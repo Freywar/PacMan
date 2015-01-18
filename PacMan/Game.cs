@@ -438,13 +438,6 @@ namespace PacMan
 					GL.MatrixMode(MatrixMode.Modelview);
 					GL.LoadIdentity();
 
-
-
-					
-
-
-
-
 					Camera.Render();
 					CurrentMap.Render();
 
