@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<game>
+	<pacman speed="3"></pacman>
+	<powerup duration="10"></powerup>
+	<ghosts>
+		<ghost name="Blinky" color="red" speed="3,5" frightenedSpeed="2,5" eatenSpeed="10"></ghost>
+		<ghost name="Pinky" color="pink" speed="3,4" frightenedSpeed="2,4" eatenSpeed="10" delay="1"></ghost>
+		<ghost name="Inky" color="cyan" speed="3,3" frightenedSpeed="2,3" eatenSpeed="10" delay ="2"></ghost>
+		<ghost name="Clyde" color="orange" speed="3,2" frightenedSpeed="2,2" eatenSpeed="10" delay="3"></ghost>
+	</ghosts>
+	<maps>
+		<map name="Default" path="default.map"></map>
+	</maps>
+</game>
