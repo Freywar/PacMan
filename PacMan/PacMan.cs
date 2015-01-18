@@ -21,6 +21,7 @@ namespace PacMan
 
 		protected Creature.Directions desiredDirection = Creature.Directions.Up;
 
+		public int Lives = 3;
 		public States State = States.Normal;
 		public double SuperTime = 0;
 

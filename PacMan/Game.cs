@@ -9,7 +9,6 @@ using OpenTK.Graphics.OpenGL;
 using OpenTK.Input;
 using System.Xml;
 using System.IO;
-using System.Text;
 using System.Drawing;
 
 
@@ -68,6 +67,8 @@ namespace PacMan
 		/// Current map.
 		/// </summary>
 		private Map CurrentMap = null;
+		private HUD HUD = new HUD();
+
 		/// <summary>
 		/// Powerup duration(seconds).
 		/// </summary>
@@ -88,6 +89,7 @@ namespace PacMan
 			set
 			{
 				text_texture = -1;
+				HUD.Width = value;
 				Width_v = value;
 			}
 		}
@@ -100,6 +102,7 @@ namespace PacMan
 			set
 			{
 				text_texture = -1;
+				HUD.Height = value;
 				Height_v = value;
 			}
 		}
@@ -259,10 +262,21 @@ namespace PacMan
 		{
 			CurrentMap = Maps[0];
 			CurrentMap.Init();
+			PacMan.Lives = 3;
 			PacMan.Init(CurrentMap);
 			foreach (Ghost ghost in Ghosts)
 				ghost.Init(CurrentMap);
 			Camera.Init(CurrentMap, PacMan);
+
+			State = States.Playing;
+		}
+
+		private void restartLevel()
+		{
+			CurrentMap.Init();
+			PacMan.Init(CurrentMap);
+			foreach (Ghost ghost in Ghosts)
+				ghost.Init(CurrentMap);
 
 			State = States.Playing;
 		}
@@ -311,7 +325,13 @@ namespace PacMan
 					{
 						case Ghost.States.Normal:
 							if (Geometry.Distance(PacMan.X, PacMan.Y, ghost.X, ghost.Y) < 1)
-								State = States.Lose;
+							{
+								PacMan.Lives--;
+								if (PacMan.Lives == 0)
+									State = States.Lose;
+								else
+									restartLevel();
+							}
 							break;
 						case Ghost.States.Frightened:
 							if (Geometry.Distance(PacMan.X, PacMan.Y, ghost.X, ghost.Y) < 1)
@@ -331,6 +351,9 @@ namespace PacMan
 
 				if (CurrentMap.PointsCount == 0)
 					State = States.Won;
+
+					HUD.Score = Score;
+					HUD.Lives = PacMan.Lives;
 			}
 		}
 
@@ -423,7 +446,7 @@ namespace PacMan
 				case States.Playing:
 
 
-				
+
 					GL.Enable(EnableCap.Lighting);
 					GL.Enable(EnableCap.Light0);
 					GL.Enable(EnableCap.DepthTest);
@@ -449,12 +472,14 @@ namespace PacMan
 
 
 
-						
+
 					GL.Disable(EnableCap.Lighting);
 					GL.Disable(EnableCap.Light0);
 					GL.Disable(EnableCap.DepthTest);
 					GL.Disable(EnableCap.ColorMaterial);
 					GL.Disable(EnableCap.CullFace);
+
+					HUD.Render();
 
 					break;
 

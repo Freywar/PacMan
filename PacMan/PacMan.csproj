@@ -54,6 +54,7 @@
     <Compile Include="Game.cs" />
     <Compile Include="Geometry.cs" />
     <Compile Include="Ghost.cs" />
+    <Compile Include="HUD.cs" />
     <Compile Include="Map.cs" />
     <Compile Include="PacMan.cs" />
     <Compile Include="Program.cs" />
