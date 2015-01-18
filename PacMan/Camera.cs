@@ -197,7 +197,7 @@ namespace PacMan
 			GL.Translate(0, 0, -R);
 			GL.Rotate(XAngle, 1, 0, 0);
 			GL.Rotate(YAngle, 0, 1, 0);
-			GL.Translate(-X, 0, -Y);
+			GL.Translate(-X, -0.5, -Y);
 		}
 	}
 }

@@ -203,7 +203,7 @@ namespace PacMan
 		/// Position and direction update.
 		/// </summary>
 		/// <param name="dt">Time passed from last call(seconds).</param>
-		/// <param name="map">Map</param>
+		/// <param name="map">Map.</param>
 		/// <returns>Visited cell center or Point.Empty.</returns>
 		virtual public Point Update(double dt, Map map)
 		{
@@ -224,6 +224,63 @@ namespace PacMan
 				moveRemainingCellPart(dt, map);
 			return result;
 		}
+
+		/// <summary>
+		/// Eye rendering.
+		/// </summary>
+		/// <param name="x">Center X(map cells).</param>
+		/// <param name="y">Center Y(map cells).</param>
+		/// <param name="z">Center Z(map cells).</param>
+		/// <param name="r">Radius(map cells).</param>
+		/// <param name="pupilAlpha">Pupil alpha(radians)..</param>
+		/// <param name="pupilBeta">Pupil beta(radians)..</param>
+		/// <param name="pupilRad">Pupil radius(radians).</param>
+		/// <param name="color">Color.</param>
+		public void renderEye(double x, double y, double z, double r, double pupilAlpha, double pupilBeta, double pupilRad, Color color)
+		{
+			double angleStep = Math.PI / 10;
+
+			GL.Translate(x, y, z);
+			GL.Begin(PrimitiveType.Quads);
+			for (double alpha = -Math.PI / 2; alpha < Math.PI / 2; alpha += angleStep)
+				for (double beta = 0; beta < Math.PI * 2; beta += angleStep)
+				{
+					if (Geometry.Distance(alpha, beta, pupilAlpha, pupilBeta) < pupilRad)
+						GL.Color3(Color.Black);
+					else
+						GL.Color3(color);
+					GL.Normal3(Geometry.FromSpheric(alpha, beta, 1));
+					GL.Vertex3(Geometry.FromSpheric(alpha, beta, r));
+
+
+					if (Geometry.Distance(alpha+angleStep, beta, pupilAlpha, pupilBeta) < pupilRad)
+						GL.Color3(Color.Black);
+					else
+						GL.Color3(color);
+					GL.Normal3(Geometry.FromSpheric(alpha + angleStep, beta, 1));
+					GL.Vertex3(Geometry.FromSpheric(alpha + angleStep, beta, r));
+
+
+					if (Geometry.Distance(alpha+angleStep, beta+angleStep, pupilAlpha, pupilBeta) < pupilRad)
+						GL.Color3(Color.Black);
+					else
+						GL.Color3(color);
+					GL.Normal3(Geometry.FromSpheric(alpha + angleStep, beta + angleStep, 1));
+					GL.Vertex3(Geometry.FromSpheric(alpha + angleStep, beta + angleStep, r));
+
+					if (Geometry.Distance(alpha, beta+angleStep, pupilAlpha, pupilBeta) < pupilRad)
+						GL.Color3(Color.Black);
+					else
+						GL.Color3(color);
+					GL.Normal3(Geometry.FromSpheric(alpha, beta + angleStep, 1));
+					GL.Vertex3(Geometry.FromSpheric(alpha, beta + angleStep, r));
+				}
+
+			GL.End();
+			GL.Translate(-x, -y, -z);
+
+		}
+
 		/// <summary>
 		/// Render.
 		/// </summary>

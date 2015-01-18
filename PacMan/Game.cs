@@ -271,9 +271,11 @@ namespace PacMan
 			State = States.Playing;
 		}
 
+		/// <summary>
+		/// Restart level after death.
+		/// </summary>
 		private void restartLevel()
 		{
-			CurrentMap.Init();
 			PacMan.Init(CurrentMap);
 			foreach (Ghost ghost in Ghosts)
 				ghost.Init(CurrentMap);
@@ -586,6 +588,5 @@ namespace PacMan
 			}
 
 		}
-
 	}
 }

@@ -11,20 +11,48 @@ using System.Drawing;
 
 namespace PacMan
 {
+	/// <summary>
+	/// PacMan class.
+	/// </summary>
 	class PacMan : Creature
 	{
+		/// <summary>
+		/// PacMan states.
+		/// </summary>
 		public enum States
 		{
+			/// <summary>
+			/// Normal.
+			/// </summary>
 			Normal,
+			/// <summary>
+			/// Super.
+			/// </summary>
 			Super
 		}
 
+		/// <summary>
+		/// Direction defined by user input, will be applied on next crossroad.
+		/// </summary>
 		protected Creature.Directions desiredDirection = Creature.Directions.Up;
 
+		/// <summary>
+		/// Lives count.
+		/// </summary>
 		public int Lives = 3;
+		/// <summary>
+		/// State.
+		/// </summary>
 		public States State = States.Normal;
+		/// <summary>
+		/// Remaining time in Super state.
+		/// </summary>
 		public double SuperTime = 0;
 
+		/// <summary>
+		/// Init on level start.
+		/// </summary>
+		/// <param name="map">Map.</param>
 		public override void Init(Map map)
 		{
 			State = States.Normal;
@@ -69,6 +97,10 @@ namespace PacMan
 			}
 		}
 
+		/// <summary>
+		/// User input handling.
+		/// </summary>
+		/// <param name="keyboard">Pressed keys.</param>
 		public void Control(KeyboardDevice keyboard)
 		{
 			if (keyboard[Key.Up])
@@ -89,168 +121,111 @@ namespace PacMan
 			mouthOpen = Math.Sin(mouthOpen);
 			mouthOpen *= Math.PI / 4;
 
+			double angleStep = Math.PI / 10;
+			double smallerAngleStep = (mouthOpen > Math.PI / 2 && mouthOpen < 3 * Math.PI / 2) ? angleStep : (Math.PI / 2 - mouthOpen) / 5;
 
 			GL.Translate(X, 0.5, Y);
 			switch (Direction)
 			{
 				case Directions.Down:
-				break;
+					GL.Rotate(-90, 0, 1, 0);
+					break;
 				case Directions.Up:
-				GL.Rotate(180, 0,1,0);
-				break;
+					GL.Rotate(90, 0, 1, 0);
+					break;
 				case Directions.Left:
-				GL.Rotate(-90, 0,1,0);
-				break;
+					GL.Rotate(180, 0, 1, 0);
+					break;
 				case Directions.Right:
-				GL.Rotate(90, 0,1,0);
-				break;
+					GL.Rotate(0, 0, 1, 0);
+					break;
 
 			}
+			GL.Rotate(-90, 1, 0, 0);
 
 			GL.Begin(PrimitiveType.Quads);
 
-			
-
-
-			GL.Color3(Color.DarkRed);
 			//upper jaw
-			for (double yAngle = -Math.PI / 2; yAngle < Math.PI / 2; yAngle += Math.PI / 10)
-			{
-				Vector3 xAxis = new Vector3(1, 0, 0);
-				Vector3 jawAxis = new Vector3(0, (float)Math.Sin(mouthOpen), (float)Math.Cos(mouthOpen));
-				Vector3 normal = Vector3.Cross(xAxis, jawAxis);
-				GL.Normal3(normal);
-				GL.Vertex3(0, 0, 0);
-				GL.Vertex3(Math.Sin(yAngle + Math.PI / 10) * 0.45, Math.Sin(mouthOpen) * Math.Cos(yAngle + Math.PI / 10) * 0.45, Math.Sin(mouthOpen) * Math.Cos(yAngle + Math.PI / 10) * 0.45);
-				GL.Vertex3(Math.Sin(yAngle) * 0.45, Math.Sin(mouthOpen) * Math.Cos(yAngle) * 0.45, Math.Sin(mouthOpen) * Math.Cos(yAngle) * 0.45);
-				GL.Vertex3(0, 0, 0);
-			}
-
-			GL.Color3(Color.Yellow);
-			//upper face
-			for (double yAngle = -Math.PI / 2; yAngle < Math.PI / 2; yAngle += Math.PI / 10)
-				for (double xAngle = mouthOpen; xAngle <= Math.PI / 2; xAngle += Math.PI / 10)
-				{
-
-					GL.Normal3(Math.Sin(yAngle), Math.Sin(xAngle) * Math.Cos(yAngle), Math.Cos(xAngle) * Math.Cos(yAngle));
-
-					GL.Vertex3(Math.Sin(yAngle) * 0.45, Math.Sin(xAngle) * Math.Cos(yAngle) * 0.45, Math.Cos(xAngle) * Math.Cos(yAngle) * 0.45);
-					GL.Vertex3(Math.Sin(yAngle + Math.PI / 10) * 0.45, Math.Sin(xAngle) * Math.Cos(yAngle + Math.PI / 10) * 0.45, Math.Cos(xAngle) * Math.Cos(yAngle + Math.PI / 10) * 0.45);
-					GL.Vertex3(Math.Sin(yAngle + Math.PI / 10) * 0.45, Math.Sin(xAngle + Math.PI / 10) * Math.Cos(yAngle + Math.PI / 10) * 0.45, Math.Cos(xAngle + Math.PI / 10) * Math.Cos(yAngle + Math.PI / 10) * 0.45);
-					GL.Vertex3(Math.Sin(yAngle) * 0.45, Math.Sin(xAngle + Math.PI / 10) * Math.Cos(yAngle) * 0.45, Math.Cos(xAngle + Math.PI / 10) * Math.Cos(yAngle) * 0.45);
-				}
-
-			//back
-			for (double yAngle = -Math.PI / 2; yAngle < Math.PI / 2; yAngle += Math.PI / 10)
-				for (double xAngle = Math.PI / 2; xAngle <= 3 * Math.PI / 2; xAngle += Math.PI / 10)
-				{
-
-					GL.Normal3(Math.Sin(yAngle), Math.Sin(xAngle) * Math.Cos(yAngle), Math.Cos(xAngle) * Math.Cos(yAngle));
-
-					GL.Vertex3(Math.Sin(yAngle) * 0.45, Math.Sin(xAngle) * Math.Cos(yAngle) * 0.45, Math.Cos(xAngle) * Math.Cos(yAngle) * 0.45);
-					GL.Vertex3(Math.Sin(yAngle + Math.PI / 10) * 0.45, Math.Sin(xAngle) * Math.Cos(yAngle + Math.PI / 10) * 0.45, Math.Cos(xAngle) * Math.Cos(yAngle + Math.PI / 10) * 0.45);
-					GL.Vertex3(Math.Sin(yAngle + Math.PI / 10) * 0.45, Math.Sin(xAngle + Math.PI / 10) * Math.Cos(yAngle + Math.PI / 10) * 0.45, Math.Cos(xAngle + Math.PI / 10) * Math.Cos(yAngle + Math.PI / 10) * 0.45);
-					GL.Vertex3(Math.Sin(yAngle) * 0.45, Math.Sin(xAngle + Math.PI / 10) * Math.Cos(yAngle) * 0.45, Math.Cos(xAngle + Math.PI / 10) * Math.Cos(yAngle) * 0.45);
-				}
-
-			//lower face
-			for (double yAngle = -Math.PI / 2; yAngle < Math.PI / 2; yAngle += Math.PI / 10)
-				for (double xAngle = -Math.PI / 2; xAngle <= -mouthOpen; xAngle += Math.PI / 10)
-				{
-
-					GL.Normal3(Math.Sin(yAngle), Math.Sin(xAngle) * Math.Cos(yAngle), Math.Cos(xAngle) * Math.Cos(yAngle));
-
-					GL.Vertex3(Math.Sin(yAngle) * 0.45, Math.Sin(xAngle) * Math.Cos(yAngle) * 0.45, Math.Cos(xAngle) * Math.Cos(yAngle) * 0.45);
-					GL.Vertex3(Math.Sin(yAngle + Math.PI / 10) * 0.45, Math.Sin(xAngle) * Math.Cos(yAngle + Math.PI / 10) * 0.45, Math.Cos(xAngle) * Math.Cos(yAngle + Math.PI / 10) * 0.45);
-					GL.Vertex3(Math.Sin(yAngle + Math.PI / 10) * 0.45, Math.Sin(xAngle + Math.PI / 10) * Math.Cos(yAngle + Math.PI / 10) * 0.45, Math.Cos(xAngle + Math.PI / 10) * Math.Cos(yAngle + Math.PI / 10) * 0.45);
-					GL.Vertex3(Math.Sin(yAngle) * 0.45, Math.Sin(xAngle + Math.PI / 10) * Math.Cos(yAngle) * 0.45, Math.Cos(xAngle + Math.PI / 10) * Math.Cos(yAngle) * 0.45);
-				}
-
 			GL.Color3(Color.DarkRed);
-			//lower jaw
-			for (double yAngle = -Math.PI / 2; yAngle < Math.PI / 2; yAngle += Math.PI / 10)
+			for (double yAngle = -Math.PI / 2; yAngle < Math.PI / 2; yAngle += angleStep)
 			{
-				Vector3 xAxis = new Vector3(1, 0, 0);
-				Vector3 jawAxis = new Vector3(0, (float)Math.Sin(-mouthOpen), (float)Math.Cos(-mouthOpen));
-				Vector3 normal = Vector3.Cross(jawAxis, xAxis);
-				GL.Normal3(normal);
+
+				Vector3d jawAxis = new Vector3d(Math.Cos(mouthOpen), 0, Math.Sin(mouthOpen));
+				Vector3d yAxis = new Vector3d(0, 1, 0);
+
+				GL.Normal3(Vector3d.Cross(yAxis, jawAxis));
+
 				GL.Vertex3(0, 0, 0);
-				GL.Vertex3(Math.Sin(yAngle) * 0.45, Math.Sin(-mouthOpen) * Math.Cos(yAngle) * 0.45, Math.Sin(mouthOpen) * Math.Cos(yAngle) * 0.45);
-				GL.Vertex3(Math.Sin(yAngle + Math.PI / 10) * 0.45, Math.Sin(-mouthOpen) * Math.Cos(yAngle + Math.PI / 10) * 0.45, Math.Sin(mouthOpen) * Math.Cos(yAngle + Math.PI / 10) * 0.45);
+
+				GL.Vertex3(Geometry.FromSpheric(yAngle + angleStep, mouthOpen, 0.45));
+				GL.Vertex3(Geometry.FromSpheric(yAngle, mouthOpen, 0.45));
+
 				GL.Vertex3(0, 0, 0);
+
 			}
 
-
-			GL.End();
-
-
-			//left eye
-			GL.Translate(Math.Sin(Math.PI / 6) * 0.45, Math.Sin(Math.PI / 6 + mouthOpen) * Math.Cos(Math.PI / 6) * 0.45, Math.Cos(Math.PI / 6 + mouthOpen) * Math.Cos(Math.PI / 6) * 0.45);
-			GL.Begin(PrimitiveType.Quads);
-			for (double alpha = -Math.PI / 2; alpha < Math.PI / 2; alpha += Math.PI / 10)
-				for (double beta = 0; beta < Math.PI * 2; beta += Math.PI / 10)
+			//body
+			GL.Color3(Color.Yellow);
+			for (double yAngle = -Math.PI / 2; yAngle < Math.PI / 2; yAngle += angleStep)
+				for (double xAngle = 0; xAngle <= Math.PI * 2; xAngle += angleStep)
 				{
-					if (State == States.Super)
-						GL.Color3(Color.Red);
-					else 					if (Math.Sqrt((alpha - Math.PI / 6 - mouthOpen) * (alpha - Math.PI / 6 - mouthOpen) + (beta - Math.PI / 2 + Math.PI / 6) * (beta - Math.PI / 2 + Math.PI / 6)) < Math.PI / 6)
-						GL.Color3(Color.Black);
-					else
-						GL.Color3(Color.White);
-					GL.Normal3(Math.Cos(alpha) * Math.Cos(beta), Math.Sin(alpha), Math.Cos(alpha) * Math.Sin(beta));
-					GL.Vertex3(Math.Cos(alpha) * Math.Cos(beta) * 0.1, Math.Sin(alpha) * 0.1, Math.Cos(alpha) * Math.Sin(beta) * 0.1);
-					GL.Vertex3(Math.Cos(alpha + Math.PI / 10) * Math.Cos(beta) * 0.1, Math.Sin(alpha + Math.PI / 10) * 0.1, Math.Cos(alpha + Math.PI / 10) * Math.Sin(beta) * 0.1);
-					GL.Vertex3(Math.Cos(alpha + Math.PI / 10) * Math.Cos(beta + Math.PI / 10) * 0.1, Math.Sin(alpha + Math.PI / 10) * 0.1, Math.Cos(alpha + Math.PI / 10) * Math.Sin(beta + Math.PI / 10) * 0.1);
-					GL.Vertex3(Math.Cos(alpha) * Math.Cos(beta + Math.PI / 10) * 0.1, Math.Sin(alpha) * 0.1, Math.Cos(alpha) * Math.Sin(beta + Math.PI / 10) * 0.1);
+					double rxAngle = xAngle * (Math.PI * 2 - mouthOpen * 2) / (Math.PI * 2) + mouthOpen;
+					double rxAngleNext = (xAngle + angleStep) * (Math.PI * 2 - mouthOpen * 2) / (Math.PI * 2) + mouthOpen;
 
+					GL.Normal3(Geometry.FromSpheric(yAngle, rxAngle, 1));
+					GL.Vertex3(Geometry.FromSpheric(yAngle, rxAngle, 0.45));
 
+					GL.Normal3(Geometry.FromSpheric(yAngle + angleStep, rxAngle, 1));
+					GL.Vertex3(Geometry.FromSpheric(yAngle + angleStep, rxAngle, 0.45));
+
+					GL.Normal3(Geometry.FromSpheric(yAngle + angleStep, rxAngleNext, 1));
+					GL.Vertex3(Geometry.FromSpheric(yAngle + angleStep, rxAngleNext, 0.45));
+
+					GL.Normal3(Geometry.FromSpheric(yAngle, rxAngleNext, 1));
+					GL.Vertex3(Geometry.FromSpheric(yAngle, rxAngleNext, 0.45));
 				}
 
+			//lower jaw
+			GL.Color3(Color.DarkRed);
+			for (double yAngle = -Math.PI / 2; yAngle < Math.PI / 2; yAngle += angleStep)
+			{
+				Vector3d jawAxis = new Vector3d(Math.Cos(-mouthOpen), 0, Math.Sin(-mouthOpen));
+				Vector3d yAxis = new Vector3d(0, 1, 0);
+
+				GL.Normal3(Vector3d.Cross(jawAxis, yAxis));
+				GL.Vertex3(0, 0, 0);
+				GL.Vertex3(Geometry.FromSpheric(yAngle, -mouthOpen, 0.45));
+				GL.Vertex3(Geometry.FromSpheric(yAngle + angleStep, -mouthOpen, 0.45));
+				GL.Vertex3(0, 0, 0);
+			}
 			GL.End();
-			GL.Translate(-Math.Sin(Math.PI / 6) * 0.45, -Math.Sin(Math.PI / 6 + mouthOpen) * Math.Cos(Math.PI / 6) * 0.45, -Math.Cos(Math.PI / 6 + mouthOpen) * Math.Cos(Math.PI / 6) * 0.45);
 
+			//eyes
+			renderEye(Math.Cos(Math.PI / 6 + mouthOpen) * Math.Cos(Math.PI / 6) * 0.45, Math.Sin(Math.PI / 6) * 0.45, Math.Sin(Math.PI / 6 + mouthOpen) * Math.Cos(Math.PI / 6) * 0.45,
+			0.1, Math.PI / 6 + mouthOpen, Math.PI / 2 - Math.PI / 6, Math.PI / 6, State == States.Super ? Color.Red : Color.White);
+			renderEye(Math.Cos(Math.PI / 6 + mouthOpen) * Math.Cos(-Math.PI / 6) * 0.45, Math.Sin(-Math.PI / 6) * 0.45, Math.Sin(Math.PI / 6 + mouthOpen) * Math.Cos(-Math.PI / 6) * 0.45,
+			0.1, Math.PI / 6 + mouthOpen, Math.PI / 2 - Math.PI / 6, Math.PI / 6, State == States.Super ? Color.Red : Color.White);
 
-			//right eye
-			GL.Translate(Math.Sin(-Math.PI / 6) * 0.45, Math.Sin(Math.PI / 6 + mouthOpen) * Math.Cos(-Math.PI / 6) * 0.45, Math.Cos(Math.PI / 6 + mouthOpen) * Math.Cos(-Math.PI / 6) * 0.45);
-			GL.Begin(PrimitiveType.Quads);
-			for (double alpha = -Math.PI / 2; alpha < Math.PI / 2; alpha += Math.PI / 10)
-				for (double beta = 0; beta < Math.PI * 2; beta += Math.PI / 10)
-				{
-				if (State == States.Super)
-				GL.Color3(Color.Red);
-					else if (Math.Sqrt((alpha - Math.PI / 6 - mouthOpen) * (alpha - Math.PI / 6 - mouthOpen) + (beta + Math.PI / 2) * (beta - Math.PI / 2 + Math.PI / 6)) < Math.PI / 6)
-						GL.Color3(Color.Black);
-					else
-						GL.Color3(Color.White);
-					GL.Normal3(Math.Cos(alpha) * Math.Cos(beta), Math.Sin(alpha), Math.Cos(alpha) * Math.Sin(beta));
-					GL.Vertex3(Math.Cos(alpha) * Math.Cos(beta) * 0.1, Math.Sin(alpha) * 0.1, Math.Cos(alpha) * Math.Sin(beta) * 0.1);
-					GL.Vertex3(Math.Cos(alpha + Math.PI / 10) * Math.Cos(beta) * 0.1, Math.Sin(alpha + Math.PI / 10) * 0.1, Math.Cos(alpha + Math.PI / 10) * Math.Sin(beta) * 0.1);
-					GL.Vertex3(Math.Cos(alpha + Math.PI / 10) * Math.Cos(beta + Math.PI / 10) * 0.1, Math.Sin(alpha + Math.PI / 10) * 0.1, Math.Cos(alpha + Math.PI / 10) * Math.Sin(beta + Math.PI / 10) * 0.1);
-					GL.Vertex3(Math.Cos(alpha) * Math.Cos(beta + Math.PI / 10) * 0.1, Math.Sin(alpha) * 0.1, Math.Cos(alpha) * Math.Sin(beta + Math.PI / 10) * 0.1);
+			GL.Rotate(90, 1, 0, 0);
 
-
-				}
-			GL.End();
-			GL.Translate(-Math.Sin(-Math.PI / 6) * 0.45, -Math.Sin(Math.PI / 6 + mouthOpen) * Math.Cos(-Math.PI / 6) * 0.45, -Math.Cos(Math.PI / 6 + mouthOpen) * Math.Cos(-Math.PI / 6) * 0.45);
-
-
-						switch (Direction)
+			switch (Direction)
 			{
 				case Directions.Down:
-				break;
+					GL.Rotate(90, 0, 1, 0);
+					break;
 				case Directions.Up:
-				GL.Rotate(-180, 0,1,0);
-				break;
+					GL.Rotate(-90, 0, 1, 0);
+					break;
 				case Directions.Left:
-				GL.Rotate(90, 0,1,0);
-				break;
+					GL.Rotate(-180, 0, 1, 0);
+					break;
 				case Directions.Right:
-				GL.Rotate(-90, 0,1,0);
-				break;
+					GL.Rotate(0, 0, 1, 0);
+					break;
 
 			}
+
 			GL.Translate(-X, -0.5, -Y);
 		}
-
-
 	}
 }

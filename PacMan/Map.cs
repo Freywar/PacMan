@@ -37,41 +37,60 @@ namespace PacMan
 			/// </summary>
 			None
 		}
+
+		/// <summary>
+		/// Wrap X coordinate inside map borders.
+		/// </summary>
+		/// <param name="X">X coordinate.</param>
+		/// <returns>X coordinate inside map borders.</returns>
 		public double WrapX(double X)
 		{
-			if (X > Height)
-				return X - Height;
+			if (X >= Width)
+				return X - Width;
 			if (X < 0)
-				return X + Height;
+				return X + Width;
 			return X;
 		}
+		/// <summary>
+		/// Wrap Y coordinate inside map borders.
+		/// </summary>
+		/// <param name="Y">Y coordinate.</param>
+		/// <returns>Y coordinate inside map borders.</returns>
 		public double WrapY(double Y)
 		{
-			if (Y > Height)
+			if (Y >= Height)
 				return Y - Height;
 			if (Y < 0)
 				return Y + Height;
 			return Y;
 		}
 
-
+		/// <summary>
+		/// Wrap X coordinate inside map borders.
+		/// </summary>
+		/// <param name="X">X coordinate.</param>
+		/// <returns>X coordinate inside map borders.</returns>
 		public int WrapX(int X)
 		{
-			if (X > Height)
-				return X - Height;
+			if (X >= Width)
+				return X - Width;
 			if (X < 0)
-				return X + Height;
+				return X + Width;
 			return X;
 		}
+		/// <summary>
+		/// Wrap Y coordinate inside map borders.
+		/// </summary>
+		/// <param name="Y">Y coordinate.</param>
+		/// <returns>Y coordinate inside map borders.</returns>
 		public int WrapY(int Y)
 		{
-			if (Y > Height)
+			if (Y >= Height)
 				return Y - Height;
 			if (Y < 0)
 				return Y + Height;
 			return Y;
 		}
-
 
 		/// <summary>
 		/// Map name
@@ -127,12 +146,22 @@ namespace PacMan
 		/// <returns>Cell.</returns>
 		public Objects this[double y, double x] { get { return Fields[(int)WrapY(y)][(int)WrapX(x)]; } }
 
-
+		/// <summary>
+		/// Cell does not contains walls.
+		/// </summary>
+		/// <param name="y">Y coordinate, wrapping included.</param>
+		/// <param name="x">X coordinate, wrapping included.</param>
+		/// <returns>True, if cell is walkable.</returns>
 		public bool IsWalkable(int y, int x)
 		{
 			return this[y, x] != Objects.Wall;
 		}
-
+		/// <summary>
+		/// Cell does not contains walls.
+		/// </summary>
+		/// <param name="y">Y coordinate, wrapping included.</param>
+		/// <param name="x">X coordinate, wrapping included.</param>
+		/// <returns>True, if cell is walkable.</returns>
 		public bool IsWalkable(double y, double x)
 		{
 			return this[y, x] != Objects.Wall;

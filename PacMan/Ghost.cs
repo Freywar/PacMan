@@ -11,21 +11,57 @@ using System.Drawing;
 
 namespace PacMan
 {
+	/// <summary>
+	/// Ghost class.
+	/// </summary>
 	class Ghost : Creature
 	{
+		/// <summary>
+		/// Ghost states.
+		/// </summary>
 		public enum States
 		{
+			/// <summary>
+			/// Waiting outside map.
+			/// </summary>
 			Waiting,
+			/// <summary>
+			/// Normal.
+			/// </summary>
 			Normal,
+			/// <summary>
+			/// Frightened.
+			/// </summary>
 			Frightened,
+			/// <summary>
+			/// Eaten.
+			/// </summary>
 			Eaten
 		}
 
+		/// <summary>
+		/// Name.
+		/// </summary>
 		public String Name = "Ghost";
+		/// <summary>
+		/// Color.
+		/// </summary>
 		public Color Color = Color.Red;
+		/// <summary>
+		/// Delay before appearance after level start or death(seconds).
+		/// </summary>
 		public double Delay = 0;
+		/// <summary>
+		/// State.
+		/// </summary>
 		public States State = States.Normal;
+		/// <summary>
+		/// Frightened speed.
+		/// </summary>
 		public double FrightenedSpeed = 1;
+		/// <summary>
+		/// Eaten speed.
+		/// </summary>
 		public double EatenSpeed = 1;
 		protected override double CurrentSpeed
 		{
@@ -47,36 +83,44 @@ namespace PacMan
 		}
 
 		private double waitedTime = 0;
-		private int[][] distanceMap = null;
+
 		private double rAnimationTime = 0;
+		/// <summary>
+		/// Calculate skirt fluctuation.
+		/// </summary>
+		/// <param name="y">Offset from bottom.</param>
+		/// <param name="beta">Offset by angle.</param>
+		/// <returns>Radius delta.</returns>
+		private double DR(double y, double beta)
+		{
+			if (y <= 0)
+				return 0;
+			y = y * 2;
+			y = y * y * 0.2;
+			return (
+			Math.Cos(beta * 4 + rAnimationTime) * y +
+			Math.Cos(beta * 8 + rAnimationTime * 2) * y +
+			Math.Cos(beta * 16 + rAnimationTime * 4) * y +
+			Math.Cos(beta * 32 + rAnimationTime * 8) * y
+			) / 4;
+		}
+
+		#region Path detection.
+
+		private int[][] distanceMap = null;
 
 		private void fillDistanceMapRec(Map map, int x, int y, int distance)
 		{
-			if ((distanceMap[y][x] != -1 && distanceMap[y][x] <= distance) || map[y][x] == Map.Objects.Wall)
+			if ((distanceMap[y][x] != -1 && distanceMap[y][x] <= distance) || !map.IsWalkable(y, x))
 				return;
 
 			distanceMap[y][x] = distance;
 
-			if (y > 0)
-				fillDistanceMapRec(map, x, y - 1, distance + 1);
-			else
-				fillDistanceMapRec(map, x, map.Height - 1, distance + 1);
+			fillDistanceMapRec(map, x, map.WrapY(y - 1), distance + 1);
+			fillDistanceMapRec(map, x, map.WrapY(y + 1), distance + 1);
+			fillDistanceMapRec(map, map.WrapX(x - 1), y, distance + 1);
+			fillDistanceMapRec(map, map.WrapX(x + 1), y, distance + 1);
 
-			if (y < map.Height - 1)
-				fillDistanceMapRec(map, x, y + 1, distance + 1);
-			else
-				fillDistanceMapRec(map, x, 0, distance + 1);
-
-
-			if (x > 0)
-				fillDistanceMapRec(map, x - 1, y, distance + 1);
-			else
-				fillDistanceMapRec(map, map.Width - 1, y, distance + 1);
-
-			if (x < map.Width - 1)
-				fillDistanceMapRec(map, x + 1, y, distance + 1);
-			else
-				fillDistanceMapRec(map, 0, y, distance + 1);
 		}
 
 		private void fillDistanceMap(Map map, Point target)
@@ -95,21 +139,74 @@ namespace PacMan
 			fillDistanceMapRec(map, target.X, target.Y, 0);
 		}
 
-		protected override void updateDirection(Map map)
+		/// <summary>
+		/// Choose best direction to reach target.
+		/// </summary>
+		/// <param name="map">Map.</param>
+		/// <param name="target">Target.</param>
+		/// <returns>Direction.</returns>
+		private Directions chooseDirection(Map map, Point target, Directions currentDirection)
 		{
-			throw new NotImplementedException();
+			fillDistanceMap(map, target);
+			if (distanceMap[(int)Y][(int)X] == -1)
+				currentDirection = cw(currentDirection);
+
+			int px = (int)map.WrapX(X);
+			int py = (int)map.WrapY(Y);
+			int bestDistance = distanceMap[py][px];
+
+			py = (int)map.WrapY(Y - 1);
+			if (distanceMap[py][px] != -1 && distanceMap[py][px] < bestDistance)
+			{
+				currentDirection = Directions.Up;
+				bestDistance = distanceMap[py][px];
+			}
+
+			py = (int)map.WrapX(Y + 1);
+			if (distanceMap[py][px] != -1 && distanceMap[py][px] < bestDistance)
+			{
+				currentDirection = Directions.Down;
+				bestDistance = distanceMap[py][px];
+			}
+
+			py = (int)map.WrapY(Y);
+
+			px = (int)map.WrapX(X - 1);
+			if (distanceMap[py][px] != -1 && distanceMap[py][px] < bestDistance)
+			{
+				currentDirection = Directions.Left;
+				bestDistance = distanceMap[py][px];
+			}
+
+			px = (int)map.WrapX(X + 1);
+			if (distanceMap[py][px] != -1 && distanceMap[py][px] < bestDistance)
+			{
+				currentDirection = Directions.Right;
+				bestDistance = distanceMap[py][px];
+			}
+
+			return currentDirection;
 		}
 
+		#endregion
+
+		protected override void updateDirection(Map map)
+		{
+			throw new NotSupportedException("PacMan required.");
+		}
+
+		/// <summary>
+		/// New direction selection on crossroads.
+		/// </summary>
+		/// <param name="map">Map.</param>
+		/// <param name="pacman">PacMan.</param>
 		protected void updateDirection(Map map, PacMan pacman)
 		{
-			if (State == States.Waiting)
-				return;
-
-
-
 			Point target;
 			switch (State)
 			{
+				case States.Waiting:
+					return;
 				case States.Normal:
 					target = new Point((int)pacman.X, (int)pacman.Y);
 					break;
@@ -133,76 +230,7 @@ namespace PacMan
 					break;
 			}
 
-			fillDistanceMap(map, target);
-			if (distanceMap[(int)Y][(int)X] == -1)
-				Direction = cw(Direction);
-
-			int bestDistance = distanceMap[(int)Y][(int)X];
-			if (Y > 0)
-			{
-				if (distanceMap[(int)(Y - 1)][(int)X] != -1 && distanceMap[(int)(Y - 1)][(int)X] < bestDistance)
-				{
-					Direction = Directions.Up;
-					bestDistance = distanceMap[(int)(Y - 1)][(int)X];
-				}
-
-			}
-			else
-				if (distanceMap[map.Height - 1][(int)X] != -1 && distanceMap[map.Height - 1][(int)X] < bestDistance)
-				{
-					Direction = Directions.Up;
-					bestDistance = distanceMap[map.Height - 1][(int)X];
-				}
-
-			if (Y < map.Height - 1)
-			{
-				if (distanceMap[(int)(Y + 1)][(int)X] != -1 && distanceMap[(int)(Y + 1)][(int)X] < bestDistance)
-				{
-					Direction = Directions.Down;
-					bestDistance = distanceMap[(int)(Y + 1)][(int)X];
-				}
-
-			}
-			else
-				if (distanceMap[0][(int)X] != -1 && distanceMap[0][(int)X] < bestDistance)
-				{
-					Direction = Directions.Down;
-					bestDistance = distanceMap[0][(int)X];
-				}
-
-			if (X > 0)
-			{
-				if (distanceMap[(int)Y][(int)(X - 1)] != -1 && distanceMap[(int)Y][(int)(X - 1)] < bestDistance)
-				{
-					Direction = Directions.Left;
-					bestDistance = distanceMap[(int)Y][(int)(X - 1)];
-				}
-
-			}
-			else
-				if (distanceMap[(int)Y][map.Width - 1] != -1 && distanceMap[(int)Y][map.Width - 1] < bestDistance)
-				{
-					Direction = Directions.Left;
-					bestDistance = distanceMap[(int)Y][map.Width - 1];
-				}
-
-			if (X < map.Width - 1)
-			{
-				if (distanceMap[(int)Y][(int)(X + 1)] != -1 && distanceMap[(int)Y][(int)(X + 1)] < bestDistance)
-				{
-					Direction = Directions.Right;
-					bestDistance = distanceMap[(int)Y][(int)(X + 1)];
-				}
-
-			}
-			else
-				if (distanceMap[(int)Y][0] != -1 && distanceMap[(int)Y][0] < bestDistance)
-				{
-					Direction = Directions.Right;
-					bestDistance = distanceMap[(int)Y][0];
-				}
-
-
+			Direction = chooseDirection(map, target, Direction);
 		}
 
 		public override void Init(Map map)
@@ -213,6 +241,17 @@ namespace PacMan
 			Y = map.GhostStart.Y;
 		}
 
+		public override Point Update(double dt, Map map)
+		{
+			throw new NotSupportedException("PacMan required.");
+		}
+		/// <summary>
+		/// Position and direction update.
+		/// </summary>
+		/// <param name="dt">Time passed from last call(seconds).</param>
+		/// <param name="map">Map.</param>
+		/// <param name="pacman">PacMan.</param>
+		/// <returns>Visited cell center or Point.Empty.</returns>
 		public Point Update(double dt, Map map, PacMan pacman)
 		{
 			rAnimationTime += dt;
@@ -247,13 +286,25 @@ namespace PacMan
 			return result;
 		}
 
+		private void renderSkirtPoint(double dy, double beta, double r, double yStep)
+		{
+			double prevDr = DR(dy - yStep, beta);
+			double dr = DR(dy, beta);
+			double alpha = Math.Atan2(yStep, dr - prevDr);
+
+			GL.Normal3(Math.Cos(beta) * Math.Sin(alpha), Math.Cos(alpha), Math.Sin(beta) * Math.Sin(alpha));
+			GL.Vertex3(Math.Cos(beta) * (r + dr), -dy, Math.Sin(beta) * (r + dr));
+		}
+
+		/// <summary>
+		/// Render.
+		/// </summary>
 		public override void Render()
 		{
 			if (State == States.Waiting)
 				return;
-			
 
-			GL.Translate(X, 0, Y);
+			GL.Translate(X, 0.5, Y);
 			switch (Direction)
 			{
 				case Directions.Down:
@@ -267,104 +318,49 @@ namespace PacMan
 				case Directions.Right:
 					GL.Rotate(90, 0, 1, 0);
 					break;
-
 			}
 
-
-			GL.Begin(PrimitiveType.Quads);
-			double r = State == States.Eaten ? 0.1 : 0.45;
+			double r = 0.45;
+			double angleStep = Math.PI / 10;
+			double yStep = 0.1;
 			if (State != States.Eaten)
 			{
+				GL.Color3(State == States.Frightened ? Color.LightBlue : Color);
+
 				//cap
-				for (double alpha = 0; alpha < Math.PI / 2; alpha += Math.PI / 10)
-					for (double beta = 0; beta < Math.PI * 2; beta += Math.PI / 10)
+				GL.Begin(PrimitiveType.Quads);
+				for (double alpha = 0; alpha < Math.PI / 2; alpha += angleStep)
+					for (double beta = 0; beta < Math.PI * 2; beta += angleStep)
 					{
+						GL.Normal3(Geometry.FromSpheric(alpha, beta, 1));
+						GL.Vertex3(Geometry.FromSpheric(alpha, beta, r));
 
-						GL.Color3(State == States.Frightened ? Color.LightBlue : Color);
-						GL.Normal3(Math.Cos(alpha) * Math.Cos(beta), Math.Sin(alpha), Math.Cos(alpha) * Math.Sin(beta));
-						GL.Vertex3(Math.Cos(alpha) * Math.Cos(beta) * r, 0.5 + Math.Sin(alpha) * r, Math.Cos(alpha) * Math.Sin(beta) * r);
-						GL.Vertex3(Math.Cos(alpha + Math.PI / 10) * Math.Cos(beta) * r, 0.5 + Math.Sin(alpha + Math.PI / 10) * r, Math.Cos(alpha + Math.PI / 10) * Math.Sin(beta) * r);
-						GL.Vertex3(Math.Cos(alpha + Math.PI / 10) * Math.Cos(beta + Math.PI / 10) * r, 0.5 + Math.Sin(alpha + Math.PI / 10) * r, Math.Cos(alpha + Math.PI / 10) * Math.Sin(beta + Math.PI / 10) * r);
-						GL.Vertex3(Math.Cos(alpha) * Math.Cos(beta + Math.PI / 10) * r, 0.5 + Math.Sin(alpha) * r, Math.Cos(alpha) * Math.Sin(beta + Math.PI / 10) * r);
+						GL.Normal3(Geometry.FromSpheric(alpha + angleStep, beta, 1));
+						GL.Vertex3(Geometry.FromSpheric(alpha + angleStep, beta, r));
 
+						GL.Normal3(Geometry.FromSpheric(alpha + angleStep, beta + angleStep, 1));
+						GL.Vertex3(Geometry.FromSpheric(alpha + angleStep, beta + angleStep, r));
 
+						GL.Normal3(Geometry.FromSpheric(alpha, beta + angleStep, 1));
+						GL.Vertex3(Geometry.FromSpheric(alpha, beta + angleStep, r));
 					}
 
-
-
-
-				//bottom
-				for (double y = 0; y < 0.5; y += 0.1)
-					for (double beta = 0; beta < Math.PI * 2; beta += Math.PI / 10)
+				//skirt
+				for (double dy = 0; dy < 0.5; dy += 0.1)
+					for (double beta = 0; beta < Math.PI * 2; beta += angleStep)
 					{
-
-						GL.Color3(State == States.Frightened ? Color.LightBlue : Color);
-						double dr = DR(y, beta);
-						GL.Normal3(Math.Cos(beta), 0, Math.Sin(beta));
-						dr = DR(y, beta);
-						GL.Vertex3(Math.Cos(beta) * (r + dr), y, Math.Sin(beta) * (r + dr));
-						dr = DR(y + 0.1, beta);
-						GL.Vertex3(Math.Cos(beta) * (r + dr), (y + 0.1), Math.Sin(beta) * (r + dr));
-						dr = DR(y + 0.1, beta + Math.PI / 10);
-						GL.Vertex3(Math.Cos(beta + Math.PI / 10) * (r + dr), (y + 0.1), Math.Sin(beta + Math.PI / 10) * (r + dr));
-						dr = DR(y, beta + Math.PI / 10);
-						GL.Vertex3(Math.Cos(beta + Math.PI / 10) * (r + dr), y, Math.Sin(beta + Math.PI / 10) * (r + dr));
-
-
+						renderSkirtPoint(dy, beta, r, yStep);
+						renderSkirtPoint(dy, beta + angleStep, r, yStep);
+						renderSkirtPoint(dy + yStep, beta + angleStep, r, yStep);
+						renderSkirtPoint(dy + yStep, beta, r, yStep);
 					}
-
-
 				GL.End();
 			}
 
-			GL.Translate(0, 0.5, 0);
-
-			//left eye
-			GL.Translate(Math.Sin(Math.PI / 6) * 0.45, Math.Sin(Math.PI / 6 + 0) * Math.Cos(Math.PI / 6) * 0.45, Math.Cos(Math.PI / 6 + 0) * Math.Cos(Math.PI / 6) * 0.45);
-			GL.Begin(PrimitiveType.Quads);
-			for (double alpha = -Math.PI / 2; alpha < Math.PI / 2; alpha += Math.PI / 10)
-				for (double beta = 0; beta < Math.PI * 2; beta += Math.PI / 10)
-				{
-					if (Math.Sqrt((alpha - Math.PI / 6 - 0) * (alpha - Math.PI / 6 - 0) + (beta - Math.PI / 2 + Math.PI / 6) * (beta - Math.PI / 2 + Math.PI / 6)) < Math.PI / 6)
-						GL.Color3(Color.Black);
-					else
-						GL.Color3(Color.White);
-					GL.Normal3(Math.Cos(alpha) * Math.Cos(beta), Math.Sin(alpha), Math.Cos(alpha) * Math.Sin(beta));
-					GL.Vertex3(Math.Cos(alpha) * Math.Cos(beta) * 0.1, Math.Sin(alpha) * 0.1, Math.Cos(alpha) * Math.Sin(beta) * 0.1);
-					GL.Vertex3(Math.Cos(alpha + Math.PI / 10) * Math.Cos(beta) * 0.1, Math.Sin(alpha + Math.PI / 10) * 0.1, Math.Cos(alpha + Math.PI / 10) * Math.Sin(beta) * 0.1);
-					GL.Vertex3(Math.Cos(alpha + Math.PI / 10) * Math.Cos(beta + Math.PI / 10) * 0.1, Math.Sin(alpha + Math.PI / 10) * 0.1, Math.Cos(alpha + Math.PI / 10) * Math.Sin(beta + Math.PI / 10) * 0.1);
-					GL.Vertex3(Math.Cos(alpha) * Math.Cos(beta + Math.PI / 10) * 0.1, Math.Sin(alpha) * 0.1, Math.Cos(alpha) * Math.Sin(beta + Math.PI / 10) * 0.1);
-
-
-				}
-
-			GL.End();
-			GL.Translate(-Math.Sin(Math.PI / 6) * 0.45, -Math.Sin(Math.PI / 6 + 0) * Math.Cos(Math.PI / 6) * 0.45, -Math.Cos(Math.PI / 6 + 0) * Math.Cos(Math.PI / 6) * 0.45);
-
-
-			//right eye
-			GL.Translate(Math.Sin(-Math.PI / 6) * 0.45, Math.Sin(Math.PI / 6 + 0) * Math.Cos(-Math.PI / 6) * 0.45, Math.Cos(Math.PI / 6 + 0) * Math.Cos(-Math.PI / 6) * 0.45);
-			GL.Begin(PrimitiveType.Quads);
-			for (double alpha = -Math.PI / 2; alpha < Math.PI / 2; alpha += Math.PI / 10)
-				for (double beta = 0; beta < Math.PI * 2; beta += Math.PI / 10)
-				{
-					if (Math.Sqrt((alpha - Math.PI / 6 - 0) * (alpha - Math.PI / 6 - 0) + (beta + Math.PI / 2) * (beta - Math.PI / 2 + Math.PI / 6)) < Math.PI / 6)
-						GL.Color3(Color.Black);
-					else
-						GL.Color3(Color.White);
-					GL.Normal3(Math.Cos(alpha) * Math.Cos(beta), Math.Sin(alpha), Math.Cos(alpha) * Math.Sin(beta));
-					GL.Vertex3(Math.Cos(alpha) * Math.Cos(beta) * 0.1, Math.Sin(alpha) * 0.1, Math.Cos(alpha) * Math.Sin(beta) * 0.1);
-					GL.Vertex3(Math.Cos(alpha + Math.PI / 10) * Math.Cos(beta) * 0.1, Math.Sin(alpha + Math.PI / 10) * 0.1, Math.Cos(alpha + Math.PI / 10) * Math.Sin(beta) * 0.1);
-					GL.Vertex3(Math.Cos(alpha + Math.PI / 10) * Math.Cos(beta + Math.PI / 10) * 0.1, Math.Sin(alpha + Math.PI / 10) * 0.1, Math.Cos(alpha + Math.PI / 10) * Math.Sin(beta + Math.PI / 10) * 0.1);
-					GL.Vertex3(Math.Cos(alpha) * Math.Cos(beta + Math.PI / 10) * 0.1, Math.Sin(alpha) * 0.1, Math.Cos(alpha) * Math.Sin(beta + Math.PI / 10) * 0.1);
-
-
-				}
-			GL.End();
-			GL.Translate(-Math.Sin(-Math.PI / 6) * 0.45, -Math.Sin(Math.PI / 6 + 0) * Math.Cos(-Math.PI / 6) * 0.45, -Math.Cos(Math.PI / 6 + 0) * Math.Cos(-Math.PI / 6) * 0.45);
-
-			GL.Translate(0, -0.5, 0);
-
+			renderEye(Math.Sin(Math.PI / 6) * r, Math.Sin(Math.PI / 6 + 0) * Math.Cos(Math.PI / 6) * r, Math.Cos(Math.PI / 6 + 0) * Math.Cos(Math.PI / 6) * r,
+			0.1, Math.PI / 6, Math.PI / 2 - Math.PI / 6, Math.PI / 6, Color.White);
+			renderEye(Math.Sin(-Math.PI / 6) * r, Math.Sin(Math.PI / 6 + 0) * Math.Cos(Math.PI / 6) * r, Math.Cos(Math.PI / 6 + 0) * Math.Cos(-Math.PI / 6) * r,
+			0.1, Math.PI / 6, Math.PI / 2 - Math.PI / 6, Math.PI / 6, Color.White);
 
 			switch (Direction)
 			{
@@ -381,17 +377,7 @@ namespace PacMan
 					break;
 
 			}
-			GL.Translate(-X, 0, -Y);
-		}
-		private double DR(double y, double beta)
-		{
-			return (
-			Math.Cos(beta * 4 + rAnimationTime) * (y * 2 - 1) * (y * 2 - 1) * 0.2 +
-			Math.Cos(beta * 8 + rAnimationTime * 2) * (y * 2 - 1) * (y * 2 - 1) * 0.2 +
-			Math.Cos(beta * 16 + rAnimationTime * 4) * (y * 2 - 1) * (y * 2 - 1) * 0.2 +
-			Math.Cos(beta * 32 + rAnimationTime * 8) * (y * 2 - 1) * (y * 2 - 1) * 0.2
-			) / 4;
+			GL.Translate(-X, -0.5, -Y);
 		}
 	}
-
 }
