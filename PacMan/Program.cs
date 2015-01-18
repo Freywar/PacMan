@@ -29,7 +29,8 @@ namespace PacMan
 		public static void OnWindowUpdate(Object sender, FrameEventArgs e)
 		{
 			Game.Update(e.Time);
-			Game.Control(Window.Keyboard);
+			if (!Game.Control(Window.Keyboard))
+				Window.Exit();
 		}
 
 		public static void OnWindowRender(Object sender, FrameEventArgs e)

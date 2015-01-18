@@ -49,14 +49,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="2D\Screen2D.cs" />
     <Compile Include="Camera.cs" />
-    <Compile Include="Creature.cs" />
+    <Compile Include="Creatures\Creature.cs" />
     <Compile Include="Game.cs" />
     <Compile Include="Geometry.cs" />
-    <Compile Include="Ghost.cs" />
-    <Compile Include="HUD.cs" />
+    <Compile Include="Creatures\Ghost.cs" />
+    <Compile Include="2D\HUD.cs" />
     <Compile Include="Map.cs" />
-    <Compile Include="PacMan.cs" />
+    <Compile Include="2D\Menu.cs" />
+    <Compile Include="Creatures\PacMan.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

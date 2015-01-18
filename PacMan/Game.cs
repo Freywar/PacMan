@@ -26,13 +26,17 @@ namespace PacMan
 		private enum States
 		{
 			/// <summary>
-			/// Logo screen.
+			/// Main menu.
 			/// </summary>
-			Starting,
+			MainMenu,
 			/// <summary>
 			/// Game.
 			/// </summary>
 			Playing,
+			/// <summary>
+			/// Pause menu.
+			/// </summary>
+			PauseMenu,
 			/// <summary>
 			/// Win screen.
 			/// </summary>
@@ -46,7 +50,7 @@ namespace PacMan
 		/// <summary>
 		/// Game state.
 		/// </summary>
-		private States State = States.Starting;
+		private States State = States.MainMenu;
 		/// <summary>
 		/// Camera.
 		/// </summary>
@@ -68,6 +72,8 @@ namespace PacMan
 		/// </summary>
 		private Map CurrentMap = null;
 		private HUD HUD = new HUD();
+		private Menu MainMenu = new Menu();
+		private Menu PauseMenu = new Menu();
 
 		/// <summary>
 		/// Powerup duration(seconds).
@@ -90,6 +96,8 @@ namespace PacMan
 			{
 				text_texture = -1;
 				HUD.Width = value;
+				MainMenu.Width = value;
+				PauseMenu.Width = value;
 				Width_v = value;
 			}
 		}
@@ -103,6 +111,8 @@ namespace PacMan
 			{
 				text_texture = -1;
 				HUD.Height = value;
+				MainMenu.Height = value;
+				PauseMenu.Height = value;
 				Height_v = value;
 			}
 		}
@@ -241,6 +251,15 @@ namespace PacMan
 		{
 			loadConfig();
 
+			MainMenu.Items = new Menu.Item[3];
+			MainMenu.Items[0] = new Menu.Item("Start", true);
+			MainMenu.Items[1] = new Menu.Item("Continue", false);
+			MainMenu.Items[2] = new Menu.Item("Exit", true);
+
+			PauseMenu.Items = new Menu.Item[2];
+			PauseMenu.Items[0] = new Menu.Item("Continue", true);
+			PauseMenu.Items[1] = new Menu.Item("Main menu", true);
+
 			float[] light_diffuse = { 1.0f, 1.0f, 1.0f, 1.0f };
 			float[] light_position = { 0.0f, 0.0f, 2.0f, 0.0f };
 			float[] light_ambient = { 0.3f, 0.3f, 0.3f, 1.0f };
@@ -252,7 +271,9 @@ namespace PacMan
 			GL.Light(LightName.Light0, LightParameter.Ambient, light_ambient);
 			GL.Light(LightName.Light0, LightParameter.Diffuse, light_diffuse);
 
-			State = States.Starting;
+
+			MainMenu.Init();
+			State = States.MainMenu;
 		}
 
 		/// <summary>
@@ -283,109 +304,158 @@ namespace PacMan
 			State = States.Playing;
 		}
 
+		private bool escButtonReleased = true;
+
 		/// <summary>
 		/// Update game properties.
 		/// </summary>
 		/// <param name="dt">Time elapsed from last call(seconds).</param>
 		public void Update(double dt)
 		{
-			if (State == States.Playing)
+			switch (State)
 			{
-				Point pacManVisitedCell = PacMan.Update(dt, CurrentMap);
-				foreach (Ghost ghost in Ghosts)
-					ghost.Update(dt, CurrentMap, PacMan);
-				Camera.Update(dt, CurrentMap, PacMan);
+				case States.MainMenu:
+					MainMenu.Update(dt);
+					break;
 
-				if (pacManVisitedCell != Point.Empty)
-				{
-					if (CurrentMap[pacManVisitedCell.Y][pacManVisitedCell.X] == Map.Objects.Point)
-						Score += 10;
-					if (CurrentMap[pacManVisitedCell.Y][pacManVisitedCell.X] == Map.Objects.Powerup)
-					{
-						Score += 100;
-						PacMan.State = PacMan.States.Super;
-						PacMan.SuperTime += PowerupDuration;
-						foreach (Ghost ghost in Ghosts)
-							ghost.State = Ghost.States.Frightened;
-					}
-					CurrentMap[pacManVisitedCell.Y][pacManVisitedCell.X] = Map.Objects.None;
-				}
-
-				PacMan.SuperTime -= dt;
-				if (PacMan.State == PacMan.States.Super && PacMan.SuperTime <= 0)
-				{
-					PacMan.State = PacMan.States.Normal;
-					PacMan.SuperTime = 0;
+				case States.Playing:
+					Point pacManVisitedCell = PacMan.Update(dt, CurrentMap);
 					foreach (Ghost ghost in Ghosts)
-						if (ghost.State == Ghost.States.Frightened)
-							ghost.State = Ghost.States.Normal;
-				}
+						ghost.Update(dt, CurrentMap, PacMan);
+					Camera.Update(dt, CurrentMap, PacMan);
 
-				foreach (Ghost ghost in Ghosts)
-				{
-					switch (ghost.State)
+					if (pacManVisitedCell != Point.Empty)
 					{
-						case Ghost.States.Normal:
-							if (Geometry.Distance(PacMan.X, PacMan.Y, ghost.X, ghost.Y) < 1)
-							{
-								PacMan.Lives--;
-								if (PacMan.Lives == 0)
-									State = States.Lose;
-								else
-									restartLevel();
-							}
-							break;
-						case Ghost.States.Frightened:
-							if (Geometry.Distance(PacMan.X, PacMan.Y, ghost.X, ghost.Y) < 1)
-							{
-								Score += 100;
-								ghost.State = Ghost.States.Eaten;
-							}
-							break;
-						case Ghost.States.Eaten:
-							if (Geometry.Distance(ghost.X, ghost.Y, CurrentMap.GhostStart.X, CurrentMap.GhostStart.Y) < 0.1)
-								ghost.State = Ghost.States.Waiting;
-							break;
-						default:
-							break;
+						if (CurrentMap[pacManVisitedCell.Y][pacManVisitedCell.X] == Map.Objects.Point)
+							Score += 10;
+						if (CurrentMap[pacManVisitedCell.Y][pacManVisitedCell.X] == Map.Objects.Powerup)
+						{
+							Score += 100;
+							PacMan.State = PacMan.States.Super;
+							PacMan.SuperTime += PowerupDuration;
+							foreach (Ghost ghost in Ghosts)
+								ghost.State = Ghost.States.Frightened;
+						}
+						CurrentMap[pacManVisitedCell.Y][pacManVisitedCell.X] = Map.Objects.None;
 					}
-				}
 
-				if (CurrentMap.PointsCount == 0)
-					State = States.Won;
+					PacMan.SuperTime -= dt;
+					if (PacMan.State == PacMan.States.Super && PacMan.SuperTime <= 0)
+					{
+						PacMan.State = PacMan.States.Normal;
+						PacMan.SuperTime = 0;
+						foreach (Ghost ghost in Ghosts)
+							if (ghost.State == Ghost.States.Frightened)
+								ghost.State = Ghost.States.Normal;
+					}
+
+					foreach (Ghost ghost in Ghosts)
+					{
+						switch (ghost.State)
+						{
+							case Ghost.States.Normal:
+								if (Geometry.Distance(PacMan.X, PacMan.Y, ghost.X, ghost.Y) < 1)
+								{
+									PacMan.Lives--;
+									if (PacMan.Lives == 0)
+										State = States.Lose;
+									else
+										restartLevel();
+								}
+								break;
+							case Ghost.States.Frightened:
+								if (Geometry.Distance(PacMan.X, PacMan.Y, ghost.X, ghost.Y) < 1)
+								{
+									Score += 100;
+									ghost.State = Ghost.States.Eaten;
+								}
+								break;
+							case Ghost.States.Eaten:
+								if (Geometry.Distance(ghost.X, ghost.Y, CurrentMap.GhostStart.X, CurrentMap.GhostStart.Y) < 0.1)
+									ghost.State = Ghost.States.Waiting;
+								break;
+							default:
+								break;
+						}
+					}
+
+					if (CurrentMap.PointsCount == 0)
+						State = States.Won;
 
 					HUD.Score = Score;
 					HUD.Lives = PacMan.Lives;
+					break;
+
+				case States.PauseMenu:
+					PauseMenu.Update(dt);
+					break;
 			}
+
+
 		}
 
 		/// <summary>
 		/// User input handling.
 		/// </summary>
 		/// <param name="keyboard">Pressed keys.</param>
-		public void Control(KeyboardDevice keyboard)
+		/// <returns>Continue game.</returns>
+		public bool Control(KeyboardDevice keyboard)
 		{
+			int? selectedIndex;
 			switch (State)
 			{
-				case States.Starting:
-					if (keyboard[Key.Enter])
+				case States.MainMenu:
+					selectedIndex = MainMenu.Control(keyboard);
+					if (selectedIndex == 0)
 						startGame();
+					if (selectedIndex == 1)
+						throw new NotImplementedException();
+					if (selectedIndex == 2)
+						return false;
+					if (keyboard[Key.Escape])
+						return false;
 					break;
 				case States.Playing:
 					PacMan.Control(keyboard);
 					Camera.Control(keyboard);
+					if (keyboard[Key.Escape])
+					{
+						if (escButtonReleased)
+						{
+							escButtonReleased = false;
+							State = States.PauseMenu;
+						}
+					}
+					else
+						escButtonReleased = true;
 					break;
-
+				case States.PauseMenu:
+					selectedIndex = PauseMenu.Control(keyboard);
+					if (selectedIndex == 0)
+						State = States.Playing;
+					if (selectedIndex == 1)
+						State = States.MainMenu;
+					if (keyboard[Key.Escape])
+					{
+						if (escButtonReleased)
+						{
+							escButtonReleased = false;
+							State = States.Playing;
+						}
+					}
+					else
+						escButtonReleased = true;
+					break;
 				case States.Lose:
 					if (keyboard[Key.Enter])
 						startGame();
 					break;
-
 				case States.Won:
 					if (keyboard[Key.Enter])
 						startGame();
 					break;
 			}
+			return true;
 		}
 
 		/// <summary>
@@ -395,54 +465,8 @@ namespace PacMan
 		{
 			switch (State)
 			{
-				case States.Starting:
-					GL.MatrixMode(MatrixMode.Projection);
-					GL.LoadIdentity();
-					GL.Ortho(0, Width, 0, Height, -1, 1);
-
-					GL.MatrixMode(MatrixMode.Modelview);
-					GL.LoadIdentity();
-					if (text_texture == -1)
-					{
-						text_bmp = new Bitmap(Width, Height);
-
-						text_texture = GL.GenTexture();
-						GL.BindTexture(TextureTarget.Texture2D, text_texture);
-						GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)All.Linear);
-						GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)All.Linear);
-						GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, text_bmp.Width, text_bmp.Height, 0,
-							 PixelFormat.Bgra, PixelType.UnsignedByte, IntPtr.Zero); // just allocate memory, so we can update efficiently using TexSubImage2D
-					}
-
-					using (Graphics gfx = Graphics.FromImage(text_bmp))
-					{
-						gfx.Clear(Color.Transparent);
-						gfx.DrawString("Press enter", new Font(new FontFamily("Tahoma"), 32, FontStyle.Bold), new SolidBrush(Color.Yellow),
-
-						Width / 2 - gfx.MeasureString("Press enter", new Font(new FontFamily("Tahoma"), 32, FontStyle.Bold)).Width / 2,
-						Height / 2 - gfx.MeasureString("Press enter", new Font(new FontFamily("Tahoma"), 32, FontStyle.Bold)).Height / 2);
-
-					}
-
-					System.Drawing.Imaging.BitmapData data = text_bmp.LockBits(new Rectangle(0, 0, text_bmp.Width, text_bmp.Height), System.Drawing.Imaging.ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-					GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, Width, Height, 0,
-						 PixelFormat.Bgra, PixelType.UnsignedByte, data.Scan0);
-					text_bmp.UnlockBits(data);
-
-					GL.Enable(EnableCap.Texture2D);
-					GL.Enable(EnableCap.Blend);
-					GL.BlendFunc(BlendingFactorSrc.One, BlendingFactorDest.OneMinusSrcAlpha);
-
-					GL.Begin(PrimitiveType.Quads);
-
-					GL.TexCoord2(0f, 1f); GL.Vertex2(0f, 0f);
-					GL.TexCoord2(1f, 1f); GL.Vertex2(Width, 0f);
-					GL.TexCoord2(1f, 0f); GL.Vertex2(Width, Height);
-					GL.TexCoord2(0f, 0f); GL.Vertex2(0f, Height);
-					GL.End();
-
-					GL.Disable(EnableCap.Texture2D);
-
+				case States.MainMenu:
+					MainMenu.Render();
 					break;
 
 				case States.Playing:
@@ -484,7 +508,9 @@ namespace PacMan
 					HUD.Render();
 
 					break;
-
+				case States.PauseMenu:
+					PauseMenu.Render();
+					break;
 
 				case States.Lose:
 					GL.MatrixMode(MatrixMode.Projection);
