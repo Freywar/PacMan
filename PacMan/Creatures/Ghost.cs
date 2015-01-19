@@ -202,7 +202,6 @@ namespace PacMan
 		/// <param name="pacman">PacMan.</param>
 		protected void updateDirection(Map map, PacMan pacman)
 		{
-		return;
 			Point target;
 			switch (State)
 			{
@@ -302,7 +301,7 @@ namespace PacMan
 		/// </summary>
 		public override void Render()
 		{
-		return;
+
 
 			if (State == States.Waiting)
 				return;
