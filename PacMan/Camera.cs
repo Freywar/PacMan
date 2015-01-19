@@ -84,10 +84,6 @@ namespace PacMan
 		}
 
 		/// <summary>
-		/// Shows if F button has been released after last press.
-		/// </summary>
-		private bool followButtonReleased = true;
-		/// <summary>
 		/// Rotation speed around X axis in degrees per second.
 		/// </summary>
 		private double xAngleSpeed;
@@ -116,7 +112,6 @@ namespace PacMan
 			rSpeed = 0;
 
 			FollowPacMan = false;
-			followButtonReleased = true;
 
 			if (FollowPacMan)
 			{
@@ -155,38 +150,40 @@ namespace PacMan
 		}
 
 		/// <summary>
-		/// User input handling.
+		/// Key press handling.
 		/// </summary>
-		/// <param name="keyboard">Pressed keys.</param>
-		public void Control(KeyboardDevice keyboard)
+		/// <param name="key">Pressed key.</param>
+		public void KeyDown(Key key)
 		{
-			if (keyboard[Key.W] && !keyboard[Key.S])
-				xAngleSpeed = rotationSpeed;
-			else if (keyboard[Key.S] && !keyboard[Key.W])
-				xAngleSpeed = -rotationSpeed;
-			else xAngleSpeed = 0;
 
-			if (keyboard[Key.A] && !keyboard[Key.D])
-				yAngleSpeed = rotationSpeed;
-			else if (keyboard[Key.D] && !keyboard[Key.A])
-				yAngleSpeed = -rotationSpeed;
-			else yAngleSpeed = 0;
-
-			if (keyboard[Key.Q] && !keyboard[Key.E])
-				rSpeed = translationSpeed;
-			else if (keyboard[Key.E] && !keyboard[Key.Q])
-				rSpeed = -translationSpeed;
-			else
-				rSpeed = 0;
-
-			if (keyboard[Key.F])
+			switch (key)
 			{
-				if (followButtonReleased)
-					FollowPacMan = !FollowPacMan;
-				followButtonReleased = false;
+				case Key.W: xAngleSpeed += rotationSpeed; break;
+				case Key.S: xAngleSpeed -= rotationSpeed; break;
+				case Key.A: yAngleSpeed += rotationSpeed; break;
+				case Key.D: yAngleSpeed -= rotationSpeed; break;
+				case Key.Q: rSpeed += translationSpeed; break;
+				case Key.E: rSpeed -= translationSpeed; break;
+				case Key.F: FollowPacMan = !FollowPacMan; break;
 			}
-			else
-				followButtonReleased = true;
+		}
+
+		/// <summary>
+		/// Key release handling.
+		/// </summary>
+		/// <param name="key">Released key.</param>
+		public void KeyUp(Key key)
+		{
+
+			switch (key)
+			{
+				case Key.W: xAngleSpeed -= rotationSpeed; break;
+				case Key.S: xAngleSpeed += rotationSpeed; break;
+				case Key.A: yAngleSpeed -= rotationSpeed; break;
+				case Key.D: yAngleSpeed += rotationSpeed; break;
+				case Key.Q: rSpeed -= translationSpeed; break;
+				case Key.E: rSpeed += translationSpeed; break;
+			}
 		}
 
 		/// <summary>

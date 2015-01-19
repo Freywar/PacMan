@@ -13,6 +13,19 @@ namespace PacMan
 		private static Game Game;
 		private static GameWindow Window;
 
+		public static void OnKeyDown(Object sender, KeyboardKeyEventArgs e)
+		{
+			if (Game.KeyDown(e.Key))
+				Window.Exit();
+		}
+
+		public static void OnKeyUp(Object sender, KeyboardKeyEventArgs e)
+		{
+			if (Game.KeyUp(e.Key))
+				Window.Exit();
+
+		}
+
 		public static void OnWindowLoad(Object sender, EventArgs e)
 		{
 			Game = new Game();
@@ -28,8 +41,7 @@ namespace PacMan
 
 		public static void OnWindowUpdate(Object sender, FrameEventArgs e)
 		{
-			Game.Update(e.Time);
-			if (!Game.Control(Window.Keyboard))
+			if (Game.Update(e.Time))
 				Window.Exit();
 		}
 
@@ -37,10 +49,7 @@ namespace PacMan
 		{
 			GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-			
-
 			Game.Render();
-
 
 			Window.SwapBuffers();
 		}
@@ -56,6 +65,8 @@ namespace PacMan
 			Window.Resize += OnWindowResize;
 			Window.UpdateFrame += OnWindowUpdate;
 			Window.RenderFrame += OnWindowRender;
+			Window.KeyDown += OnKeyDown;
+			Window.KeyUp += OnKeyUp;
 			Window.Run(60.0);
 		}
 	}

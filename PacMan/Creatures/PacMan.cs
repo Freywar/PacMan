@@ -98,19 +98,26 @@ namespace PacMan
 		}
 
 		/// <summary>
-		/// User input handling.
+		/// Key press handling.
 		/// </summary>
-		/// <param name="keyboard">Pressed keys.</param>
-		public void Control(KeyboardDevice keyboard)
+		/// <param name="keyboard">Pressed key.</param>
+		public void KeyDown(Key key)
 		{
-			if (keyboard[Key.Up])
+			if (key == Key.Up)
 				desiredDirection = Creature.Directions.Up;
-			if (keyboard[Key.Down])
+			if (key == Key.Down)
 				desiredDirection = Creature.Directions.Down;
-			if (keyboard[Key.Left])
+			if (key == Key.Left)
 				desiredDirection = Creature.Directions.Left;
-			if (keyboard[Key.Right])
+			if (key == Key.Right)
 				desiredDirection = Creature.Directions.Right;
+		}
+		/// <summary>
+		/// Key release handling.
+		/// </summary>
+		/// <param name="keyboard">REleased key.</param>
+		public void KeyUp(Key key)
+		{
 		}
 
 		public override void Render()

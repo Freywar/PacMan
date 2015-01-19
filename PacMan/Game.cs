@@ -304,13 +304,12 @@ namespace PacMan
 			State = States.Playing;
 		}
 
-		private bool escButtonReleased = true;
-
 		/// <summary>
 		/// Update game properties.
 		/// </summary>
 		/// <param name="dt">Time elapsed from last call(seconds).</param>
-		public void Update(double dt)
+		/// <returns>Exit flag.</returns>
+		public bool Update(double dt)
 		{
 			switch (State)
 			{
@@ -390,72 +389,84 @@ namespace PacMan
 					PauseMenu.Update(dt);
 					break;
 			}
-
+			return false;
 
 		}
 
 		/// <summary>
-		/// User input handling.
+		/// Key press handling.
 		/// </summary>
-		/// <param name="keyboard">Pressed keys.</param>
-		/// <returns>Continue game.</returns>
-		public bool Control(KeyboardDevice keyboard)
+		/// <param name="key">Pressed key.</param>
+		/// <returns>Exit flag.</returns>
+		public bool KeyDown(Key key)
 		{
 			int? selectedIndex;
 			switch (State)
 			{
 				case States.MainMenu:
-					selectedIndex = MainMenu.Control(keyboard);
+					selectedIndex = MainMenu.KeyDown(key);
 					if (selectedIndex == 0)
 						startGame();
 					if (selectedIndex == 1)
 						throw new NotImplementedException();
 					if (selectedIndex == 2)
-						return false;
-					if (keyboard[Key.Escape])
-						return false;
+						return true;
+					if (key == Key.Escape)
+						return true;
 					break;
 				case States.Playing:
-					PacMan.Control(keyboard);
-					Camera.Control(keyboard);
-					if (keyboard[Key.Escape])
-					{
-						if (escButtonReleased)
-						{
-							escButtonReleased = false;
-							State = States.PauseMenu;
-						}
-					}
-					else
-						escButtonReleased = true;
+					PacMan.KeyDown(key);
+					Camera.KeyDown(key);
+					if (key == Key.Escape)
+						State = States.PauseMenu;
 					break;
 				case States.PauseMenu:
-					selectedIndex = PauseMenu.Control(keyboard);
+					selectedIndex = PauseMenu.KeyDown(key);
 					if (selectedIndex == 0)
 						State = States.Playing;
 					if (selectedIndex == 1)
 						State = States.MainMenu;
-					if (keyboard[Key.Escape])
-					{
-						if (escButtonReleased)
-						{
-							escButtonReleased = false;
-							State = States.Playing;
-						}
-					}
-					else
-						escButtonReleased = true;
+					if (key == Key.Escape)
+						State = States.Playing;
 					break;
 				case States.Lose:
-					if (keyboard[Key.Enter])
+					if (key == Key.Enter)
 						startGame();
 					break;
 				case States.Won:
-					if (keyboard[Key.Enter])
+					if (key == Key.Enter)
 						startGame();
 					break;
 			}
-			return true;
+			return false;
+		}
+
+		/// <summary>
+		/// Key release handling.
+		/// </summary>
+		/// <param name="key">Released key.</param>
+		/// <returns>Exit flag.</returns>
+		public bool KeyUp(Key key)
+		{
+			int? selectedIndex;
+			switch (State)
+			{
+				case States.MainMenu:
+					selectedIndex = MainMenu.KeyUp(key);
+					break;
+				case States.Playing:
+					PacMan.KeyUp(key);
+					Camera.KeyUp(key);
+					break;
+				case States.PauseMenu:
+					selectedIndex = PauseMenu.KeyUp(key);
+					break;
+				case States.Lose:
+					break;
+				case States.Won:
+					break;
+			}
+			return false;
 		}
 
 		/// <summary>
@@ -470,8 +481,6 @@ namespace PacMan
 					break;
 
 				case States.Playing:
-
-
 
 					GL.Enable(EnableCap.Lighting);
 					GL.Enable(EnableCap.Light0);
@@ -495,9 +504,6 @@ namespace PacMan
 					PacMan.Render();
 					for (int i = 0; i < Ghosts.Length; i++)
 						Ghosts[i].Render();
-
-
-
 
 					GL.Disable(EnableCap.Lighting);
 					GL.Disable(EnableCap.Light0);

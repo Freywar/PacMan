@@ -34,7 +34,7 @@ namespace PacMan
 				{
 					texture_v = new Bitmap(Width, Height);
 					textureId = GL.GenTexture();
-					GL.BindTexture(TextureTarget.Texture2D, textureId);
+					GL.BindTexture(TextureTarget.Texture2D, (int)textureId);
 					GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)All.Linear);
 					GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)All.Linear);
 					GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, texture_v.Width, texture_v.Height, 0,
@@ -45,18 +45,18 @@ namespace PacMan
 			set
 			{
 				textureIsValid = false;
-				texture_v = value;
-				if (texture_v == null)
+				if (texture_v != null && value == null)
 				{
-					GL.DeleteTexture(textureId);
-					textureId = -1;
+					GL.DeleteTexture((int)textureId);
+					textureId = null;
 				}
+				texture_v = value;
 			}
 		}
 		/// <summary>
 		/// OpenGL texture id.
 		/// </summary>
-		private int textureId = -1;
+		private int? textureId = null;
 		/// <summary>
 		/// Texture needs OpenGL rendering only.
 		/// </summary>
@@ -112,7 +112,7 @@ namespace PacMan
 
 				render2D(gfx);
 
-				GL.BindTexture(TextureTarget.Texture2D, textureId);
+				GL.BindTexture(TextureTarget.Texture2D, (int)textureId);
 				System.Drawing.Imaging.BitmapData data = texture.LockBits(new Rectangle(0, 0, texture.Width, texture.Height),
 					System.Drawing.Imaging.ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
 				GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, Width, Height, 0,
@@ -122,7 +122,7 @@ namespace PacMan
 				textureIsValid = true;
 			}
 			else
-				GL.BindTexture(TextureTarget.Texture2D, textureId);
+				GL.BindTexture(TextureTarget.Texture2D, (int)textureId);
 
 			GL.Enable(EnableCap.Texture2D);
 			GL.Enable(EnableCap.Blend);

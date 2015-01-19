@@ -44,48 +44,55 @@ namespace PacMan
 
 		public void Update(double dt)
 		{
-			if (pressedKey != null)
-				pressedKeyTime += dt;
-		}
-
-		public int? Control(KeyboardDevice keyboard)
-		{
 			if (Items == null || Items.Length == 0)
 				throw new NotSupportedException("Can not navigate empty menu.");
 
-			if (keyboard[Key.Up] && !keyboard[Key.Down] && (pressedKey != Key.Up || pressedKeyTime > 0.5))
+			if (pressedKey != null)
+				pressedKeyTime += dt;
+
+			if (pressedKeyTime >= 0.3)
 			{
-				if (selectedIndex > 0)
+				if (pressedKey == Key.Up && selectedIndex > 0)
 				{
 					selectedIndex--;
 					textureIsValid = false;
 				}
 
-				pressedKey = Key.Up;
-				pressedKeyTime = 0;
-			}
-
-			if (keyboard[Key.Down] && !keyboard[Key.Up] && (pressedKey != Key.Down || pressedKeyTime > 0.5))
-			{
-				if (selectedIndex < Items.Length - 1)
+				if (pressedKey == Key.Down && selectedIndex < Items.Length - 1)
 				{
 					selectedIndex++;
 					textureIsValid = false;
 				}
-				pressedKey = Key.Down;
+
 				pressedKeyTime = 0;
 			}
+		}
 
-			if (pressedKey != null && !keyboard[(Key)pressedKey])
+		public int? KeyDown(Key key)
+		{
+			if (Items == null || Items.Length == 0)
+				throw new NotSupportedException("Can not navigate empty menu.");
+
+			if (key == Key.Up || key == Key.Down)
+			{
+				pressedKey = key;
+				pressedKeyTime = 0.5;
+			}
+
+			if (key == Key.Enter && Items[selectedIndex].Enabled)
+				return selectedIndex;
+			else
+				return null;
+		}
+
+		public int? KeyUp(Key key)
+		{
+			if (key == pressedKey)
 			{
 				pressedKey = null;
 				pressedKeyTime = 0;
 			}
-
-			if (keyboard[Key.Enter] && Items[selectedIndex].Enabled)
-				return selectedIndex;
-			else
-				return null;
+			return null;
 		}
 
 		protected override void render2D(Graphics gfx)
