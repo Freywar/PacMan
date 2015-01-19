@@ -4,6 +4,7 @@ using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Input;
+using System.Collections.Generic;
 
 namespace PacMan
 {
@@ -12,18 +13,23 @@ namespace PacMan
 	{
 		private static Game Game;
 		private static GameWindow Window;
+		private static Dictionary<Key, bool> pressedKeys = new Dictionary<Key, bool>();
+
 
 		public static void OnKeyDown(Object sender, KeyboardKeyEventArgs e)
 		{
-			if (Game.KeyDown(e.Key))
-				Window.Exit();
+			if (!pressedKeys.ContainsKey(e.Key) || !pressedKeys[e.Key])
+				if (Game.KeyDown(e.Key))
+					Window.Exit();
+			pressedKeys[e.Key] = true;
 		}
 
 		public static void OnKeyUp(Object sender, KeyboardKeyEventArgs e)
 		{
-			if (Game.KeyUp(e.Key))
-				Window.Exit();
-
+			if (pressedKeys[e.Key])
+				if (Game.KeyUp(e.Key))
+					Window.Exit();
+			pressedKeys[e.Key] = false;
 		}
 
 		public static void OnWindowLoad(Object sender, EventArgs e)

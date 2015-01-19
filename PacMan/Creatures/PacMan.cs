@@ -122,7 +122,7 @@ namespace PacMan
 
 		public override void Render()
 		{
-
+		return;
 			double mouthOpen = Math.Max(Math.Abs(X - Math.Round(X)), Math.Abs(Y - Math.Round(Y)));
 			mouthOpen *= 2 * Math.PI / 2;
 			mouthOpen = Math.Sin(mouthOpen);

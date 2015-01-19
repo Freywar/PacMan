@@ -274,6 +274,8 @@ namespace PacMan
 
 			MainMenu.Init();
 			State = States.MainMenu;
+
+			startGame();
 		}
 
 		/// <summary>
