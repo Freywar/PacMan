@@ -130,6 +130,7 @@ namespace PacMan
 
 			GL.Begin(PrimitiveType.Quads);
 
+			GL.Color3(Color.White);
 			GL.TexCoord2(0f, 1f); GL.Vertex2(0f, 0f);
 			GL.TexCoord2(1f, 1f); GL.Vertex2(Width, 0f);
 			GL.TexCoord2(1f, 0f); GL.Vertex2(Width, Height);

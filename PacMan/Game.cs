@@ -501,8 +501,6 @@ namespace PacMan
 					Camera.Render();
 					CurrentMap.Render();
 
-					//GL.Translate(-CurrentMap.Width / 2, 0, -CurrentMap.Height / 2);
-
 					PacMan.Render();
 					for (int i = 0; i < Ghosts.Length; i++)
 						Ghosts[i].Render();

@@ -242,21 +242,260 @@ namespace PacMan
 				throw new Exception("Invalid map data");
 		}
 
+		#region Wall rendering
+
+		private void renderWallCenter()
+		{
+			double ps2 = 1.0 / 6.0;
+			GL.Begin(PrimitiveType.Quads);
+			GL.Normal3(0.0, 1.0, 0.0);
+			GL.Vertex3(-ps2, 1.0, -ps2);
+			GL.Vertex3(-ps2, 1.0, ps2);
+			GL.Vertex3(ps2, 1.0, ps2);
+			GL.Vertex3(ps2, 1.0, -ps2);
+			GL.End();
+		}
+
+		private void renderWallSide()
+		{
+			double ps2 = 1.0 / 6.0;
+			GL.Begin(PrimitiveType.Quads);
+			GL.Normal3(0.0, 1.0, 0.0);
+			GL.Vertex3(-ps2, 1.0, -ps2);
+			GL.Vertex3(-ps2, 1.0, ps2);
+			GL.Vertex3(0, 1.0, ps2);
+			GL.Vertex3(0, 1.0, -ps2);
+
+
+			GL.Normal3(1.0, 0.0, 0.0);
+			GL.Vertex3(0, 0.0, -ps2);
+			GL.Vertex3(0, 1.0, -ps2);
+			GL.Vertex3(0, 1.0, ps2);
+			GL.Vertex3(0, 0.0, ps2);
+
+			GL.End();
+		}
+
+		private void renderWallClosedCorner()
+		{
+			double ps2 = 1.0 / 6.0;
+			GL.Begin(PrimitiveType.Quads);
+
+			GL.Normal3(0.0, 1.0, 0.0);
+
+			GL.Vertex3(-ps2, 1.0, -ps2);
+			GL.Vertex3(-ps2, 1.0, 0);
+			GL.Vertex3(0, 1.0, 0);
+			GL.Vertex3(0, 1.0, -ps2);
+
+			GL.Vertex3(0, 1.0, -ps2);
+			GL.Vertex3(0, 1.0, 0);
+			GL.Vertex3(ps2, 1.0, 0);
+			GL.Vertex3(ps2, 1.0, -ps2);
+
+			GL.Vertex3(-ps2, 1.0, 0);
+			GL.Vertex3(-ps2, 1.0, ps2);
+			GL.Vertex3(0, 1.0, ps2);
+			GL.Vertex3(0, 1.0, 0);
+
+			for (double alpha = 0; alpha < Math.PI / 2; alpha += Math.PI / 10)
+			{
+				GL.Vertex3(0, 1.0, 0);
+				GL.Vertex3(ps2 - ps2 * Math.Sin(alpha + Math.PI / 10), 1.0, ps2 - ps2 * Math.Cos(alpha + Math.PI / 10));
+				GL.Vertex3(ps2 - ps2 * Math.Sin(alpha), 1.0, ps2 - ps2 * Math.Cos(alpha));
+				GL.Vertex3(0, 1.0, 0);
+			}
+
+			for (double alpha = 0; alpha < Math.PI / 2; alpha += Math.PI / 10)
+			{
+				GL.Normal3( Math.Sin(alpha), 0,  Math.Cos(alpha));
+				GL.Vertex3(ps2 - ps2 * Math.Sin(alpha), 0, ps2 - ps2 * Math.Cos(alpha));
+
+				GL.Normal3(Math.Sin(alpha), 0,  Math.Cos(alpha));
+				GL.Vertex3(ps2 - ps2 * Math.Sin(alpha), 1.0, ps2 - ps2 * Math.Cos(alpha));
+
+				GL.Normal3( Math.Sin(alpha + Math.PI / 10), 0,  Math.Cos(alpha + Math.PI / 10));
+				GL.Vertex3(ps2 - ps2 * Math.Sin(alpha + Math.PI / 10), 1.0, ps2 - ps2 * Math.Cos(alpha + Math.PI / 10));
+
+				GL.Normal3( Math.Sin(alpha + Math.PI / 10), 0,  Math.Cos(alpha + Math.PI / 10));
+				GL.Vertex3(ps2 - ps2 * Math.Sin(alpha + Math.PI / 10), 0, ps2 - ps2 * Math.Cos(alpha + Math.PI / 10));
+				
+				
+			}
+			GL.End();
+		}
+
+		private void renderWallOpenCorner()
+		{
+			double ps2 = 1.0 / 6.0;
+			GL.Begin(PrimitiveType.Quads);
+			GL.Normal3(0.0, 1.0, 0.0);
+			for (double alpha = 0; alpha < Math.PI / 2; alpha += Math.PI / 10)
+			{
+				GL.Vertex3(-ps2 + 0, 1.0, -ps2);
+				GL.Vertex3(-ps2 + ps2 * Math.Sin(alpha), 1.0, -ps2 + ps2 * Math.Cos(alpha));
+				GL.Vertex3(-ps2 + ps2 * Math.Sin(alpha + Math.PI / 10), 1.0, -ps2 + ps2 * Math.Cos(alpha + Math.PI / 10));
+				GL.Vertex3(-ps2 + 0, 1.0, -ps2);
+			}
+
+			for (double alpha = 0; alpha < Math.PI / 2; alpha += Math.PI / 10)
+			{
+				GL.Normal3(Math.Sin(alpha), 0, Math.Cos(alpha));
+				GL.Vertex3(-ps2 + ps2 * Math.Sin(alpha), 0, -ps2 + ps2 * Math.Cos(alpha));
+				GL.Normal3(Math.Sin(alpha + Math.PI / 10), 0, Math.Cos(alpha + Math.PI / 10));
+				GL.Vertex3(-ps2 + ps2 * Math.Sin(alpha + Math.PI / 10), 0, -ps2 + ps2 * Math.Cos(alpha + Math.PI / 10));
+				GL.Normal3(Math.Sin(alpha + Math.PI / 10), 0, Math.Cos(alpha + Math.PI / 10));
+				GL.Vertex3(-ps2 + ps2 * Math.Sin(alpha + Math.PI / 10), 1.0, -ps2 + ps2 * Math.Cos(alpha + Math.PI / 10));
+				GL.Normal3(Math.Sin(alpha), 0, Math.Cos(alpha));
+				GL.Vertex3(-ps2 + ps2 * Math.Sin(alpha), 1.0, -ps2 + ps2 * Math.Cos(alpha));
+			}
+			GL.End();
+		}
+
+		private void renderWall(int x, int y)
+		{
+			GL.Translate(x, 0, y);
+
+			GL.Color3(Color.DarkBlue);
+
+			double ps = 1.0/3.0;
+
+			//center
+			renderWallCenter();
+
+			//right
+			GL.Translate(ps, 0, 0);
+			if (x < Width - 1 && Fields[y][x + 1] == Objects.Wall)
+				renderWallCenter();
+			else
+				renderWallSide();
+			GL.Translate(-ps, 0, 0);
+
+			//left
+			GL.Translate(-ps, 0, 0);
+			GL.Rotate(180, 0, 1, 0);
+			if (x > 0 && Fields[y][x - 1] == Objects.Wall)
+				renderWallCenter();
+			else
+				renderWallSide();
+			GL.Rotate(-180, 0, 1, 0);
+			GL.Translate(ps, 0, 0);
+
+			//bottom
+			GL.Translate(0, 0, ps);
+			GL.Rotate(-90, 0, 1, 0);
+			if (y < Height - 1 && Fields[y + 1][x] == Objects.Wall)
+				renderWallCenter();
+			else
+				renderWallSide();
+			GL.Rotate(90, 0, 1, 0);
+			GL.Translate(0, 0, -ps);
+
+			//top
+			GL.Translate(0, 0, -ps);
+			GL.Rotate(90, 0, 1, 0);
+			if (y > 0 && Fields[y - 1][x] == Objects.Wall)
+				renderWallCenter();
+			else
+				renderWallSide();
+			GL.Rotate(-90, 0, 1, 0);
+			GL.Translate(0, 0, ps);
+
+			//rightbottom
+			GL.Translate(ps, 0, ps);
+			if (x < Width - 1 && y < Height - 1 && Fields[y + 1][x] == Objects.Wall && Fields[y][x + 1] == Objects.Wall && Fields[y + 1][x + 1] == Objects.Wall)
+				renderWallCenter();
+			else if (x < Width - 1 && y < Height - 1 && Fields[y + 1][x] == Objects.Wall && Fields[y][x + 1] == Objects.Wall)
+				renderWallClosedCorner();
+			else if (x < Width - 1 && Fields[y][x + 1] == Objects.Wall)
+			{
+				GL.Rotate(-90, 0, 1, 0);
+				renderWallSide();
+				GL.Rotate(90, 0, 1, 0);
+			}
+
+			else if (y < Height - 1 && Fields[y + 1][x] == Objects.Wall)
+				renderWallSide();
+			else
+				renderWallOpenCorner();
+			GL.Translate(-ps, 0, -ps);
+
+
+			//righttop
+			GL.Translate(ps, 0, -ps);
+			GL.Rotate(90, 0, 1, 0);
+			if (x < Width - 1 && y > 0 && Fields[y - 1][x] == Objects.Wall && Fields[y][x + 1] == Objects.Wall && Fields[y - 1][x + 1] == Objects.Wall)
+				renderWallCenter();
+			else if (x < Width - 1 && y > 0 && Fields[y - 1][x] == Objects.Wall && Fields[y][x + 1] == Objects.Wall)
+				renderWallClosedCorner();
+			else if (x < Width - 1 && Fields[y][x + 1] == Objects.Wall)
+				renderWallSide();
+
+			else if (y > 0 && Fields[y - 1][x] == Objects.Wall)
+			{
+				GL.Rotate(-90, 0, 1, 0);
+				renderWallSide();
+				GL.Rotate(90, 0, 1, 0);
+			}
+			else
+				renderWallOpenCorner();
+			GL.Rotate(-90, 0, 1, 0);
+			GL.Translate(-ps, 0, ps);
+
+			//lefttop
+			GL.Translate(-ps, 0, -ps);
+			GL.Rotate(180, 0, 1, 0);
+			if (x > 0 && y > 0 && Fields[y - 1][x] == Objects.Wall && Fields[y][x - 1] == Objects.Wall && Fields[y - 1][x - 1] == Objects.Wall)
+				renderWallCenter();
+			else if (x > 0 && y > 0 && Fields[y - 1][x] == Objects.Wall && Fields[y][x - 1] == Objects.Wall)
+				renderWallClosedCorner();
+			else if (x > 0 && Fields[y][x - 1] == Objects.Wall)
+			{
+				GL.Rotate(-90, 0, 1, 0);
+				renderWallSide();
+				GL.Rotate(90, 0, 1, 0);
+			}
+			else if (y > 0 && Fields[y - 1][x] == Objects.Wall)
+				renderWallSide();
+			else
+				renderWallOpenCorner();
+			GL.Rotate(-180, 0, 1, 0);
+			GL.Translate(ps, 0, ps);
+
+			//leftbottom
+			GL.Translate(-ps, 0, ps);
+			GL.Rotate(-90, 0, 1, 0);
+			if (x > 0 && y < Height - 1 && Fields[y + 1][x] == Objects.Wall && Fields[y][x - 1] == Objects.Wall && Fields[y + 1][x - 1] == Objects.Wall)
+				renderWallCenter();
+			else if (x > 0 && y < Height - 1 && Fields[y + 1][x] == Objects.Wall && Fields[y][x - 1] == Objects.Wall)
+				renderWallClosedCorner();
+			else if (x > 0 && Fields[y][x - 1] == Objects.Wall)
+
+				renderWallSide();
+			else if (y < Height - 1 && Fields[y + 1][x] == Objects.Wall)
+			{
+				GL.Rotate(-90, 0, 1, 0);
+				renderWallSide();
+				GL.Rotate(90, 0, 1, 0);
+			}
+
+			else
+				renderWallOpenCorner();
+			GL.Rotate(90, 0, 1, 0);
+			GL.Translate(ps, 0, -ps);
+
+			GL.Translate(-x, 0, -y);
+
+			GL.End();
+		}
+
+		#endregion
+
 		/// <summary>
 		/// Render method
 		/// </summary>
 		public void Render()
 		{
-
-
-			GL.Begin(PrimitiveType.Quads);
-			GL.Color3(Color.Black);
-			GL.Normal3(0.0, 1.0, 0.0);
-			GL.Vertex3(-0.5, 0, -0.5);
-			GL.Vertex3(-0.5, 0, Height + 0.5);
-			GL.Vertex3(Width + 0.5, 0, Height + 0.5);
-			GL.Vertex3(Width + 0.5, 0, -0.5);
-			GL.End();
 
 			for (int y = 0; y < Height; y++)
 				for (int x = 0; x < Width; x++)
@@ -264,54 +503,7 @@ namespace PacMan
 					{
 
 						case Objects.Wall:
-
-
-
-
-							GL.Translate(x, 0, y);
-							GL.Begin(PrimitiveType.Quads);
-							GL.Color3(Color.DarkBlue);
-
-							GL.Normal3(0.0, 1.0, 0.0);
-							GL.Vertex3(-0.5, 1.0, -0.5);
-							GL.Vertex3(-0.5, 1.0, 0.5);
-							GL.Vertex3(0.5, 1.0, 0.5);
-							GL.Vertex3(0.5, 1.0, -0.5);
-
-							GL.Normal3(1.0, 0.0, 0.0);
-							GL.Vertex3(0.5, 0.0, -0.5);
-							GL.Vertex3(0.5, 1.0, -0.5);
-							GL.Vertex3(0.5, 1.0, 0.5);
-							GL.Vertex3(0.5, 0.0, 0.5);
-
-
-							GL.Normal3(-1.0, 0.0, 0.0);
-							GL.Vertex3(-0.5, 0.0, -0.5);
-							GL.Vertex3(-0.5, 0.0, 0.5);
-							GL.Vertex3(-0.5, 1.0, 0.5);
-							GL.Vertex3(-0.5, 1.0, -0.5);
-
-
-							GL.Normal3(0.0, 0.0, 1.0);
-							GL.Vertex3(0.5, 0.0, 0.5);
-							GL.Vertex3(0.5, 1.0, 0.5);
-							GL.Vertex3(-0.5, 1.0, 0.5);
-							GL.Vertex3(-0.5, 0.0, 0.5);
-
-
-
-							GL.Normal3(0.0, 0.0, -1.0);
-							GL.Vertex3(0.5, 0.0, -0.5);
-							GL.Vertex3(-0.5, 0.0, -0.5);
-							GL.Vertex3(-0.5, 1.0, -0.5);
-							GL.Vertex3(0.5, 1.0, -0.5);
-
-
-
-
-
-							GL.End();
-							GL.Translate(-x, 0, -y);
+						renderWall(x,y);
 							break;
 
 						case Objects.Point:

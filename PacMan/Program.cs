@@ -15,7 +15,6 @@ namespace PacMan
 		private static GameWindow Window;
 		private static Dictionary<Key, bool> pressedKeys = new Dictionary<Key, bool>();
 
-
 		public static void OnKeyDown(Object sender, KeyboardKeyEventArgs e)
 		{
 			if (!pressedKeys.ContainsKey(e.Key) || !pressedKeys[e.Key])
@@ -59,8 +58,6 @@ namespace PacMan
 
 			Window.SwapBuffers();
 		}
-
-
 
 		[STAThread]
 		public static void Main()
