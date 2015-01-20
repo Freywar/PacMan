@@ -70,6 +70,11 @@ namespace PacMan
 			Window.SwapBuffers();
 		}
 
+		public static void OnWindowUnload(Object sender, EventArgs e)
+		{
+			Game.Exit();
+		}
+
 		[STAThread]
 		public static void Main()
 		{
@@ -83,7 +88,9 @@ namespace PacMan
 			Window.RenderFrame += OnWindowRender;
 			Window.KeyDown += OnKeyDown;
 			Window.KeyUp += OnKeyUp;
+			Window.Unload+=	OnWindowUnload;	
 			Window.Run(60.0);
+
 		}
 	}
 }
