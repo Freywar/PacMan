@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<game>
+<game autostart="false">
 	<pacman speed="3"></pacman>
 	<powerup duration="10"></powerup>
 	<ghosts>

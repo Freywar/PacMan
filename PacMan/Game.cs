@@ -214,7 +214,7 @@ namespace PacMan
 		/// <summary>
 		/// Load config from file.
 		/// </summary>
-		private void loadConfig()
+		private bool loadConfig()
 		{
 			XmlDocument settings = new XmlDocument();
 			settings.Load("config.xml");
@@ -242,6 +242,11 @@ namespace PacMan
 							SaveData = node;
 							break;
 					}
+				foreach (XmlAttribute attr in settings.DocumentElement.Attributes)
+					if (attr.Name == "autostart" && attr.Value == "true")
+						return true;
+				return false;
+
 			}
 			else
 				throw new Exception("Invalid root element in config file.");
@@ -435,7 +440,7 @@ namespace PacMan
 		/// </summary>
 		public void Init()
 		{
-			loadConfig();
+			bool autostart = loadConfig();
 
 			MainMenu.Header = new string[1] { "PACMAN" };
 			MainMenu.Items = new Menu.Item[3];
@@ -470,6 +475,9 @@ namespace PacMan
 
 			MainMenu.Init();
 			State = States.MainMenu;
+
+			if (autostart)
+				startGame();
 		}
 
 		/// <summary>
