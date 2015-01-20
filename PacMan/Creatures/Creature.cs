@@ -245,35 +245,35 @@ namespace PacMan
 			for (double alpha = -Math.PI / 2; alpha < Math.PI / 2; alpha += angleStep)
 				for (double beta = 0; beta < Math.PI * 2; beta += angleStep)
 				{
-					if (Geometry.Distance(alpha, beta, pupilAlpha, pupilBeta) < pupilRad)
+					if (Utils.Distance(alpha, beta, pupilAlpha, pupilBeta) < pupilRad)
 						GL.Color3(Color.Black);
 					else
 						GL.Color3(color);
-					GL.Normal3(Geometry.FromSpheric(alpha, beta, 1));
-					GL.Vertex3(Geometry.FromSpheric(alpha, beta, r));
+					GL.Normal3(Utils.FromSpheric(alpha, beta, 1));
+					GL.Vertex3(Utils.FromSpheric(alpha, beta, r));
 
 
-					if (Geometry.Distance(alpha+angleStep, beta, pupilAlpha, pupilBeta) < pupilRad)
+					if (Utils.Distance(alpha+angleStep, beta, pupilAlpha, pupilBeta) < pupilRad)
 						GL.Color3(Color.Black);
 					else
 						GL.Color3(color);
-					GL.Normal3(Geometry.FromSpheric(alpha + angleStep, beta, 1));
-					GL.Vertex3(Geometry.FromSpheric(alpha + angleStep, beta, r));
+					GL.Normal3(Utils.FromSpheric(alpha + angleStep, beta, 1));
+					GL.Vertex3(Utils.FromSpheric(alpha + angleStep, beta, r));
 
 
-					if (Geometry.Distance(alpha+angleStep, beta+angleStep, pupilAlpha, pupilBeta) < pupilRad)
+					if (Utils.Distance(alpha+angleStep, beta+angleStep, pupilAlpha, pupilBeta) < pupilRad)
 						GL.Color3(Color.Black);
 					else
 						GL.Color3(color);
-					GL.Normal3(Geometry.FromSpheric(alpha + angleStep, beta + angleStep, 1));
-					GL.Vertex3(Geometry.FromSpheric(alpha + angleStep, beta + angleStep, r));
+					GL.Normal3(Utils.FromSpheric(alpha + angleStep, beta + angleStep, 1));
+					GL.Vertex3(Utils.FromSpheric(alpha + angleStep, beta + angleStep, r));
 
-					if (Geometry.Distance(alpha, beta+angleStep, pupilAlpha, pupilBeta) < pupilRad)
+					if (Utils.Distance(alpha, beta+angleStep, pupilAlpha, pupilBeta) < pupilRad)
 						GL.Color3(Color.Black);
 					else
 						GL.Color3(color);
-					GL.Normal3(Geometry.FromSpheric(alpha, beta + angleStep, 1));
-					GL.Vertex3(Geometry.FromSpheric(alpha, beta + angleStep, r));
+					GL.Normal3(Utils.FromSpheric(alpha, beta + angleStep, 1));
+					GL.Vertex3(Utils.FromSpheric(alpha, beta + angleStep, r));
 				}
 
 			GL.End();

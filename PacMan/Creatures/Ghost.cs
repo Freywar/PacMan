@@ -301,8 +301,6 @@ namespace PacMan
 		/// </summary>
 		public override void Render()
 		{
-
-
 			if (State == States.Waiting)
 				return;
 
@@ -334,17 +332,17 @@ namespace PacMan
 				for (double alpha = 0; alpha < Math.PI / 2; alpha += angleStep)
 					for (double beta = 0; beta < Math.PI * 2; beta += angleStep)
 					{
-						GL.Normal3(Geometry.FromSpheric(alpha, beta, 1));
-						GL.Vertex3(Geometry.FromSpheric(alpha, beta, r));
+						GL.Normal3(Utils.FromSpheric(alpha, beta, 1));
+						GL.Vertex3(Utils.FromSpheric(alpha, beta, r));
 
-						GL.Normal3(Geometry.FromSpheric(alpha + angleStep, beta, 1));
-						GL.Vertex3(Geometry.FromSpheric(alpha + angleStep, beta, r));
+						GL.Normal3(Utils.FromSpheric(alpha + angleStep, beta, 1));
+						GL.Vertex3(Utils.FromSpheric(alpha + angleStep, beta, r));
 
-						GL.Normal3(Geometry.FromSpheric(alpha + angleStep, beta + angleStep, 1));
-						GL.Vertex3(Geometry.FromSpheric(alpha + angleStep, beta + angleStep, r));
+						GL.Normal3(Utils.FromSpheric(alpha + angleStep, beta + angleStep, 1));
+						GL.Vertex3(Utils.FromSpheric(alpha + angleStep, beta + angleStep, r));
 
-						GL.Normal3(Geometry.FromSpheric(alpha, beta + angleStep, 1));
-						GL.Vertex3(Geometry.FromSpheric(alpha, beta + angleStep, r));
+						GL.Normal3(Utils.FromSpheric(alpha, beta + angleStep, 1));
+						GL.Vertex3(Utils.FromSpheric(alpha, beta + angleStep, r));
 					}
 
 				//skirt

@@ -242,115 +242,353 @@ namespace PacMan
 				throw new Exception("Invalid map data");
 		}
 
+		private Mesh sphere = null;
+		private Mesh sphereMesh
+		{
+			get
+			{
+				if (sphere == null)
+				{
+					Vector3d color = new Vector3d(1, 1, 1);
+					double r = 1;
+
+					double step = Math.PI / 10;
+					int pointsCount = 800;
+					int vp = 0;
+					int np = 0;
+					int cp = 0;
+
+					double[] v = new double[pointsCount * 3];
+					double[] n = new double[pointsCount * 3];
+					double[] c = new double[pointsCount * 4];
+
+
+					for (double alpha = -Math.PI / 2; alpha < Math.PI / 2; alpha += step)
+						for (double beta = 0; beta < Math.PI * 2; beta += step)
+						{
+							GL.Color3(Color.White);
+
+							Vector3d normal = Utils.FromSpheric(alpha, beta, 1);
+							Utils.Push(n, normal, ref np);
+							normal.Mult(r);
+							Utils.Push(v, normal, ref vp);
+							Utils.Push(c, color, ref cp);
+
+							normal = Utils.FromSpheric(alpha + step, beta, 1);
+							Utils.Push(n, normal, ref np);
+							normal.Mult(r);
+							Utils.Push(v, normal, ref vp);
+							Utils.Push(c, color, ref cp);
+
+							normal = Utils.FromSpheric(alpha + step, beta + step, 1);
+							Utils.Push(n, normal, ref np);
+							normal.Mult(r);
+							Utils.Push(v, normal, ref vp);
+							Utils.Push(c, color, ref cp);
+
+							normal = Utils.FromSpheric(alpha, beta + step, 1);
+							Utils.Push(n, normal, ref np);
+							normal.Mult(r);
+							Utils.Push(v, normal, ref vp);
+							Utils.Push(c, color, ref cp);
+						}
+
+					sphere = new Mesh();
+					sphere.Vertices = v;
+					sphere.Normals = n;
+					sphere.Colors = c;
+				}
+
+				return sphere;
+			}
+		}
+
 		#region Wall rendering
 
-		private void renderWallCenter()
+		private Mesh wallCenter_v = null;
+		private Mesh wallCenter
 		{
-			double ps2 = 1.0 / 6.0;
-			GL.Begin(PrimitiveType.Quads);
-			GL.Normal3(0.0, 1.0, 0.0);
-			GL.Vertex3(-ps2, 1.0, -ps2);
-			GL.Vertex3(-ps2, 1.0, ps2);
-			GL.Vertex3(ps2, 1.0, ps2);
-			GL.Vertex3(ps2, 1.0, -ps2);
-			GL.End();
+			get
+			{
+				if (wallCenter_v == null)
+				{
+					double ps2 = 1.0 / 6.0;
+					Vector3d color = new Vector3d(
+					Color.DarkBlue.R / 255.0, Color.DarkBlue.G / 255.0,
+					Color.DarkBlue.B / 255.0);
+					Vector3d normal = new Vector3d(0, 1, 0);
+
+					int pointsCount = 4;
+					int vp = 0;
+					int np = 0;
+					int cp = 0;
+
+					double[] v = new double[pointsCount * 3];
+					double[] n = new double[pointsCount * 3];
+					double[] c = new double[pointsCount * 4];
+
+					Utils.Push(v, new Vector3d(-ps2, 1.0, -ps2), ref vp);
+					Utils.Push(v, new Vector3d(-ps2, 1.0, ps2), ref vp);
+					Utils.Push(v, new Vector3d(ps2, 1.0, ps2), ref vp);
+					Utils.Push(v, new Vector3d(ps2, 1.0, -ps2), ref vp);
+
+					for (int i = 0; i < 4; i++)
+					{
+						Utils.Push(n, normal, ref np);
+						Utils.Push(c, color, ref cp);
+					}
+
+					wallCenter_v = new Mesh();
+					wallCenter_v.Vertices = v;
+					wallCenter_v.Normals = n;
+					wallCenter_v.Colors = c;
+				}
+
+				return wallCenter_v;
+			}
 		}
 
-		private void renderWallSide()
+		private Mesh wallSideMesh_v = null;
+		private Mesh wallSideMesh
 		{
-			double ps2 = 1.0 / 6.0;
-			GL.Begin(PrimitiveType.Quads);
-			GL.Normal3(0.0, 1.0, 0.0);
-			GL.Vertex3(-ps2, 1.0, -ps2);
-			GL.Vertex3(-ps2, 1.0, ps2);
-			GL.Vertex3(0, 1.0, ps2);
-			GL.Vertex3(0, 1.0, -ps2);
+			get
+			{
+				if (wallSideMesh_v == null)
+				{
+					double ps2 = 1.0 / 6.0;
+					Vector3d color = new Vector3d(
+					Color.DarkBlue.R / 255.0, Color.DarkBlue.G / 255.0,
+					Color.DarkBlue.B / 255.0);
 
+					int pointsCount = 8;
+					int vp = 0;
+					int np = 0;
+					int cp = 0;
 
-			GL.Normal3(1.0, 0.0, 0.0);
-			GL.Vertex3(0, 0.0, -ps2);
-			GL.Vertex3(0, 1.0, -ps2);
-			GL.Vertex3(0, 1.0, ps2);
-			GL.Vertex3(0, 0.0, ps2);
+					double[] v = new double[pointsCount * 3];
+					double[] n = new double[pointsCount * 3];
+					double[] c = new double[pointsCount * 3];
 
-			GL.End();
+					Utils.Push(v, new Vector3d(-ps2, 1.0, -ps2), ref vp);
+					Utils.Push(v, new Vector3d(-ps2, 1.0, ps2), ref vp);
+					Utils.Push(v, new Vector3d(0, 1.0, ps2), ref vp);
+					Utils.Push(v, new Vector3d(0, 1.0, -ps2), ref vp);
+					Utils.Push(v, new Vector3d(0, 0.0, -ps2), ref vp);
+					Utils.Push(v, new Vector3d(0, 1.0, -ps2), ref vp);
+					Utils.Push(v, new Vector3d(0, 1.0, ps2), ref vp);
+					Utils.Push(v, new Vector3d(0, 0.0, ps2), ref vp);
+
+					Vector3d normal = new Vector3d(0, 1, 0);
+					for (int i = 0; i < 4; i++)
+					{
+						Utils.Push(n, normal, ref np);
+						Utils.Push(c, color, ref cp);
+					}
+
+					normal = new Vector3d(1, 0, 0);
+					for (int i = 4; i < 8; i++)
+					{
+						Utils.Push(n, normal, ref np);
+						Utils.Push(c, color, ref cp);
+					}
+
+					wallSideMesh_v = new Mesh();
+					wallSideMesh_v.Vertices = v;
+					wallSideMesh_v.Normals = n;
+					wallSideMesh_v.Colors = c;
+				}
+
+				return wallSideMesh_v;
+			}
 		}
 
-		private void renderWallClosedCorner()
+		private Mesh wallclosedCornerMesh_v = null;
+		private Mesh wallclosedCornerMesh
 		{
-			double ps2 = 1.0 / 6.0;
-			GL.Begin(PrimitiveType.Quads);
-
-			GL.Normal3(0.0, 1.0, 0.0);
-
-			GL.Vertex3(-ps2, 1.0, -ps2);
-			GL.Vertex3(-ps2, 1.0, 0);
-			GL.Vertex3(0, 1.0, 0);
-			GL.Vertex3(0, 1.0, -ps2);
-
-			GL.Vertex3(0, 1.0, -ps2);
-			GL.Vertex3(0, 1.0, 0);
-			GL.Vertex3(ps2, 1.0, 0);
-			GL.Vertex3(ps2, 1.0, -ps2);
-
-			GL.Vertex3(-ps2, 1.0, 0);
-			GL.Vertex3(-ps2, 1.0, ps2);
-			GL.Vertex3(0, 1.0, ps2);
-			GL.Vertex3(0, 1.0, 0);
-
-			for (double alpha = 0; alpha < Math.PI / 2; alpha += Math.PI / 10)
+			get
 			{
-				GL.Vertex3(0, 1.0, 0);
-				GL.Vertex3(ps2 - ps2 * Math.Sin(alpha + Math.PI / 10), 1.0, ps2 - ps2 * Math.Cos(alpha + Math.PI / 10));
-				GL.Vertex3(ps2 - ps2 * Math.Sin(alpha), 1.0, ps2 - ps2 * Math.Cos(alpha));
-				GL.Vertex3(0, 1.0, 0);
+				if (wallclosedCornerMesh_v == null)
+				{
+					double ps2 = 1.0 / 6.0;
+					double step = Math.PI / 10;
+					Vector3d color = new Vector3d(
+					Color.DarkBlue.R / 255.0, Color.DarkBlue.G / 255.0,
+					Color.DarkBlue.B / 255.0);
+
+					int pointsCount = 52;
+					int vp = 0;
+					int np = 0;
+					int cp = 0;
+
+					double[] v = new double[pointsCount * 3];
+					double[] n = new double[pointsCount * 3];
+					double[] c = new double[pointsCount * 3];
+
+					Utils.Push(v, new Vector3d(-ps2, 1.0, -ps2), ref vp);
+					Utils.Push(v, new Vector3d(-ps2, 1.0, 0), ref vp);
+					Utils.Push(v, new Vector3d(0, 1.0, 0), ref vp);
+					Utils.Push(v, new Vector3d(0, 1.0, -ps2), ref vp);
+
+					Utils.Push(v, new Vector3d(0, 1.0, -ps2), ref vp);
+					Utils.Push(v, new Vector3d(0, 1.0, 0), ref vp);
+					Utils.Push(v, new Vector3d(ps2, 1.0, 0), ref vp);
+					Utils.Push(v, new Vector3d(ps2, 1.0, -ps2), ref vp);
+
+					Utils.Push(v, new Vector3d(-ps2, 1.0, 0), ref vp);
+					Utils.Push(v, new Vector3d(-ps2, 1.0, ps2), ref vp);
+					Utils.Push(v, new Vector3d(0, 1.0, ps2), ref vp);
+					Utils.Push(v, new Vector3d(0, 1.0, 0), ref vp);
+
+					Vector3d normal = new Vector3d(0, 1, 0);
+					for (int i = 0; i < 12; i++)
+						Utils.Push(n, normal, ref np);
+
+					for (double alpha = 0; alpha < Math.PI / 2; alpha += step)
+					{
+						Utils.Push(v, new Vector3d(0, 1.0, 0), ref vp);
+						Utils.Push(v, new Vector3d(ps2 - ps2 * Math.Sin(alpha + step), 1.0,
+							 ps2 - ps2 * Math.Cos(alpha + step)), ref vp);
+						Utils.Push(v, new Vector3d(ps2 - ps2 * Math.Sin(alpha), 1.0,
+							 ps2 - ps2 * Math.Cos(alpha)), ref vp);
+						Utils.Push(v, new Vector3d(0, 1.0, 0), ref vp);
+						for (int i = 0; i < 4; i++)
+							Utils.Push(n, normal, ref np);
+
+					}
+
+					for (double alpha = 0; alpha < Math.PI / 2; alpha += step)
+					{
+						normal = new Vector3d(Math.Sin(alpha), 0, Math.Cos(alpha));
+						Utils.Push(n, normal, ref np);
+						normal.Mult(ps2);
+						normal.X = ps2 - normal.X;
+						normal.Z = ps2 - normal.Z;
+						Utils.Push(v, normal, ref vp);
+
+						normal = new Vector3d(Math.Sin(alpha), 0, Math.Cos(alpha));
+						Utils.Push(n, normal, ref np);
+						normal.Mult(ps2);
+						normal.X = ps2 - normal.X;
+						normal.Y = 1;
+						normal.Z = ps2 - normal.Z;
+						Utils.Push(v, normal, ref vp);
+
+						normal = new Vector3d(Math.Sin(alpha + step), 0, Math.Cos(alpha + step));
+						Utils.Push(n, normal, ref np);
+						normal.Mult(ps2);
+						normal.X = ps2 - normal.X;
+						normal.Y = 1;
+						normal.Z = ps2 - normal.Z;
+						Utils.Push(v, normal, ref vp);
+
+
+						normal = new Vector3d(Math.Sin(alpha + step), 0, Math.Cos(alpha + step));
+						Utils.Push(n, normal, ref np);
+						normal.Mult(ps2);
+						normal.X = ps2 - normal.X;
+						normal.Z = ps2 - normal.Z;
+						Utils.Push(v, normal, ref vp);
+					}
+
+					for (int i = 0; i < pointsCount; i++)
+						Utils.Push(c, color, ref cp);
+
+					wallclosedCornerMesh_v = new Mesh();
+					wallclosedCornerMesh_v.Vertices = v;
+					wallclosedCornerMesh_v.Normals = n;
+					wallclosedCornerMesh_v.Colors = c;
+				}
+
+				return wallclosedCornerMesh_v;
 			}
-
-			for (double alpha = 0; alpha < Math.PI / 2; alpha += Math.PI / 10)
-			{
-				GL.Normal3( Math.Sin(alpha), 0,  Math.Cos(alpha));
-				GL.Vertex3(ps2 - ps2 * Math.Sin(alpha), 0, ps2 - ps2 * Math.Cos(alpha));
-
-				GL.Normal3(Math.Sin(alpha), 0,  Math.Cos(alpha));
-				GL.Vertex3(ps2 - ps2 * Math.Sin(alpha), 1.0, ps2 - ps2 * Math.Cos(alpha));
-
-				GL.Normal3( Math.Sin(alpha + Math.PI / 10), 0,  Math.Cos(alpha + Math.PI / 10));
-				GL.Vertex3(ps2 - ps2 * Math.Sin(alpha + Math.PI / 10), 1.0, ps2 - ps2 * Math.Cos(alpha + Math.PI / 10));
-
-				GL.Normal3( Math.Sin(alpha + Math.PI / 10), 0,  Math.Cos(alpha + Math.PI / 10));
-				GL.Vertex3(ps2 - ps2 * Math.Sin(alpha + Math.PI / 10), 0, ps2 - ps2 * Math.Cos(alpha + Math.PI / 10));
-				
-				
-			}
-			GL.End();
 		}
 
-		private void renderWallOpenCorner()
+		private Mesh wallOpenCornerMesh_v = null;
+		private Mesh wallOpenCornerMesh
 		{
-			double ps2 = 1.0 / 6.0;
-			GL.Begin(PrimitiveType.Quads);
-			GL.Normal3(0.0, 1.0, 0.0);
-			for (double alpha = 0; alpha < Math.PI / 2; alpha += Math.PI / 10)
+			get
 			{
-				GL.Vertex3(-ps2 + 0, 1.0, -ps2);
-				GL.Vertex3(-ps2 + ps2 * Math.Sin(alpha), 1.0, -ps2 + ps2 * Math.Cos(alpha));
-				GL.Vertex3(-ps2 + ps2 * Math.Sin(alpha + Math.PI / 10), 1.0, -ps2 + ps2 * Math.Cos(alpha + Math.PI / 10));
-				GL.Vertex3(-ps2 + 0, 1.0, -ps2);
-			}
+				if (wallOpenCornerMesh_v == null)
+				{
+					double ps2 = 1.0 / 6.0;
+					double step = Math.PI / 10;
+					Vector3d color = new Vector3d(
+					Color.DarkBlue.R / 255.0, Color.DarkBlue.G / 255.0,
+					Color.DarkBlue.B / 255.0);
 
-			for (double alpha = 0; alpha < Math.PI / 2; alpha += Math.PI / 10)
-			{
-				GL.Normal3(Math.Sin(alpha), 0, Math.Cos(alpha));
-				GL.Vertex3(-ps2 + ps2 * Math.Sin(alpha), 0, -ps2 + ps2 * Math.Cos(alpha));
-				GL.Normal3(Math.Sin(alpha + Math.PI / 10), 0, Math.Cos(alpha + Math.PI / 10));
-				GL.Vertex3(-ps2 + ps2 * Math.Sin(alpha + Math.PI / 10), 0, -ps2 + ps2 * Math.Cos(alpha + Math.PI / 10));
-				GL.Normal3(Math.Sin(alpha + Math.PI / 10), 0, Math.Cos(alpha + Math.PI / 10));
-				GL.Vertex3(-ps2 + ps2 * Math.Sin(alpha + Math.PI / 10), 1.0, -ps2 + ps2 * Math.Cos(alpha + Math.PI / 10));
-				GL.Normal3(Math.Sin(alpha), 0, Math.Cos(alpha));
-				GL.Vertex3(-ps2 + ps2 * Math.Sin(alpha), 1.0, -ps2 + ps2 * Math.Cos(alpha));
+					int pointsCount = 40;
+					int vp = 0;
+					int np = 0;
+					int cp = 0;
+
+					double[] v = new double[pointsCount * 3];
+					double[] n = new double[pointsCount * 3];
+					double[] c = new double[pointsCount * 3];
+
+					Vector3d normal = new Vector3d(0, 1, 0);
+
+					for (double alpha = 0; alpha < Math.PI / 2; alpha += step)
+					{
+						Utils.Push(v, new Vector3d(-ps2, 1.0, -ps2), ref vp);
+						Utils.Push(v, new Vector3d(-ps2, 1.0, -ps2), ref vp);
+						Utils.Push(v, new Vector3d(-ps2 + ps2 * Math.Sin(alpha), 1.0,
+							 -ps2 + ps2 * Math.Cos(alpha)), ref vp);
+						Utils.Push(v, new Vector3d(-ps2 + ps2 * Math.Sin(alpha + step), 1.0,
+							 -ps2 + ps2 * Math.Cos(alpha + step)), ref vp);
+						
+						
+						for (int i = 0; i < 4; i++)
+							Utils.Push(n, normal, ref np);
+
+					}
+
+					for (double alpha = 0; alpha < Math.PI / 2; alpha += step)
+					{
+						normal = new Vector3d(Math.Sin(alpha), 0, Math.Cos(alpha));
+						Utils.Push(n, normal, ref np);
+						normal.Mult(ps2);
+						normal.X = normal.X - ps2;
+						normal.Z = normal.Z - ps2;
+						Utils.Push(v, normal, ref vp);
+
+						normal = new Vector3d(Math.Sin(alpha + step), 0, Math.Cos(alpha + step));
+						Utils.Push(n, normal, ref np);
+						normal.Mult(ps2);
+						normal.X = normal.X - ps2;
+						normal.Z = normal.Z - ps2;
+						Utils.Push(v, normal, ref vp);
+
+						normal = new Vector3d(Math.Sin(alpha + step), 0, Math.Cos(alpha + step));
+						Utils.Push(n, normal, ref np);
+						normal.Mult(ps2);
+						normal.X = normal.X - ps2;
+						normal.Y = 1;
+						normal.Z = normal.Z - ps2;
+						Utils.Push(v, normal, ref vp);
+
+						normal = new Vector3d(Math.Sin(alpha), 0, Math.Cos(alpha));
+						Utils.Push(n, normal, ref np);
+						normal.Mult(ps2);
+						normal.X = normal.X - ps2;
+						normal.Y = 1;
+						normal.Z = normal.Z - ps2;
+						Utils.Push(v, normal, ref vp);
+					}
+
+					for (int i = 0; i < pointsCount; i++)
+						Utils.Push(c, color, ref cp);
+
+					wallOpenCornerMesh_v = new Mesh();
+					wallOpenCornerMesh_v.Vertices = v;
+					wallOpenCornerMesh_v.Normals = n;
+					wallOpenCornerMesh_v.Colors = c;
+				}
+
+				return wallOpenCornerMesh_v;
 			}
-			GL.End();
 		}
+
+	
 
 		private void renderWall(int x, int y)
 		{
@@ -358,26 +596,26 @@ namespace PacMan
 
 			GL.Color3(Color.DarkBlue);
 
-			double ps = 1.0/3.0;
+			double ps = 1.0 / 3.0;
 
 			//center
-			renderWallCenter();
+			wallCenter.Render();
 
 			//right
 			GL.Translate(ps, 0, 0);
 			if (x < Width - 1 && Fields[y][x + 1] == Objects.Wall)
-				renderWallCenter();
+				wallCenter.Render();
 			else
-				renderWallSide();
+				wallSideMesh.Render();
 			GL.Translate(-ps, 0, 0);
 
 			//left
 			GL.Translate(-ps, 0, 0);
 			GL.Rotate(180, 0, 1, 0);
 			if (x > 0 && Fields[y][x - 1] == Objects.Wall)
-				renderWallCenter();
+				wallCenter.Render();
 			else
-				renderWallSide();
+				wallSideMesh.Render();
 			GL.Rotate(-180, 0, 1, 0);
 			GL.Translate(ps, 0, 0);
 
@@ -385,9 +623,9 @@ namespace PacMan
 			GL.Translate(0, 0, ps);
 			GL.Rotate(-90, 0, 1, 0);
 			if (y < Height - 1 && Fields[y + 1][x] == Objects.Wall)
-				renderWallCenter();
+				wallCenter.Render();
 			else
-				renderWallSide();
+				wallSideMesh.Render();
 			GL.Rotate(90, 0, 1, 0);
 			GL.Translate(0, 0, -ps);
 
@@ -395,29 +633,29 @@ namespace PacMan
 			GL.Translate(0, 0, -ps);
 			GL.Rotate(90, 0, 1, 0);
 			if (y > 0 && Fields[y - 1][x] == Objects.Wall)
-				renderWallCenter();
+				wallCenter.Render();
 			else
-				renderWallSide();
+				wallSideMesh.Render();
 			GL.Rotate(-90, 0, 1, 0);
 			GL.Translate(0, 0, ps);
 
 			//rightbottom
 			GL.Translate(ps, 0, ps);
 			if (x < Width - 1 && y < Height - 1 && Fields[y + 1][x] == Objects.Wall && Fields[y][x + 1] == Objects.Wall && Fields[y + 1][x + 1] == Objects.Wall)
-				renderWallCenter();
+				wallCenter.Render();
 			else if (x < Width - 1 && y < Height - 1 && Fields[y + 1][x] == Objects.Wall && Fields[y][x + 1] == Objects.Wall)
-				renderWallClosedCorner();
+				wallclosedCornerMesh.Render();
 			else if (x < Width - 1 && Fields[y][x + 1] == Objects.Wall)
 			{
 				GL.Rotate(-90, 0, 1, 0);
-				renderWallSide();
+				wallSideMesh.Render();
 				GL.Rotate(90, 0, 1, 0);
 			}
 
 			else if (y < Height - 1 && Fields[y + 1][x] == Objects.Wall)
-				renderWallSide();
+				wallSideMesh.Render();
 			else
-				renderWallOpenCorner();
+				wallOpenCornerMesh.Render();
 			GL.Translate(-ps, 0, -ps);
 
 
@@ -425,20 +663,20 @@ namespace PacMan
 			GL.Translate(ps, 0, -ps);
 			GL.Rotate(90, 0, 1, 0);
 			if (x < Width - 1 && y > 0 && Fields[y - 1][x] == Objects.Wall && Fields[y][x + 1] == Objects.Wall && Fields[y - 1][x + 1] == Objects.Wall)
-				renderWallCenter();
+				wallCenter.Render();
 			else if (x < Width - 1 && y > 0 && Fields[y - 1][x] == Objects.Wall && Fields[y][x + 1] == Objects.Wall)
-				renderWallClosedCorner();
+				wallclosedCornerMesh.Render();
 			else if (x < Width - 1 && Fields[y][x + 1] == Objects.Wall)
-				renderWallSide();
+				wallSideMesh.Render();
 
 			else if (y > 0 && Fields[y - 1][x] == Objects.Wall)
 			{
 				GL.Rotate(-90, 0, 1, 0);
-				renderWallSide();
+				wallSideMesh.Render();
 				GL.Rotate(90, 0, 1, 0);
 			}
 			else
-				renderWallOpenCorner();
+				wallOpenCornerMesh.Render();
 			GL.Rotate(-90, 0, 1, 0);
 			GL.Translate(-ps, 0, ps);
 
@@ -446,19 +684,19 @@ namespace PacMan
 			GL.Translate(-ps, 0, -ps);
 			GL.Rotate(180, 0, 1, 0);
 			if (x > 0 && y > 0 && Fields[y - 1][x] == Objects.Wall && Fields[y][x - 1] == Objects.Wall && Fields[y - 1][x - 1] == Objects.Wall)
-				renderWallCenter();
+				wallCenter.Render();
 			else if (x > 0 && y > 0 && Fields[y - 1][x] == Objects.Wall && Fields[y][x - 1] == Objects.Wall)
-				renderWallClosedCorner();
+				wallclosedCornerMesh.Render();
 			else if (x > 0 && Fields[y][x - 1] == Objects.Wall)
 			{
 				GL.Rotate(-90, 0, 1, 0);
-				renderWallSide();
+				wallSideMesh.Render();
 				GL.Rotate(90, 0, 1, 0);
 			}
 			else if (y > 0 && Fields[y - 1][x] == Objects.Wall)
-				renderWallSide();
+				wallSideMesh.Render();
 			else
-				renderWallOpenCorner();
+				wallOpenCornerMesh.Render();
 			GL.Rotate(-180, 0, 1, 0);
 			GL.Translate(ps, 0, ps);
 
@@ -466,21 +704,21 @@ namespace PacMan
 			GL.Translate(-ps, 0, ps);
 			GL.Rotate(-90, 0, 1, 0);
 			if (x > 0 && y < Height - 1 && Fields[y + 1][x] == Objects.Wall && Fields[y][x - 1] == Objects.Wall && Fields[y + 1][x - 1] == Objects.Wall)
-				renderWallCenter();
+				wallCenter.Render();
 			else if (x > 0 && y < Height - 1 && Fields[y + 1][x] == Objects.Wall && Fields[y][x - 1] == Objects.Wall)
-				renderWallClosedCorner();
+				wallclosedCornerMesh.Render();
 			else if (x > 0 && Fields[y][x - 1] == Objects.Wall)
 
-				renderWallSide();
+				wallSideMesh.Render();
 			else if (y < Height - 1 && Fields[y + 1][x] == Objects.Wall)
 			{
 				GL.Rotate(-90, 0, 1, 0);
-				renderWallSide();
+				wallSideMesh.Render();
 				GL.Rotate(90, 0, 1, 0);
 			}
 
 			else
-				renderWallOpenCorner();
+				wallOpenCornerMesh.Render();
 			GL.Rotate(90, 0, 1, 0);
 			GL.Translate(ps, 0, -ps);
 
@@ -503,53 +741,17 @@ namespace PacMan
 					{
 
 						case Objects.Wall:
-						renderWall(x,y);
+							renderWall(x, y);
 							break;
 
 						case Objects.Point:
-
-							GL.Translate(x, 0, y);
-							GL.Begin(PrimitiveType.Quads);
-
-							for (double alpha = -Math.PI / 2; alpha < Math.PI / 2; alpha += Math.PI / 10)
-								for (double beta = 0; beta < Math.PI * 2; beta += Math.PI / 10)
-								{
-									GL.Color3(Color.White);
-									GL.Normal3(Math.Cos(alpha) * Math.Cos(beta), Math.Sin(alpha), Math.Cos(alpha) * Math.Sin(beta));
-									GL.Vertex3(Math.Cos(alpha) * Math.Cos(beta) * 0.1, 0.5 + Math.Sin(alpha) * 0.1, Math.Cos(alpha) * Math.Sin(beta) * 0.1);
-									GL.Vertex3(Math.Cos(alpha + Math.PI / 10) * Math.Cos(beta) * 0.1, 0.5 + Math.Sin(alpha + Math.PI / 10) * 0.1, Math.Cos(alpha + Math.PI / 10) * Math.Sin(beta) * 0.1);
-									GL.Vertex3(Math.Cos(alpha + Math.PI / 10) * Math.Cos(beta + Math.PI / 10) * 0.1, 0.5 + Math.Sin(alpha + Math.PI / 10) * 0.1, Math.Cos(alpha + Math.PI / 10) * Math.Sin(beta + Math.PI / 10) * 0.1);
-									GL.Vertex3(Math.Cos(alpha) * Math.Cos(beta + Math.PI / 10) * 0.1, 0.5 + Math.Sin(alpha) * 0.1, Math.Cos(alpha) * Math.Sin(beta + Math.PI / 10) * 0.1);
-
-
-								}
-
-							GL.End();
-							GL.Translate(-x, 0, -y);
-
-							break;
-
 						case Objects.Powerup:
-
-							GL.Translate(x, 0, y);
-							GL.Begin(PrimitiveType.Quads);
-
-							for (double alpha = -Math.PI / 2; alpha < Math.PI / 2; alpha += Math.PI / 10)
-								for (double beta = 0; beta < Math.PI * 2; beta += Math.PI / 10)
-								{
-									GL.Color3(Color.White);
-									GL.Normal3(Math.Cos(alpha) * Math.Cos(beta), Math.Sin(alpha), Math.Cos(alpha) * Math.Sin(beta));
-									GL.Vertex3(Math.Cos(alpha) * Math.Cos(beta) * 0.3, 0.5 + Math.Sin(alpha) * 0.3, Math.Cos(alpha) * Math.Sin(beta) * 0.3);
-									GL.Vertex3(Math.Cos(alpha + Math.PI / 10) * Math.Cos(beta) * 0.3, 0.5 + Math.Sin(alpha + Math.PI / 10) * 0.3, Math.Cos(alpha + Math.PI / 10) * Math.Sin(beta) * 0.3);
-									GL.Vertex3(Math.Cos(alpha + Math.PI / 10) * Math.Cos(beta + Math.PI / 10) * 0.3, 0.5 + Math.Sin(alpha + Math.PI / 10) * 0.3, Math.Cos(alpha + Math.PI / 10) * Math.Sin(beta + Math.PI / 10) * 0.3);
-									GL.Vertex3(Math.Cos(alpha) * Math.Cos(beta + Math.PI / 10) * 0.3, 0.5 + Math.Sin(alpha) * 0.3, Math.Cos(alpha) * Math.Sin(beta + Math.PI / 10) * 0.3);
-
-
-								}
-
-							GL.End();
-							GL.Translate(-x, 0, -y);
-
+							double r = Fields[y][x] == Objects.Point ? 0.1 : 0.3;
+							GL.PushMatrix();
+							GL.Translate(x, 0.5, y);
+							GL.Scale(r, r, r);
+							sphereMesh.Render(PrimitiveType.Quads);
+							GL.PopMatrix();
 							break;
 
 						case Objects.None:

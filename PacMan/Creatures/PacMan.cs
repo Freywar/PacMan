@@ -163,8 +163,8 @@ namespace PacMan
 
 				GL.Vertex3(0, 0, 0);
 
-				GL.Vertex3(Geometry.FromSpheric(yAngle + angleStep, mouthOpen, 0.45));
-				GL.Vertex3(Geometry.FromSpheric(yAngle, mouthOpen, 0.45));
+				GL.Vertex3(Utils.FromSpheric(yAngle + angleStep, mouthOpen, 0.45));
+				GL.Vertex3(Utils.FromSpheric(yAngle, mouthOpen, 0.45));
 
 				GL.Vertex3(0, 0, 0);
 
@@ -178,17 +178,17 @@ namespace PacMan
 					double rxAngle = xAngle * (Math.PI * 2 - mouthOpen * 2) / (Math.PI * 2) + mouthOpen;
 					double rxAngleNext = (xAngle + angleStep) * (Math.PI * 2 - mouthOpen * 2) / (Math.PI * 2) + mouthOpen;
 
-					GL.Normal3(Geometry.FromSpheric(yAngle, rxAngle, 1));
-					GL.Vertex3(Geometry.FromSpheric(yAngle, rxAngle, 0.45));
+					GL.Normal3(Utils.FromSpheric(yAngle, rxAngle, 1));
+					GL.Vertex3(Utils.FromSpheric(yAngle, rxAngle, 0.45));
 
-					GL.Normal3(Geometry.FromSpheric(yAngle + angleStep, rxAngle, 1));
-					GL.Vertex3(Geometry.FromSpheric(yAngle + angleStep, rxAngle, 0.45));
+					GL.Normal3(Utils.FromSpheric(yAngle + angleStep, rxAngle, 1));
+					GL.Vertex3(Utils.FromSpheric(yAngle + angleStep, rxAngle, 0.45));
 
-					GL.Normal3(Geometry.FromSpheric(yAngle + angleStep, rxAngleNext, 1));
-					GL.Vertex3(Geometry.FromSpheric(yAngle + angleStep, rxAngleNext, 0.45));
+					GL.Normal3(Utils.FromSpheric(yAngle + angleStep, rxAngleNext, 1));
+					GL.Vertex3(Utils.FromSpheric(yAngle + angleStep, rxAngleNext, 0.45));
 
-					GL.Normal3(Geometry.FromSpheric(yAngle, rxAngleNext, 1));
-					GL.Vertex3(Geometry.FromSpheric(yAngle, rxAngleNext, 0.45));
+					GL.Normal3(Utils.FromSpheric(yAngle, rxAngleNext, 1));
+					GL.Vertex3(Utils.FromSpheric(yAngle, rxAngleNext, 0.45));
 				}
 
 			//lower jaw
@@ -200,8 +200,8 @@ namespace PacMan
 
 				GL.Normal3(Vector3d.Cross(jawAxis, yAxis));
 				GL.Vertex3(0, 0, 0);
-				GL.Vertex3(Geometry.FromSpheric(yAngle, -mouthOpen, 0.45));
-				GL.Vertex3(Geometry.FromSpheric(yAngle + angleStep, -mouthOpen, 0.45));
+				GL.Vertex3(Utils.FromSpheric(yAngle, -mouthOpen, 0.45));
+				GL.Vertex3(Utils.FromSpheric(yAngle + angleStep, -mouthOpen, 0.45));
 				GL.Vertex3(0, 0, 0);
 			}
 			GL.End();

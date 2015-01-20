@@ -355,7 +355,7 @@ namespace PacMan
 						switch (ghost.State)
 						{
 							case Ghost.States.Normal:
-								if (Geometry.Distance(PacMan.X, PacMan.Y, ghost.X, ghost.Y) < 1)
+								if (Utils.Distance(PacMan.X, PacMan.Y, ghost.X, ghost.Y) < 1)
 								{
 									PacMan.Lives--;
 									if (PacMan.Lives == 0)
@@ -365,14 +365,14 @@ namespace PacMan
 								}
 								break;
 							case Ghost.States.Frightened:
-								if (Geometry.Distance(PacMan.X, PacMan.Y, ghost.X, ghost.Y) < 1)
+								if (Utils.Distance(PacMan.X, PacMan.Y, ghost.X, ghost.Y) < 1)
 								{
 									Score += 100;
 									ghost.State = Ghost.States.Eaten;
 								}
 								break;
 							case Ghost.States.Eaten:
-								if (Geometry.Distance(ghost.X, ghost.Y, CurrentMap.GhostStart.X, CurrentMap.GhostStart.Y) < 0.1)
+								if (Utils.Distance(ghost.X, ghost.Y, CurrentMap.GhostStart.X, CurrentMap.GhostStart.Y) < 0.1)
 									ghost.State = Ghost.States.Waiting;
 								break;
 							default:
@@ -392,7 +392,6 @@ namespace PacMan
 					break;
 			}
 			return false;
-
 		}
 
 		/// <summary>
@@ -618,7 +617,6 @@ namespace PacMan
 
 					break;
 			}
-
 		}
 	}
 }
