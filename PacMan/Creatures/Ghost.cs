@@ -112,7 +112,7 @@ namespace PacMan
 			{
 				if (frigtenedCap_v == null)
 				{
-					frigtenedCap_v = createCap(Color.Blue);
+					frigtenedCap_v = createCap(Color.LightBlue);
 				}
 
 				return frigtenedCap_v;
