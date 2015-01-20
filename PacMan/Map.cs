@@ -15,6 +15,14 @@ namespace PacMan
 {
 	class Map
 	{
+		public enum States
+		{
+			AppearAnimation,
+			Normal,
+			DisappearAnimation,
+			None
+		}
+
 		/// <summary>
 		/// Possible map objects
 		/// </summary>
@@ -37,6 +45,12 @@ namespace PacMan
 			/// </summary>
 			None
 		}
+
+		private const double animationTime = 0.5;
+
+		public double AnimationState = 0;
+
+		public States State = States.Normal;
 
 		/// <summary>
 		/// Wrap X coordinate inside map borders.
@@ -240,6 +254,32 @@ namespace PacMan
 			}
 			if (PointsCount == 0 || PacManStart == Point.Empty || GhostStart == Point.Empty)
 				throw new Exception("Invalid map data");
+
+			AnimationState = 0;
+			State = States.AppearAnimation;
+		}
+
+		public void Update(double dt)
+		{
+			if (State == States.AppearAnimation)
+			{
+				AnimationState += dt / animationTime;
+				if (AnimationState >= 1)
+				{
+					State = States.Normal;
+					AnimationState = 0;
+				}
+			}
+
+			if (State == States.DisappearAnimation)
+			{
+				AnimationState += dt / animationTime;
+				if (AnimationState >= 1)
+				{
+					State = States.None;
+					AnimationState = 0;
+				}
+			}
 		}
 
 		private Mesh sphere_v = null;
@@ -535,8 +575,8 @@ namespace PacMan
 							 -ps2 + ps2 * Math.Cos(alpha)), ref vp);
 						Utils.Push(v, new Vector3d(-ps2 + ps2 * Math.Sin(alpha + step), 1.0,
 							 -ps2 + ps2 * Math.Cos(alpha + step)), ref vp);
-						
-						
+
+
 						for (int i = 0; i < 4; i++)
 							Utils.Push(n, normal, ref np);
 
@@ -592,7 +632,13 @@ namespace PacMan
 		{
 			GL.Translate(x, 0, y);
 
-			GL.Color3(Color.DarkBlue);
+			GL.PushMatrix();
+			if (State == States.AppearAnimation)
+				GL.Scale(1, AnimationState, 1);
+			if (State == States.DisappearAnimation)
+				GL.Scale(1, 1 - AnimationState, 1);
+			if (State == States.None)
+				GL.Scale(1, 0, 1);
 
 			double ps = 1.0 / 3.0;
 
@@ -720,6 +766,8 @@ namespace PacMan
 			GL.Rotate(90, 0, 1, 0);
 			GL.Translate(ps, 0, -ps);
 
+			GL.PopMatrix();
+
 			GL.Translate(-x, 0, -y);
 
 			GL.End();
@@ -732,6 +780,13 @@ namespace PacMan
 		/// </summary>
 		public void Render()
 		{
+			GL.Color3(0, 0, 0);
+			GL.Begin(PrimitiveType.Quads);
+			GL.Vertex3(-Width / 2 - 0.5, 0, -Height / 2 - 0.5);
+			GL.Vertex3(-Width / 2 - 0.5, 0, Height / 2 + 0.5);
+			GL.Vertex3(Width / 2 + 0.5, 0, Height / 2 + 0.5);
+			GL.Vertex3(Width / 2 + 0.5, 0, -Height / 2 - 0.5);
+			GL.End();
 
 			for (int y = 0; y < Height; y++)
 				for (int x = 0; x < Width; x++)
@@ -745,6 +800,14 @@ namespace PacMan
 						case Objects.Point:
 						case Objects.Powerup:
 							double r = Fields[y][x] == Objects.Point ? 0.1 : 0.3;
+
+							if (State == States.AppearAnimation)
+								r *= AnimationState;
+							if (State == States.DisappearAnimation)
+								r *= 1 - AnimationState;
+							if (State == States.None)
+								r = 0;
+
 							GL.PushMatrix();
 							GL.Translate(x, 0.5, y);
 							GL.Scale(r, r, r);

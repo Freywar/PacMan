@@ -29,6 +29,7 @@ namespace PacMan
 			/// Main menu.
 			/// </summary>
 			MainMenu,
+			AppearAnimation,
 			/// <summary>
 			/// Game.
 			/// </summary>
@@ -77,6 +78,9 @@ namespace PacMan
 		private Menu WonMenu = new Menu();
 		private Menu LostMenu = new Menu();
 		private XmlNode SaveData = null;
+		private double AnimationState = 0;
+
+		private const double animationTime = 2;
 
 		/// <summary>
 		/// Powerup duration(seconds).
@@ -722,6 +726,44 @@ namespace PacMan
 					break;
 
 				case States.Playing:
+
+					if (CurrentMap.State == Map.States.AppearAnimation)
+					{
+						CurrentMap.Update(dt);
+						if (CurrentMap.State != Map.States.Normal)
+							return false;
+					}
+
+					if (PacMan.State == PacMan.States.AppearAnimation)
+					{
+						PacMan.Update(dt, CurrentMap);
+						if (PacMan.State != PacMan.States.Normal)
+							return false;
+					}
+
+					if (PacMan.State == PacMan.States.DisappearAnimation)
+					{
+						PacMan.Update(dt, CurrentMap);
+						foreach (Ghost ghost in Ghosts)
+							if (ghost.State == Ghost.States.DisappearAnimation)
+								ghost.Update(dt, CurrentMap, PacMan);
+
+						return false;
+					}
+					else if (PacMan.State == PacMan.States.None)
+					{
+						bool waitForGhosts = false;
+						foreach (Ghost ghost in Ghosts)
+							if (ghost.State == Ghost.States.DisappearAnimation)
+							{
+								ghost.Update(dt, CurrentMap, PacMan);
+								waitForGhosts = true;
+							}
+						if (!waitForGhosts)
+							restartLevel();
+						return false;
+					}
+
 					Point pacManVisitedCell = PacMan.Update(dt, CurrentMap);
 					foreach (Ghost ghost in Ghosts)
 						ghost.Update(dt, CurrentMap, PacMan);
@@ -766,7 +808,11 @@ namespace PacMan
 										State = States.LostMenu;
 									}
 									else
-										restartLevel();
+									{
+										foreach (Ghost g in Ghosts)
+											g.State = Ghost.States.DisappearAnimation;
+										PacMan.State = PacMan.States.DisappearAnimation;
+									}
 								}
 								break;
 							case Ghost.States.Frightened:
@@ -934,7 +980,8 @@ namespace PacMan
 					GL.Disable(EnableCap.ColorMaterial);
 					GL.Disable(EnableCap.CullFace);
 
-					HUD.Render();
+					if (CurrentMap.State == Map.States.Normal)
+						HUD.Render();
 
 					break;
 				case States.PauseMenu:

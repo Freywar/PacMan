@@ -103,7 +103,7 @@ namespace PacMan
 			GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
 
 			GL.DrawArrays(type, 0, Vertices_v.Length / 3);
-			
+
 
 			GL.DisableClientState(ArrayCap.VertexArray);
 			if (Normals_v != null)
@@ -148,6 +148,11 @@ namespace PacMan
 			array[offset + 2] = (double)vector.Z;
 			array[offset + 2] = (double)vector.W;
 			offset += 4;
+		}
+
+		public static double NormSin(double param)
+		{
+			return (Math.Sin((param * 2 - 1) * Math.PI / 2) + 1) / 2;
 		}
 	}
 }

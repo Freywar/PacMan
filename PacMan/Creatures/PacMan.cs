@@ -21,6 +21,7 @@ namespace PacMan
 		/// </summary>
 		public enum States
 		{
+			AppearAnimation,
 			/// <summary>
 			/// Normal.
 			/// </summary>
@@ -28,7 +29,9 @@ namespace PacMan
 			/// <summary>
 			/// Super.
 			/// </summary>
-			Super
+			Super,
+			DisappearAnimation,
+			None
 		}
 
 		private const double maxMouthAngle = Math.PI / 4;
@@ -180,6 +183,9 @@ namespace PacMan
 		/// Remaining time in Super state.
 		/// </summary>
 		public double SuperTime = 0;
+		public double AnimationState = 0;
+
+		private const double animationDuration = 0.5;
 
 		/// <summary>
 		/// Init on level start.
@@ -187,7 +193,8 @@ namespace PacMan
 		/// <param name="map">Map.</param>
 		public override void Init(Map map)
 		{
-			State = States.Normal;
+			State = States.AppearAnimation;
+			AnimationState = 0;
 			X = map.PacManStart.X;
 			Y = map.PacManStart.Y;
 		}
@@ -229,12 +236,37 @@ namespace PacMan
 			}
 		}
 
+		public override Point Update(double dt, Map map)
+		{
+			if (State == States.AppearAnimation)
+			{
+				AnimationState += dt / animationDuration;
+				if (AnimationState >= 1)
+				{
+					State = States.Normal;
+					AnimationState = 0;
+				}
+				return Point.Empty;
+			}
+			if (State == States.DisappearAnimation)
+			{
+				AnimationState += dt / animationDuration;
+				if (AnimationState >= 1)
+					State = States.None;
+				return Point.Empty;
+			}
+			return base.Update(dt, map);
+		}
+
 		/// <summary>
 		/// Key press handling.
 		/// </summary>
 		/// <param name="keyboard">Pressed key.</param>
 		public void KeyDown(Key key)
 		{
+			if (State == States.AppearAnimation || State == States.DisappearAnimation)
+				return;
+
 			if (key == Key.Up)
 				desiredDirection = Creature.Directions.Up;
 			if (key == Key.Down)
@@ -254,6 +286,9 @@ namespace PacMan
 
 		public override void Render()
 		{
+			if (State == States.None)
+				return;
+
 			double mouthAngle = Math.Max(Math.Abs(X - Math.Round(X)), Math.Abs(Y - Math.Round(Y)));
 			mouthAngle *= 2 * Math.PI / 2;
 			mouthAngle = Math.Sin(mouthAngle);
@@ -280,6 +315,12 @@ namespace PacMan
 			}
 			GL.Rotate(-90, 1, 0, 0);
 
+			GL.PushMatrix();
+			if (State == States.AppearAnimation)
+				GL.Scale(AnimationState, AnimationState, AnimationState);
+			if (State == States.DisappearAnimation)
+				GL.Scale(1 - AnimationState, 1 - AnimationState, 1 - AnimationState);
+
 			GL.Rotate(-mouthAngle * 180 / Math.PI, 0, 1, 0);
 			jaw.Render();
 			GL.Rotate(mouthAngle * 180 / Math.PI, 0, 1, 0);
@@ -299,6 +340,8 @@ namespace PacMan
 			GL.Translate(Math.Cos(Math.PI / 6 + mouthAngle) * Math.Cos(-Math.PI / 6) * radius, Math.Sin(-Math.PI / 6) * radius, Math.Sin(Math.PI / 6 + mouthAngle) * Math.Cos(-Math.PI / 6) * radius);
 			eye.Render();
 			GL.Translate(-Math.Cos(Math.PI / 6 + mouthAngle) * Math.Cos(-Math.PI / 6) * radius, -Math.Sin(-Math.PI / 6) * radius, -Math.Sin(Math.PI / 6 + mouthAngle) * Math.Cos(-Math.PI / 6) * radius);
+
+			GL.PopMatrix();
 
 			GL.Rotate(90, 1, 0, 0);
 

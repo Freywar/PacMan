@@ -25,6 +25,7 @@ namespace PacMan
 			/// Waiting outside map.
 			/// </summary>
 			Waiting,
+			AppearAnimation,
 			/// <summary>
 			/// Normal.
 			/// </summary>
@@ -33,11 +34,18 @@ namespace PacMan
 			/// Frightened.
 			/// </summary>
 			Frightened,
+			DisappearAnimation,
 			/// <summary>
 			/// Eaten.
 			/// </summary>
-			Eaten
+			Eaten,
+			None
 		}
+
+		private const double appearAnimationDuration = 2;
+		private const double disappearAnimationDuration = 0.5;
+
+		public double AnimationState = 0;
 
 		private Mesh createCap(Color col)
 		{
@@ -55,7 +63,7 @@ namespace PacMan
 			double[] c = new double[pointsCount * 4];
 
 			for (double alpha = -Math.PI / 2; alpha < Math.PI / 2; alpha += step)
-				for (double beta = 0; beta < Math.PI*2; beta += step)
+				for (double beta = 0; beta < Math.PI * 2; beta += step)
 				{
 					GL.Color3(Color.White);
 
@@ -155,7 +163,10 @@ namespace PacMan
 						return FrightenedSpeed;
 					case States.Eaten:
 						return EatenSpeed;
+					case States.AppearAnimation:
 					case States.Waiting:
+					case States.DisappearAnimation:
+					case States.None:
 					default:
 						return 0;
 				}
@@ -177,12 +188,34 @@ namespace PacMan
 				return 0;
 			y = y * 2;
 			y = y * y * 0.2;
+			double delta = 0;
+
+			if (State == States.AppearAnimation)
+			{
+				if (AnimationState < 0.25)
+					delta = -y * Utils.NormSin(AnimationState * 4);
+				if (AnimationState >= 0.25 && AnimationState < 0.5)
+					delta = -y * (1 - Utils.NormSin(AnimationState * 4 - 1));
+				if (AnimationState >= 0.5 && AnimationState < 0.75)
+					delta = y * Utils.NormSin(AnimationState * 4 - 2);
+				if (AnimationState >= 0.75 && AnimationState < 1)
+					delta = y * (1 - Utils.NormSin(AnimationState * 4 - 3));
+			}
+
+			if (State == States.DisappearAnimation)
+			{
+				if (AnimationState < 0.5)
+					delta = y * Utils.NormSin(AnimationState * 2);
+				else
+					delta = y * (1 - Utils.NormSin(AnimationState * 2 - 1));
+			}
+
 			return (
 			Math.Cos(beta * 4 + rAnimationTime) * y +
 			Math.Cos(beta * 8 + rAnimationTime * 2) * y +
 			Math.Cos(beta * 16 + rAnimationTime * 4) * y +
 			Math.Cos(beta * 32 + rAnimationTime * 8) * y
-			) / 4;
+			) / 4 + delta;
 		}
 
 		#region Path detection.
@@ -286,7 +319,7 @@ namespace PacMan
 			switch (State)
 			{
 				case States.Waiting:
-					return;
+				case States.AppearAnimation:
 				case States.Normal:
 					target = new Point((int)pacman.X, (int)pacman.Y);
 					break;
@@ -317,6 +350,7 @@ namespace PacMan
 		{
 			State = States.Waiting;
 			waitedTime = 0;
+			AnimationState = 0;
 			X = map.GhostStart.X;
 			Y = map.GhostStart.Y;
 		}
@@ -345,7 +379,19 @@ namespace PacMan
 				case States.Waiting:
 					waitedTime += dt;
 					if (waitedTime >= Delay)
+					{
+						updateDirection(map, pacman);
+						State = States.AppearAnimation;
+					}
+
+					break;
+				case States.AppearAnimation:
+					AnimationState += dt / appearAnimationDuration;
+					if (AnimationState >= 1)
+					{
 						State = States.Normal;
+						AnimationState = 0;
+					}
 					break;
 				case States.Normal:
 				case States.Frightened:
@@ -362,6 +408,14 @@ namespace PacMan
 						updateDirection(map, pacman);
 					if (dt > 0)
 						moveRemainingCellPart(dt, map);
+					break;
+				case States.DisappearAnimation:
+					AnimationState += dt / disappearAnimationDuration;
+					if (AnimationState >= 1)
+					{
+						State = States.None;
+						AnimationState = 0;
+					}
 					break;
 			}
 
@@ -385,7 +439,7 @@ namespace PacMan
 		{
 			//return;
 
-			if (State == States.Waiting)
+			if (State == States.Waiting || State == States.None)
 				return;
 
 			GL.Translate(X, 0.5, Y);
@@ -404,6 +458,18 @@ namespace PacMan
 					break;
 			}
 
+			GL.PushMatrix();
+			if (State == States.AppearAnimation)
+			{
+				GL.Rotate(360 * Utils.NormSin(AnimationState), 0, 1, 0);
+				if (AnimationState < 0.5)
+					GL.Translate(0, -1 + 1.5 * Utils.NormSin(AnimationState * 2), 0);
+				else
+					GL.Translate(0, 0.5 * (1 - Utils.NormSin(AnimationState * 2 - 1)), 0);
+			}
+			if (State == States.DisappearAnimation)
+				GL.Translate(0, -Utils.NormSin(AnimationState), 0);
+
 			double r = 0.45;
 			double angleStep = Math.PI / 10;
 			double yStep = 0.1;
@@ -415,7 +481,7 @@ namespace PacMan
 					frigtenedCap.Render();
 				else
 					cap.Render();
-				
+
 				GL.Begin(PrimitiveType.Quads);
 
 				//skirt
@@ -441,6 +507,9 @@ namespace PacMan
 			eye.Render();
 			GL.Rotate(90, 0, 1, 0);
 			GL.Translate(-Math.Sin(-Math.PI / 6) * r, -Math.Sin(Math.PI / 6) * Math.Cos(-Math.PI / 6) * r, -Math.Cos(Math.PI / 6) * Math.Cos(-Math.PI / 6) * r);
+
+
+			GL.PopMatrix();
 
 			switch (Direction)
 			{
