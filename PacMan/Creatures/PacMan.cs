@@ -31,6 +31,138 @@ namespace PacMan
 			Super
 		}
 
+		private const double maxMouthAngle = Math.PI / 4;
+		private const double radius = 0.45;
+
+		private Mesh body_v = null;
+		private Mesh body
+		{
+			get
+			{
+				if (body_v == null)
+				{
+					Vector3d color = new Vector3d(Color.Yellow.R / 255.0, Color.Yellow.G / 255.0, Color.Yellow.B / 255.0);
+					double r = radius;
+
+					double yAngleStep = Math.PI / 10;
+					double xAngleStep = (Math.PI - maxMouthAngle) / 10;
+					int pointsCount = 896;
+					int vp = 0;
+					int np = 0;
+					int cp = 0;
+
+					double[] v = new double[pointsCount * 3];
+					double[] n = new double[pointsCount * 3];
+					double[] c = new double[pointsCount * 3];
+
+					for (double yAngle = -Math.PI / 2; yAngle < Math.PI / 2; yAngle += yAngleStep)
+						for (double xAngle = maxMouthAngle; xAngle <= Math.PI * 2 - maxMouthAngle; xAngle += xAngleStep)
+						{
+							Vector3d normal = Utils.FromSpheric(yAngle, xAngle, 1);
+							Utils.Push(n, normal, ref np);
+							normal.Mult(r);
+							Utils.Push(v, normal, ref vp);
+
+							normal = Utils.FromSpheric(yAngle + yAngleStep, xAngle, 1);
+							Utils.Push(n, normal, ref np);
+							normal.Mult(r);
+							Utils.Push(v, normal, ref vp);
+
+							normal = Utils.FromSpheric(yAngle + yAngleStep, xAngle + xAngleStep, 1);
+							Utils.Push(n, normal, ref np);
+							normal.Mult(r);
+							Utils.Push(v, normal, ref vp);
+
+							normal = Utils.FromSpheric(yAngle, xAngle + xAngleStep, 1);
+							Utils.Push(n, normal, ref np);
+							normal.Mult(r);
+							Utils.Push(v, normal, ref vp);
+						}
+					for (int i = 0; i < pointsCount; i++)
+						Utils.Push(c, color, ref cp);
+
+					body_v = new Mesh();
+					body_v.Vertices = v;
+					body_v.Normals = n;
+					body_v.Colors = c;
+				}
+				return body_v;
+			}
+		}
+
+		private Mesh jaw_v = null;
+		private Mesh jaw
+		{
+			get
+			{
+				if (jaw_v == null)
+				{
+
+					double r = radius;
+
+					double yAngleStep = Math.PI / 10;
+					double xAngleStep = maxMouthAngle / 10;
+					int pointsCount = 480;
+					int vp = 0;
+					int np = 0;
+					int cp = 0;
+
+					double[] v = new double[pointsCount * 3];
+					double[] n = new double[pointsCount * 3];
+					double[] c = new double[pointsCount * 3];
+
+					Vector3d normal = new Vector3d(0, 0, -1);
+					Vector3d color = new Vector3d(Color.DarkRed.R / 255.0, Color.DarkRed.G / 255.0, Color.DarkRed.B / 255.0);
+					for (double yAngle = -Math.PI / 2; yAngle < Math.PI / 2; yAngle += yAngleStep)
+					{
+						Utils.Push(v, new Vector3d(0, 0, 0), ref vp);
+						Utils.Push(v, Utils.FromSpheric(yAngle + yAngleStep, 0, r), ref vp);
+						Utils.Push(v, Utils.FromSpheric(yAngle, 0, r), ref vp);
+						Utils.Push(v, new Vector3d(0, 0, 0), ref vp);
+						for (int i = 0; i < 4; i++)
+						{
+							Utils.Push(n, normal, ref np);
+							Utils.Push(c, color, ref cp);
+						}
+					}
+
+					color = new Vector3d(Color.Yellow.R / 255.0, Color.Yellow.G / 255.0, Color.Yellow.B / 255.0);
+					for (double yAngle = -Math.PI / 2; yAngle < Math.PI / 2; yAngle += yAngleStep)
+						for (double xAngle = 0; xAngle < maxMouthAngle; xAngle += xAngleStep)
+						{
+							normal = Utils.FromSpheric(yAngle, xAngle, 1);
+							Utils.Push(n, normal, ref np);
+							normal.Mult(r);
+							Utils.Push(v, normal, ref vp);
+
+							normal = Utils.FromSpheric(yAngle + yAngleStep, xAngle, 1);
+							Utils.Push(n, normal, ref np);
+							normal.Mult(r);
+							Utils.Push(v, normal, ref vp);
+
+							normal = Utils.FromSpheric(yAngle + yAngleStep, xAngle + xAngleStep, 1);
+							Utils.Push(n, normal, ref np);
+							normal.Mult(r);
+							Utils.Push(v, normal, ref vp);
+
+							normal = Utils.FromSpheric(yAngle, xAngle + xAngleStep, 1);
+							Utils.Push(n, normal, ref np);
+							normal.Mult(r);
+							Utils.Push(v, normal, ref vp);
+						}
+					for (int i = cp / 3; i < pointsCount; i++)
+						Utils.Push(c, color, ref cp);
+
+					jaw_v = new Mesh();
+					jaw_v.Vertices = v;
+					jaw_v.Normals = n;
+					jaw_v.Colors = c;
+				}
+				return jaw_v;
+			}
+
+		}
+
 		/// <summary>
 		/// Direction defined by user input, will be applied on next crossroad.
 		/// </summary>
@@ -122,13 +254,13 @@ namespace PacMan
 
 		public override void Render()
 		{
-			double mouthOpen = Math.Max(Math.Abs(X - Math.Round(X)), Math.Abs(Y - Math.Round(Y)));
-			mouthOpen *= 2 * Math.PI / 2;
-			mouthOpen = Math.Sin(mouthOpen);
-			mouthOpen *= Math.PI / 4;
+			double mouthAngle = Math.Max(Math.Abs(X - Math.Round(X)), Math.Abs(Y - Math.Round(Y)));
+			mouthAngle *= 2 * Math.PI / 2;
+			mouthAngle = Math.Sin(mouthAngle);
+			mouthAngle *= maxMouthAngle;
 
 			double angleStep = Math.PI / 10;
-			double smallerAngleStep = (mouthOpen > Math.PI / 2 && mouthOpen < 3 * Math.PI / 2) ? angleStep : (Math.PI / 2 - mouthOpen) / 5;
+			double smallerAngleStep = (mouthAngle > Math.PI / 2 && mouthAngle < 3 * Math.PI / 2) ? angleStep : (Math.PI / 2 - mouthAngle) / 5;
 
 			GL.Translate(X, 0.5, Y);
 			switch (Direction)
@@ -145,72 +277,28 @@ namespace PacMan
 				case Directions.Right:
 					GL.Rotate(0, 0, 1, 0);
 					break;
-
 			}
 			GL.Rotate(-90, 1, 0, 0);
 
-			GL.Begin(PrimitiveType.Quads);
+			GL.Rotate(-mouthAngle * 180 / Math.PI, 0, 1, 0);
+			jaw.Render();
+			GL.Rotate(mouthAngle * 180 / Math.PI, 0, 1, 0);
 
-			//upper jaw
-			GL.Color3(Color.DarkRed);
-			for (double yAngle = -Math.PI / 2; yAngle < Math.PI / 2; yAngle += angleStep)
-			{
+			body.Render();
 
-				Vector3d jawAxis = new Vector3d(Math.Cos(mouthOpen), 0, Math.Sin(mouthOpen));
-				Vector3d yAxis = new Vector3d(0, 1, 0);
+			GL.Rotate(mouthAngle * 180 / Math.PI, 0, 1, 0);
+			GL.Rotate(180, 1, 0, 0);
+			jaw.Render();
+			GL.Rotate(-180, 1, 0, 0);
+			GL.Rotate(-mouthAngle * 180 / Math.PI, 0, 1, 0);
 
-				GL.Normal3(Vector3d.Cross(yAxis, jawAxis));
+			GL.Translate(Math.Cos(Math.PI / 6 + mouthAngle) * Math.Cos(Math.PI / 6) * radius, Math.Sin(Math.PI / 6) * radius, Math.Sin(Math.PI / 6 + mouthAngle) * Math.Cos(Math.PI / 6) * radius);
+			eye.Render();
+			GL.Translate(-Math.Cos(Math.PI / 6 + mouthAngle) * Math.Cos(Math.PI / 6) * radius, -Math.Sin(Math.PI / 6) * radius, -Math.Sin(Math.PI / 6 + mouthAngle) * Math.Cos(Math.PI / 6) * radius);
 
-				GL.Vertex3(0, 0, 0);
-
-				GL.Vertex3(Utils.FromSpheric(yAngle + angleStep, mouthOpen, 0.45));
-				GL.Vertex3(Utils.FromSpheric(yAngle, mouthOpen, 0.45));
-
-				GL.Vertex3(0, 0, 0);
-
-			}
-
-			//body
-			GL.Color3(Color.Yellow);
-			for (double yAngle = -Math.PI / 2; yAngle < Math.PI / 2; yAngle += angleStep)
-				for (double xAngle = 0; xAngle <= Math.PI * 2; xAngle += angleStep)
-				{
-					double rxAngle = xAngle * (Math.PI * 2 - mouthOpen * 2) / (Math.PI * 2) + mouthOpen;
-					double rxAngleNext = (xAngle + angleStep) * (Math.PI * 2 - mouthOpen * 2) / (Math.PI * 2) + mouthOpen;
-
-					GL.Normal3(Utils.FromSpheric(yAngle, rxAngle, 1));
-					GL.Vertex3(Utils.FromSpheric(yAngle, rxAngle, 0.45));
-
-					GL.Normal3(Utils.FromSpheric(yAngle + angleStep, rxAngle, 1));
-					GL.Vertex3(Utils.FromSpheric(yAngle + angleStep, rxAngle, 0.45));
-
-					GL.Normal3(Utils.FromSpheric(yAngle + angleStep, rxAngleNext, 1));
-					GL.Vertex3(Utils.FromSpheric(yAngle + angleStep, rxAngleNext, 0.45));
-
-					GL.Normal3(Utils.FromSpheric(yAngle, rxAngleNext, 1));
-					GL.Vertex3(Utils.FromSpheric(yAngle, rxAngleNext, 0.45));
-				}
-
-			//lower jaw
-			GL.Color3(Color.DarkRed);
-			for (double yAngle = -Math.PI / 2; yAngle < Math.PI / 2; yAngle += angleStep)
-			{
-				Vector3d jawAxis = new Vector3d(Math.Cos(-mouthOpen), 0, Math.Sin(-mouthOpen));
-				Vector3d yAxis = new Vector3d(0, 1, 0);
-
-				GL.Normal3(Vector3d.Cross(jawAxis, yAxis));
-				GL.Vertex3(0, 0, 0);
-				GL.Vertex3(Utils.FromSpheric(yAngle, -mouthOpen, 0.45));
-				GL.Vertex3(Utils.FromSpheric(yAngle + angleStep, -mouthOpen, 0.45));
-				GL.Vertex3(0, 0, 0);
-			}
-			GL.End();
-
-			//eyes
-			renderEye(Math.Cos(Math.PI / 6 + mouthOpen) * Math.Cos(Math.PI / 6) * 0.45, Math.Sin(Math.PI / 6) * 0.45, Math.Sin(Math.PI / 6 + mouthOpen) * Math.Cos(Math.PI / 6) * 0.45,
-			0.1, Math.PI / 6 + mouthOpen, Math.PI / 2 - Math.PI / 6, Math.PI / 6, State == States.Super ? Color.Red : Color.White);
-			renderEye(Math.Cos(Math.PI / 6 + mouthOpen) * Math.Cos(-Math.PI / 6) * 0.45, Math.Sin(-Math.PI / 6) * 0.45, Math.Sin(Math.PI / 6 + mouthOpen) * Math.Cos(-Math.PI / 6) * 0.45,
-			0.1, Math.PI / 6 + mouthOpen, Math.PI / 2 - Math.PI / 6, Math.PI / 6, State == States.Super ? Color.Red : Color.White);
+			GL.Translate(Math.Cos(Math.PI / 6 + mouthAngle) * Math.Cos(-Math.PI / 6) * radius, Math.Sin(-Math.PI / 6) * radius, Math.Sin(Math.PI / 6 + mouthAngle) * Math.Cos(-Math.PI / 6) * radius);
+			eye.Render();
+			GL.Translate(-Math.Cos(Math.PI / 6 + mouthAngle) * Math.Cos(-Math.PI / 6) * radius, -Math.Sin(-Math.PI / 6) * radius, -Math.Sin(Math.PI / 6 + mouthAngle) * Math.Cos(-Math.PI / 6) * radius);
 
 			GL.Rotate(90, 1, 0, 0);
 
@@ -228,7 +316,6 @@ namespace PacMan
 				case Directions.Right:
 					GL.Rotate(0, 0, 1, 0);
 					break;
-
 			}
 
 			GL.Translate(-X, -0.5, -Y);

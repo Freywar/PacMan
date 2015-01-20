@@ -225,60 +225,67 @@ namespace PacMan
 			return result;
 		}
 
-		/// <summary>
-		/// Eye rendering.
-		/// </summary>
-		/// <param name="x">Center X(map cells).</param>
-		/// <param name="y">Center Y(map cells).</param>
-		/// <param name="z">Center Z(map cells).</param>
-		/// <param name="r">Radius(map cells).</param>
-		/// <param name="pupilAlpha">Pupil alpha(radians)..</param>
-		/// <param name="pupilBeta">Pupil beta(radians)..</param>
-		/// <param name="pupilRad">Pupil radius(radians).</param>
-		/// <param name="color">Color.</param>
-		public void renderEye(double x, double y, double z, double r, double pupilAlpha, double pupilBeta, double pupilRad, Color color)
+		private Mesh eye_v = null;
+		protected Mesh eye
 		{
-			double angleStep = Math.PI / 10;
-
-			GL.Translate(x, y, z);
-			GL.Begin(PrimitiveType.Quads);
-			for (double alpha = -Math.PI / 2; alpha < Math.PI / 2; alpha += angleStep)
-				for (double beta = 0; beta < Math.PI * 2; beta += angleStep)
+			get
+			{
+				if (eye_v == null)
 				{
-					if (Utils.Distance(alpha, beta, pupilAlpha, pupilBeta) < pupilRad)
-						GL.Color3(Color.Black);
-					else
-						GL.Color3(color);
-					GL.Normal3(Utils.FromSpheric(alpha, beta, 1));
-					GL.Vertex3(Utils.FromSpheric(alpha, beta, r));
+					Vector3d whiteColor = new Vector3d(1, 1, 1);
+					Vector3d blackColor = new Vector3d(0, 0, 0);
+					double r = 0.1;
 
+					double step = Math.PI / 30;
+					int pointsCount = 7564;
+					int vp = 0;
+					int np = 0;
+					int cp = 0;
 
-					if (Utils.Distance(alpha+angleStep, beta, pupilAlpha, pupilBeta) < pupilRad)
-						GL.Color3(Color.Black);
-					else
-						GL.Color3(color);
-					GL.Normal3(Utils.FromSpheric(alpha + angleStep, beta, 1));
-					GL.Vertex3(Utils.FromSpheric(alpha + angleStep, beta, r));
+					double[] v = new double[pointsCount * 3];
+					double[] n = new double[pointsCount * 3];
+					double[] c = new double[pointsCount * 3];
 
+					for (double alpha = -Math.PI / 2; alpha < Math.PI / 2; alpha += step)
+						for (double beta = -Math.PI; beta < Math.PI; beta += step)
+						{
+							Vector3d color = Utils.Distance(alpha, beta, 0, 0) < Math.PI / 6 ? blackColor : whiteColor;
+							Vector3d normal = Utils.FromSpheric(alpha, beta, 1);
+							Utils.Push(n, normal, ref np);
+							normal.Mult(r);
+							Utils.Push(v, normal, ref vp);
+							Utils.Push(c, color, ref cp);
 
-					if (Utils.Distance(alpha+angleStep, beta+angleStep, pupilAlpha, pupilBeta) < pupilRad)
-						GL.Color3(Color.Black);
-					else
-						GL.Color3(color);
-					GL.Normal3(Utils.FromSpheric(alpha + angleStep, beta + angleStep, 1));
-					GL.Vertex3(Utils.FromSpheric(alpha + angleStep, beta + angleStep, r));
+							color = Utils.Distance(alpha + step, beta, 0, 0) < Math.PI / 6 ? blackColor : whiteColor;
+							normal = Utils.FromSpheric(alpha + step, beta, 1);
+							Utils.Push(n, normal, ref np);
+							normal.Mult(r);
+							Utils.Push(v, normal, ref vp);
+							Utils.Push(c, color, ref cp);
 
-					if (Utils.Distance(alpha, beta+angleStep, pupilAlpha, pupilBeta) < pupilRad)
-						GL.Color3(Color.Black);
-					else
-						GL.Color3(color);
-					GL.Normal3(Utils.FromSpheric(alpha, beta + angleStep, 1));
-					GL.Vertex3(Utils.FromSpheric(alpha, beta + angleStep, r));
+							color = Utils.Distance(alpha + step, beta + step, 0, 0) < Math.PI / 6 ? blackColor : whiteColor;
+							normal = Utils.FromSpheric(alpha + step, beta + step, 1);
+							Utils.Push(n, normal, ref np);
+							normal.Mult(r);
+							Utils.Push(v, normal, ref vp);
+							Utils.Push(c, color, ref cp);
+
+							color = Utils.Distance(alpha, beta + step, 0, 0) < Math.PI / 6 ? blackColor : whiteColor;
+							normal = Utils.FromSpheric(alpha, beta + step, 1);
+							Utils.Push(n, normal, ref np);
+							normal.Mult(r);
+							Utils.Push(v, normal, ref vp);
+							Utils.Push(c, color, ref cp);
+						}
+
+					eye_v = new Mesh();
+					eye_v.Vertices = v;
+					eye_v.Normals = n;
+					eye_v.Colors = c;
 				}
 
-			GL.End();
-			GL.Translate(-x, -y, -z);
-
+				return eye_v;
+			}
 		}
 
 		/// <summary>

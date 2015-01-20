@@ -39,6 +39,86 @@ namespace PacMan
 			Eaten
 		}
 
+		private Mesh createCap(Color col)
+		{
+			Vector3d color = new Vector3d(col.R / 255.0, col.G / 255.0, col.B / 255.0);
+			double r = 0.45;
+
+			double step = Math.PI / 10;
+			int pointsCount = 800;
+			int vp = 0;
+			int np = 0;
+			int cp = 0;
+
+			double[] v = new double[pointsCount * 3];
+			double[] n = new double[pointsCount * 3];
+			double[] c = new double[pointsCount * 4];
+
+			for (double alpha = -Math.PI / 2; alpha < Math.PI / 2; alpha += step)
+				for (double beta = 0; beta < Math.PI*2; beta += step)
+				{
+					GL.Color3(Color.White);
+
+					Vector3d normal = Utils.FromSpheric(alpha, beta, 1);
+					Utils.Push(n, normal, ref np);
+					normal.Mult(r);
+					Utils.Push(v, normal, ref vp);
+					Utils.Push(c, color, ref cp);
+
+					normal = Utils.FromSpheric(alpha + step, beta, 1);
+					Utils.Push(n, normal, ref np);
+					normal.Mult(r);
+					Utils.Push(v, normal, ref vp);
+					Utils.Push(c, color, ref cp);
+
+					normal = Utils.FromSpheric(alpha + step, beta + step, 1);
+					Utils.Push(n, normal, ref np);
+					normal.Mult(r);
+					Utils.Push(v, normal, ref vp);
+					Utils.Push(c, color, ref cp);
+
+					normal = Utils.FromSpheric(alpha, beta + step, 1);
+					Utils.Push(n, normal, ref np);
+					normal.Mult(r);
+					Utils.Push(v, normal, ref vp);
+					Utils.Push(c, color, ref cp);
+				}
+
+			Mesh res = new Mesh();
+			res.Vertices = v;
+			res.Normals = n;
+			res.Colors = c;
+			return res;
+		}
+
+		private Mesh cap_v = null;
+		private Mesh cap
+		{
+			get
+			{
+				if (cap_v == null)
+				{
+					cap_v = createCap(Color);
+				}
+
+				return cap_v;
+			}
+		}
+
+		private Mesh frigtenedCap_v = null;
+		private Mesh frigtenedCap
+		{
+			get
+			{
+				if (frigtenedCap_v == null)
+				{
+					frigtenedCap_v = createCap(Color.Blue);
+				}
+
+				return frigtenedCap_v;
+			}
+		}
+
 		/// <summary>
 		/// Name.
 		/// </summary>
@@ -258,6 +338,8 @@ namespace PacMan
 
 			Point result = Point.Empty;
 
+			//return result;
+
 			switch (State)
 			{
 				case States.Waiting:
@@ -301,6 +383,8 @@ namespace PacMan
 		/// </summary>
 		public override void Render()
 		{
+			//return;
+
 			if (State == States.Waiting)
 				return;
 
@@ -327,23 +411,12 @@ namespace PacMan
 			{
 				GL.Color3(State == States.Frightened ? Color.LightBlue : Color);
 
-				//cap
+				if (State == States.Frightened)
+					frigtenedCap.Render();
+				else
+					cap.Render();
+				
 				GL.Begin(PrimitiveType.Quads);
-				for (double alpha = 0; alpha < Math.PI / 2; alpha += angleStep)
-					for (double beta = 0; beta < Math.PI * 2; beta += angleStep)
-					{
-						GL.Normal3(Utils.FromSpheric(alpha, beta, 1));
-						GL.Vertex3(Utils.FromSpheric(alpha, beta, r));
-
-						GL.Normal3(Utils.FromSpheric(alpha + angleStep, beta, 1));
-						GL.Vertex3(Utils.FromSpheric(alpha + angleStep, beta, r));
-
-						GL.Normal3(Utils.FromSpheric(alpha + angleStep, beta + angleStep, 1));
-						GL.Vertex3(Utils.FromSpheric(alpha + angleStep, beta + angleStep, r));
-
-						GL.Normal3(Utils.FromSpheric(alpha, beta + angleStep, 1));
-						GL.Vertex3(Utils.FromSpheric(alpha, beta + angleStep, r));
-					}
 
 				//skirt
 				for (double dy = 0; dy < 0.5; dy += 0.1)
@@ -357,10 +430,17 @@ namespace PacMan
 				GL.End();
 			}
 
-			renderEye(Math.Sin(Math.PI / 6) * r, Math.Sin(Math.PI / 6 + 0) * Math.Cos(Math.PI / 6) * r, Math.Cos(Math.PI / 6 + 0) * Math.Cos(Math.PI / 6) * r,
-			0.1, Math.PI / 6, Math.PI / 2 - Math.PI / 6, Math.PI / 6, Color.White);
-			renderEye(Math.Sin(-Math.PI / 6) * r, Math.Sin(Math.PI / 6 + 0) * Math.Cos(Math.PI / 6) * r, Math.Cos(Math.PI / 6 + 0) * Math.Cos(-Math.PI / 6) * r,
-			0.1, Math.PI / 6, Math.PI / 2 - Math.PI / 6, Math.PI / 6, Color.White);
+			GL.Translate(Math.Sin(Math.PI / 6) * r, Math.Sin(Math.PI / 6) * Math.Cos(Math.PI / 6) * r, Math.Cos(Math.PI / 6) * Math.Cos(Math.PI / 6) * r);
+			GL.Rotate(-90, 0, 1, 0);
+			eye.Render();
+			GL.Rotate(90, 0, 1, 0);
+			GL.Translate(-Math.Sin(Math.PI / 6) * r, -Math.Sin(Math.PI / 6) * Math.Cos(Math.PI / 6) * r, -Math.Cos(Math.PI / 6) * Math.Cos(Math.PI / 6) * r);
+
+			GL.Translate(Math.Sin(-Math.PI / 6) * r, Math.Sin(Math.PI / 6) * Math.Cos(-Math.PI / 6) * r, Math.Cos(Math.PI / 6) * Math.Cos(-Math.PI / 6) * r);
+			GL.Rotate(-90, 0, 1, 0);
+			eye.Render();
+			GL.Rotate(90, 0, 1, 0);
+			GL.Translate(-Math.Sin(-Math.PI / 6) * r, -Math.Sin(Math.PI / 6) * Math.Cos(-Math.PI / 6) * r, -Math.Cos(Math.PI / 6) * Math.Cos(-Math.PI / 6) * r);
 
 			switch (Direction)
 			{
