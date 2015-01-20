@@ -19,7 +19,7 @@ namespace PacMan
 
 		protected override void render2D(Graphics gfx)
 		{
-			Font font = new Font(new FontFamily("Tahoma"), 12, FontStyle.Bold);
+			Font font = new Font(fontFamily, 12, FontStyle.Regular);
 			SolidBrush brush = new SolidBrush(Color.White);
 
 			SizeF[] sizes = new SizeF[Items.Length];

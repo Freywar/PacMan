@@ -10,6 +10,7 @@ using OpenTK.Input;
 using System.Xml;
 using System.IO;
 using System.Drawing;
+using System.Drawing.Text;
 
 namespace PacMan
 {
@@ -21,6 +22,22 @@ namespace PacMan
 		private Bitmap texture_v = null;
 		private int Width_v = 0;
 		private int Height_v = 0;
+		
+		private FontFamily fontFamily_v = null;
+
+		protected FontFamily fontFamily
+		{
+			get
+			{
+				if (fontFamily_v == null)
+				{
+					PrivateFontCollection pfc = new PrivateFontCollection();
+					pfc.AddFontFile("Fonts\\emulogic.ttf");
+					fontFamily_v = pfc.Families[0];
+				}
+				return fontFamily_v;
+			}
+		}
 
 		/// <summary>
 		/// Texture.

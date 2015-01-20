@@ -46,7 +46,7 @@ namespace PacMan
 
 		protected override void render2D(Graphics gfx)
 		{
-			Font font = new Font(new FontFamily("Tahoma"), 24, FontStyle.Bold);
+			Font font = new Font(fontFamily, 18, FontStyle.Regular);
 			SolidBrush brush = new SolidBrush(Color.Yellow);
 
 			string score = "Score: " + Score.ToString();
@@ -54,9 +54,12 @@ namespace PacMan
 			gfx.DrawString(score, font, brush, Width - size.Width, 0);
 
 
-			score = "Lives: " + Lives.ToString();
-			size = gfx.MeasureString(score, font);
-			gfx.DrawString(score, font, brush, 0, 0);
+			int x = 0;
+			for (int i = 0; i < Lives; i++)
+			{
+				gfx.FillPie(brush, new Rectangle(x, 0, 24, 24), 45, 270);
+				x += 24;
+			}
 		}
 	}
 }

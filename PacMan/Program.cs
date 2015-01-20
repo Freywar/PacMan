@@ -5,6 +5,7 @@ using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Input;
 using System.Collections.Generic;
+using System.Drawing;
 
 namespace PacMan
 {

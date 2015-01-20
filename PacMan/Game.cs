@@ -40,11 +40,11 @@ namespace PacMan
 			/// <summary>
 			/// Win screen.
 			/// </summary>
-			Won,
+			WonMenu,
 			/// <summary>
 			/// Lose screen.
 			/// </summary>
-			Lose
+			LostMenu
 		}
 
 		/// <summary>
@@ -74,14 +74,13 @@ namespace PacMan
 		private HUD HUD = new HUD();
 		private Menu MainMenu = new Menu();
 		private Menu PauseMenu = new Menu();
+		private Menu WonMenu = new Menu();
+		private Menu LostMenu = new Menu();
 
 		/// <summary>
 		/// Powerup duration(seconds).
 		/// </summary>
 		private double PowerupDuration = 30;
-
-		private Bitmap text_bmp;
-		private int text_texture = -1;
 
 		private int Width_v = 0;
 		private int Height_v = 0;
@@ -94,10 +93,11 @@ namespace PacMan
 			get { return Width_v; }
 			set
 			{
-				text_texture = -1;
 				HUD.Width = value;
 				MainMenu.Width = value;
 				PauseMenu.Width = value;
+				WonMenu.Width = value;
+				LostMenu.Width = value;
 				Width_v = value;
 			}
 		}
@@ -109,10 +109,11 @@ namespace PacMan
 			get { return Height_v; }
 			set
 			{
-				text_texture = -1;
 				HUD.Height = value;
 				MainMenu.Height = value;
 				PauseMenu.Height = value;
+				WonMenu.Height = value;
+				LostMenu.Height = value;
 				Height_v = value;
 			}
 		}
@@ -251,14 +252,25 @@ namespace PacMan
 		{
 			loadConfig();
 
+			MainMenu.Header = new string[1] { "PACMAN" };
 			MainMenu.Items = new Menu.Item[3];
 			MainMenu.Items[0] = new Menu.Item("Start", true);
 			MainMenu.Items[1] = new Menu.Item("Continue", false);
 			MainMenu.Items[2] = new Menu.Item("Exit", true);
 
+			PauseMenu.Header = new string[1] { "Pause" };
 			PauseMenu.Items = new Menu.Item[2];
 			PauseMenu.Items[0] = new Menu.Item("Continue", true);
 			PauseMenu.Items[1] = new Menu.Item("Main menu", true);
+
+			WonMenu.Header = new string[2] { "You won", "Score: " + Score.ToString() };
+			WonMenu.Items = new Menu.Item[1];
+			WonMenu.Items[0] = new Menu.Item("Continue", true);
+
+			LostMenu.Header = new string[2] { "Game over", "Score: " + Score.ToString() };
+			LostMenu.Items = new Menu.Item[2];
+			LostMenu.Items[0] = new Menu.Item("Restart", true);
+			LostMenu.Items[1] = new Menu.Item("Main menu", true);
 
 			float[] light_diffuse = { 1.0f, 1.0f, 1.0f, 1.0f };
 			float[] light_position = { 0.0f, 0.0f, 2.0f, 0.0f };
@@ -274,8 +286,6 @@ namespace PacMan
 
 			MainMenu.Init();
 			State = States.MainMenu;
-
-			startGame();
 		}
 
 		/// <summary>
@@ -286,6 +296,7 @@ namespace PacMan
 			CurrentMap = Maps[0];
 			CurrentMap.Init();
 			PacMan.Lives = 3;
+			Score = 0;
 			PacMan.Init(CurrentMap);
 			foreach (Ghost ghost in Ghosts)
 				ghost.Init(CurrentMap);
@@ -359,7 +370,7 @@ namespace PacMan
 								{
 									PacMan.Lives--;
 									if (PacMan.Lives == 0)
-										State = States.Lose;
+										State = States.LostMenu;
 									else
 										restartLevel();
 								}
@@ -381,7 +392,7 @@ namespace PacMan
 					}
 
 					if (CurrentMap.PointsCount == 0)
-						State = States.Won;
+						State = States.WonMenu;
 
 					HUD.Score = Score;
 					HUD.Lives = PacMan.Lives;
@@ -389,6 +400,14 @@ namespace PacMan
 
 				case States.PauseMenu:
 					PauseMenu.Update(dt);
+					break;
+
+				case States.WonMenu:
+					WonMenu.Update(dt);
+					break;
+
+				case States.LostMenu:
+					LostMenu.Update(dt);
 					break;
 			}
 			return false;
@@ -430,13 +449,21 @@ namespace PacMan
 					if (key == Key.Escape)
 						State = States.Playing;
 					break;
-				case States.Lose:
-					if (key == Key.Enter)
-						startGame();
+				case States.WonMenu:
+					selectedIndex = WonMenu.KeyDown(key);
+					if (selectedIndex == 0)
+						State = States.MainMenu;
+					if (key == Key.Escape)
+						State = States.MainMenu;
 					break;
-				case States.Won:
-					if (key == Key.Enter)
+				case States.LostMenu:
+					selectedIndex = LostMenu.KeyDown(key);
+					if (selectedIndex == 0)
 						startGame();
+					if (selectedIndex == 1)
+						State = States.MainMenu;
+					if (key == Key.Escape)
+						State = States.MainMenu;
 					break;
 			}
 			return false;
@@ -462,9 +489,9 @@ namespace PacMan
 				case States.PauseMenu:
 					selectedIndex = PauseMenu.KeyUp(key);
 					break;
-				case States.Lose:
+				case States.WonMenu:
 					break;
-				case States.Won:
+				case States.LostMenu:
 					break;
 			}
 			return false;
@@ -517,104 +544,12 @@ namespace PacMan
 					PauseMenu.Render();
 					break;
 
-				case States.Lose:
-					GL.MatrixMode(MatrixMode.Projection);
-					GL.LoadIdentity();
-					GL.Ortho(0, Width, 0, Height, -1, 1);
-					GL.MatrixMode(MatrixMode.Modelview);
-					GL.LoadIdentity();
-
-					if (text_texture == -1)
-					{
-						text_bmp = new Bitmap(Width, Height);
-
-						text_texture = GL.GenTexture();
-						GL.BindTexture(TextureTarget.Texture2D, text_texture);
-						GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)All.Linear);
-						GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)All.Linear);
-						GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, text_bmp.Width, text_bmp.Height, 0,
-							 PixelFormat.Bgra, PixelType.UnsignedByte, IntPtr.Zero); // just allocate memory, so we can update efficiently using TexSubImage2D
-					}
-
-					using (Graphics gfx = Graphics.FromImage(text_bmp))
-					{
-						gfx.Clear(Color.Transparent);
-						gfx.DrawString("Yuo Lose", new Font(new FontFamily("Tahoma"), 32, FontStyle.Bold), new SolidBrush(Color.Yellow),
-
-						Width / 2 - gfx.MeasureString("Yuo Lose", new Font(new FontFamily("Tahoma"), 32, FontStyle.Bold)).Width / 2,
-						Height / 2 - gfx.MeasureString("Yuo Lose", new Font(new FontFamily("Tahoma"), 32, FontStyle.Bold)).Height / 2);
-
-					}
-
-					System.Drawing.Imaging.BitmapData data_l = text_bmp.LockBits(new Rectangle(0, 0, text_bmp.Width, text_bmp.Height), System.Drawing.Imaging.ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-					GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, Width, Height, 0,
-						 PixelFormat.Bgra, PixelType.UnsignedByte, data_l.Scan0);
-					text_bmp.UnlockBits(data_l);
-
-					GL.Enable(EnableCap.Texture2D);
-					GL.Enable(EnableCap.Blend);
-					GL.BlendFunc(BlendingFactorSrc.One, BlendingFactorDest.OneMinusSrcAlpha);
-
-					GL.Begin(PrimitiveType.Quads);
-
-					GL.TexCoord2(0f, 1f); GL.Vertex2(0f, 0f);
-					GL.TexCoord2(1f, 1f); GL.Vertex2(Width, 0f);
-					GL.TexCoord2(1f, 0f); GL.Vertex2(Width, Height);
-					GL.TexCoord2(0f, 0f); GL.Vertex2(0f, Height);
-					GL.End();
-
-					GL.Disable(EnableCap.Texture2D);
-
+				case States.WonMenu:
+					WonMenu.Render();
 					break;
 
-				case States.Won:
-					GL.MatrixMode(MatrixMode.Projection);
-					GL.LoadIdentity();
-					GL.Ortho(0, Width, 0, Height, -1, 1);
-					GL.MatrixMode(MatrixMode.Modelview);
-					GL.LoadIdentity();
-
-					if (text_texture == -1)
-					{
-						text_bmp = new Bitmap(Width, Height);
-
-						text_texture = GL.GenTexture();
-						GL.BindTexture(TextureTarget.Texture2D, text_texture);
-						GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)All.Linear);
-						GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)All.Linear);
-						GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, text_bmp.Width, text_bmp.Height, 0,
-							 PixelFormat.Bgra, PixelType.UnsignedByte, IntPtr.Zero); // just allocate memory, so we can update efficiently using TexSubImage2D
-					}
-
-					using (Graphics gfx = Graphics.FromImage(text_bmp))
-					{
-						gfx.Clear(Color.Transparent);
-						gfx.DrawString("Yoy vin", new Font(new FontFamily("Tahoma"), 32, FontStyle.Bold), new SolidBrush(Color.Yellow),
-
-						Width / 2 - gfx.MeasureString("Yoy vin", new Font(new FontFamily("Tahoma"), 32, FontStyle.Bold)).Width / 2,
-						Height / 2 - gfx.MeasureString("Yoy vin", new Font(new FontFamily("Tahoma"), 32, FontStyle.Bold)).Height / 2);
-
-					}
-
-					System.Drawing.Imaging.BitmapData data_w = text_bmp.LockBits(new Rectangle(0, 0, text_bmp.Width, text_bmp.Height), System.Drawing.Imaging.ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-					GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, Width, Height, 0,
-						 PixelFormat.Bgra, PixelType.UnsignedByte, data_w.Scan0);
-					text_bmp.UnlockBits(data_w);
-
-					GL.Enable(EnableCap.Texture2D);
-					GL.Enable(EnableCap.Blend);
-					GL.BlendFunc(BlendingFactorSrc.One, BlendingFactorDest.OneMinusSrcAlpha);
-
-					GL.Begin(PrimitiveType.Quads);
-
-					GL.TexCoord2(0f, 1f); GL.Vertex2(0f, 0f);
-					GL.TexCoord2(1f, 1f); GL.Vertex2(Width, 0f);
-					GL.TexCoord2(1f, 0f); GL.Vertex2(Width, Height);
-					GL.TexCoord2(0f, 0f); GL.Vertex2(0f, Height);
-					GL.End();
-
-					GL.Disable(EnableCap.Texture2D);
-
+				case States.LostMenu:
+					LostMenu.Render();
 					break;
 			}
 		}

@@ -27,6 +27,11 @@ namespace PacMan
 		}
 
 		/// <summary>
+		/// Строки заголовка.
+		/// </summary>
+		public string[] Header = null;
+
+		/// <summary>
 		/// Элементы меню.
 		/// </summary>
 		public Item[] Items = null;
@@ -97,7 +102,26 @@ namespace PacMan
 
 		protected override void render2D(Graphics gfx)
 		{
-			Font font = new Font(new FontFamily("Tahoma"), 36, FontStyle.Bold);
+			if (Items == null || Items.Length == 0)
+				throw new NotSupportedException("Can not render empty menu.");
+
+			Font headerFont = new Font(fontFamily, 48, FontStyle.Bold);
+			SolidBrush headerBrush = new SolidBrush(Color.Yellow);
+
+			SizeF[] headerSizes = new SizeF[0];
+			float totalHeaderHeight = 0;
+			if (Header != null)
+			{
+				headerSizes = new SizeF[Items.Length];
+				for (int i = 0; i < Header.Length; i++)
+				{
+					headerSizes[i] = gfx.MeasureString(Header[i], headerFont);
+					totalHeaderHeight += headerSizes[i].Height;
+				}
+				totalHeaderHeight+=headerSizes[0].Height;
+			}
+
+			Font font = new Font(fontFamily, 24, FontStyle.Regular);
 			SolidBrush selectedEnabledBrush = new SolidBrush(Color.Yellow);
 			SolidBrush selectedDisabledBrush = new SolidBrush(Color.FromArgb(64, Color.Yellow));
 			SolidBrush enabledBrush = new SolidBrush(Color.Blue);
@@ -111,7 +135,19 @@ namespace PacMan
 				totalHeight += sizes[i].Height;
 			}
 
-			float x = Width / 2, y = Height / 2 - totalHeight / 2;
+			float x = Width / 2,
+				y = Height / 2 - (totalHeaderHeight + totalHeight) / 2;
+			if (Header != null)
+			{
+				for (int i = 0; i < Header.Length; i++)
+				{
+					gfx.DrawString(Header[i], headerFont, headerBrush, x - headerSizes[i].Width / 2, y);
+					y += headerSizes[i].Height;
+				}
+			}
+
+			x = Width / 2;
+			y = Height / 2 - (totalHeaderHeight + totalHeight) / 2 + totalHeaderHeight;
 			for (int i = 0; i < Items.Length; i++)
 			{
 				Brush brush;
@@ -123,7 +159,6 @@ namespace PacMan
 				gfx.DrawString(Items[i].Text, font, brush, x - sizes[i].Width / 2, y);
 				y += sizes[i].Height;
 			}
-
 		}
 	}
 }
