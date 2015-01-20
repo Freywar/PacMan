@@ -242,12 +242,12 @@ namespace PacMan
 				throw new Exception("Invalid map data");
 		}
 
-		private Mesh sphere = null;
-		private Mesh sphereMesh
+		private Mesh sphere_v = null;
+		private Mesh sphere
 		{
 			get
 			{
-				if (sphere == null)
+				if (sphere_v == null)
 				{
 					Vector3d color = new Vector3d(1, 1, 1);
 					double r = 1;
@@ -293,13 +293,13 @@ namespace PacMan
 							Utils.Push(c, color, ref cp);
 						}
 
-					sphere = new Mesh();
-					sphere.Vertices = v;
-					sphere.Normals = n;
-					sphere.Colors = c;
+					sphere_v = new Mesh();
+					sphere_v.Vertices = v;
+					sphere_v.Normals = n;
+					sphere_v.Colors = c;
 				}
 
-				return sphere;
+				return sphere_v;
 			}
 		}
 
@@ -348,12 +348,12 @@ namespace PacMan
 			}
 		}
 
-		private Mesh wallSideMesh_v = null;
-		private Mesh wallSideMesh
+		private Mesh wallSide_v = null;
+		private Mesh wallSide
 		{
 			get
 			{
-				if (wallSideMesh_v == null)
+				if (wallSide_v == null)
 				{
 					double ps2 = 1.0 / 6.0;
 					Vector3d color = new Vector3d(
@@ -392,22 +392,22 @@ namespace PacMan
 						Utils.Push(c, color, ref cp);
 					}
 
-					wallSideMesh_v = new Mesh();
-					wallSideMesh_v.Vertices = v;
-					wallSideMesh_v.Normals = n;
-					wallSideMesh_v.Colors = c;
+					wallSide_v = new Mesh();
+					wallSide_v.Vertices = v;
+					wallSide_v.Normals = n;
+					wallSide_v.Colors = c;
 				}
 
-				return wallSideMesh_v;
+				return wallSide_v;
 			}
 		}
 
-		private Mesh wallclosedCornerMesh_v = null;
-		private Mesh wallclosedCornerMesh
+		private Mesh wallclosedCorner_v = null;
+		private Mesh wallclosedCorner
 		{
 			get
 			{
-				if (wallclosedCornerMesh_v == null)
+				if (wallclosedCorner_v == null)
 				{
 					double ps2 = 1.0 / 6.0;
 					double step = Math.PI / 10;
@@ -493,22 +493,22 @@ namespace PacMan
 					for (int i = 0; i < pointsCount; i++)
 						Utils.Push(c, color, ref cp);
 
-					wallclosedCornerMesh_v = new Mesh();
-					wallclosedCornerMesh_v.Vertices = v;
-					wallclosedCornerMesh_v.Normals = n;
-					wallclosedCornerMesh_v.Colors = c;
+					wallclosedCorner_v = new Mesh();
+					wallclosedCorner_v.Vertices = v;
+					wallclosedCorner_v.Normals = n;
+					wallclosedCorner_v.Colors = c;
 				}
 
-				return wallclosedCornerMesh_v;
+				return wallclosedCorner_v;
 			}
 		}
 
-		private Mesh wallOpenCornerMesh_v = null;
-		private Mesh wallOpenCornerMesh
+		private Mesh wallOpenCorner_v = null;
+		private Mesh wallOpenCorner
 		{
 			get
 			{
-				if (wallOpenCornerMesh_v == null)
+				if (wallOpenCorner_v == null)
 				{
 					double ps2 = 1.0 / 6.0;
 					double step = Math.PI / 10;
@@ -578,17 +578,15 @@ namespace PacMan
 					for (int i = 0; i < pointsCount; i++)
 						Utils.Push(c, color, ref cp);
 
-					wallOpenCornerMesh_v = new Mesh();
-					wallOpenCornerMesh_v.Vertices = v;
-					wallOpenCornerMesh_v.Normals = n;
-					wallOpenCornerMesh_v.Colors = c;
+					wallOpenCorner_v = new Mesh();
+					wallOpenCorner_v.Vertices = v;
+					wallOpenCorner_v.Normals = n;
+					wallOpenCorner_v.Colors = c;
 				}
 
-				return wallOpenCornerMesh_v;
+				return wallOpenCorner_v;
 			}
 		}
-
-	
 
 		private void renderWall(int x, int y)
 		{
@@ -606,7 +604,7 @@ namespace PacMan
 			if (x < Width - 1 && Fields[y][x + 1] == Objects.Wall)
 				wallCenter.Render();
 			else
-				wallSideMesh.Render();
+				wallSide.Render();
 			GL.Translate(-ps, 0, 0);
 
 			//left
@@ -615,7 +613,7 @@ namespace PacMan
 			if (x > 0 && Fields[y][x - 1] == Objects.Wall)
 				wallCenter.Render();
 			else
-				wallSideMesh.Render();
+				wallSide.Render();
 			GL.Rotate(-180, 0, 1, 0);
 			GL.Translate(ps, 0, 0);
 
@@ -625,7 +623,7 @@ namespace PacMan
 			if (y < Height - 1 && Fields[y + 1][x] == Objects.Wall)
 				wallCenter.Render();
 			else
-				wallSideMesh.Render();
+				wallSide.Render();
 			GL.Rotate(90, 0, 1, 0);
 			GL.Translate(0, 0, -ps);
 
@@ -635,7 +633,7 @@ namespace PacMan
 			if (y > 0 && Fields[y - 1][x] == Objects.Wall)
 				wallCenter.Render();
 			else
-				wallSideMesh.Render();
+				wallSide.Render();
 			GL.Rotate(-90, 0, 1, 0);
 			GL.Translate(0, 0, ps);
 
@@ -644,18 +642,18 @@ namespace PacMan
 			if (x < Width - 1 && y < Height - 1 && Fields[y + 1][x] == Objects.Wall && Fields[y][x + 1] == Objects.Wall && Fields[y + 1][x + 1] == Objects.Wall)
 				wallCenter.Render();
 			else if (x < Width - 1 && y < Height - 1 && Fields[y + 1][x] == Objects.Wall && Fields[y][x + 1] == Objects.Wall)
-				wallclosedCornerMesh.Render();
+				wallclosedCorner.Render();
 			else if (x < Width - 1 && Fields[y][x + 1] == Objects.Wall)
 			{
 				GL.Rotate(-90, 0, 1, 0);
-				wallSideMesh.Render();
+				wallSide.Render();
 				GL.Rotate(90, 0, 1, 0);
 			}
 
 			else if (y < Height - 1 && Fields[y + 1][x] == Objects.Wall)
-				wallSideMesh.Render();
+				wallSide.Render();
 			else
-				wallOpenCornerMesh.Render();
+				wallOpenCorner.Render();
 			GL.Translate(-ps, 0, -ps);
 
 
@@ -665,18 +663,18 @@ namespace PacMan
 			if (x < Width - 1 && y > 0 && Fields[y - 1][x] == Objects.Wall && Fields[y][x + 1] == Objects.Wall && Fields[y - 1][x + 1] == Objects.Wall)
 				wallCenter.Render();
 			else if (x < Width - 1 && y > 0 && Fields[y - 1][x] == Objects.Wall && Fields[y][x + 1] == Objects.Wall)
-				wallclosedCornerMesh.Render();
+				wallclosedCorner.Render();
 			else if (x < Width - 1 && Fields[y][x + 1] == Objects.Wall)
-				wallSideMesh.Render();
+				wallSide.Render();
 
 			else if (y > 0 && Fields[y - 1][x] == Objects.Wall)
 			{
 				GL.Rotate(-90, 0, 1, 0);
-				wallSideMesh.Render();
+				wallSide.Render();
 				GL.Rotate(90, 0, 1, 0);
 			}
 			else
-				wallOpenCornerMesh.Render();
+				wallOpenCorner.Render();
 			GL.Rotate(-90, 0, 1, 0);
 			GL.Translate(-ps, 0, ps);
 
@@ -686,17 +684,17 @@ namespace PacMan
 			if (x > 0 && y > 0 && Fields[y - 1][x] == Objects.Wall && Fields[y][x - 1] == Objects.Wall && Fields[y - 1][x - 1] == Objects.Wall)
 				wallCenter.Render();
 			else if (x > 0 && y > 0 && Fields[y - 1][x] == Objects.Wall && Fields[y][x - 1] == Objects.Wall)
-				wallclosedCornerMesh.Render();
+				wallclosedCorner.Render();
 			else if (x > 0 && Fields[y][x - 1] == Objects.Wall)
 			{
 				GL.Rotate(-90, 0, 1, 0);
-				wallSideMesh.Render();
+				wallSide.Render();
 				GL.Rotate(90, 0, 1, 0);
 			}
 			else if (y > 0 && Fields[y - 1][x] == Objects.Wall)
-				wallSideMesh.Render();
+				wallSide.Render();
 			else
-				wallOpenCornerMesh.Render();
+				wallOpenCorner.Render();
 			GL.Rotate(-180, 0, 1, 0);
 			GL.Translate(ps, 0, ps);
 
@@ -706,19 +704,19 @@ namespace PacMan
 			if (x > 0 && y < Height - 1 && Fields[y + 1][x] == Objects.Wall && Fields[y][x - 1] == Objects.Wall && Fields[y + 1][x - 1] == Objects.Wall)
 				wallCenter.Render();
 			else if (x > 0 && y < Height - 1 && Fields[y + 1][x] == Objects.Wall && Fields[y][x - 1] == Objects.Wall)
-				wallclosedCornerMesh.Render();
+				wallclosedCorner.Render();
 			else if (x > 0 && Fields[y][x - 1] == Objects.Wall)
 
-				wallSideMesh.Render();
+				wallSide.Render();
 			else if (y < Height - 1 && Fields[y + 1][x] == Objects.Wall)
 			{
 				GL.Rotate(-90, 0, 1, 0);
-				wallSideMesh.Render();
+				wallSide.Render();
 				GL.Rotate(90, 0, 1, 0);
 			}
 
 			else
-				wallOpenCornerMesh.Render();
+				wallOpenCorner.Render();
 			GL.Rotate(90, 0, 1, 0);
 			GL.Translate(ps, 0, -ps);
 
@@ -750,7 +748,7 @@ namespace PacMan
 							GL.PushMatrix();
 							GL.Translate(x, 0.5, y);
 							GL.Scale(r, r, r);
-							sphereMesh.Render(PrimitiveType.Quads);
+							sphere.Render(PrimitiveType.Quads);
 							GL.PopMatrix();
 							break;
 
