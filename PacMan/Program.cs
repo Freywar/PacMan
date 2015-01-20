@@ -14,12 +14,18 @@ namespace PacMan
 		private static Game Game;
 		private static GameWindow Window;
 		private static Dictionary<Key, bool> pressedKeys = new Dictionary<Key, bool>();
+		private static Info Info;
+		private static bool infoIsVisible = false;
 
 		public static void OnKeyDown(Object sender, KeyboardKeyEventArgs e)
 		{
 			if (!pressedKeys.ContainsKey(e.Key) || !pressedKeys[e.Key])
+			{
 				if (Game.KeyDown(e.Key))
 					Window.Exit();
+				if (e.Key == Key.F1)
+					infoIsVisible = !infoIsVisible;
+			}
 			pressedKeys[e.Key] = true;
 		}
 
@@ -33,15 +39,14 @@ namespace PacMan
 
 		public static void OnWindowLoad(Object sender, EventArgs e)
 		{
-			Game = new Game();
 			Game.Init();
 		}
 
 		public static void OnWindowResize(Object sender, EventArgs e)
 		{
 			GL.Viewport(0, 0, Window.Width, Window.Height);
-			Game.Width = Window.Width;
-			Game.Height = Window.Height;
+			Game.Width = Info.Width = Window.Width;
+			Game.Height = Info.Height = Window.Height;
 		}
 
 		public static void OnWindowUpdate(Object sender, FrameEventArgs e)
@@ -55,7 +60,12 @@ namespace PacMan
 			GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
 			Game.Render();
-
+			if (infoIsVisible)
+			{
+				Info.Items[0] = "FPS: " + Window.RenderFrequency.ToString("#.00");
+				Info.Invalidate();
+				Info.Render();
+			}
 			Window.SwapBuffers();
 		}
 
@@ -64,6 +74,8 @@ namespace PacMan
 		{
 			Window = new GameWindow();
 			Game = new Game();
+			Info = new Info();
+			Info.Items = new string[1];
 			Window.Load += OnWindowLoad;
 			Window.Resize += OnWindowResize;
 			Window.UpdateFrame += OnWindowUpdate;

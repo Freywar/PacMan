@@ -11,7 +11,6 @@ using System.Xml;
 using System.IO;
 using System.Drawing;
 
-
 namespace PacMan
 {
 	/// <summary>
@@ -139,6 +138,11 @@ namespace PacMan
 
 			GL.Disable(EnableCap.Texture2D);
 			GL.BindTexture(TextureTarget.Texture2D, 0);
+		}
+
+		public void Invalidate()
+		{
+			textureIsValid = false;
 		}
 	}
 }
