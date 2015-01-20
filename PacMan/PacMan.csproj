@@ -49,6 +49,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="2D\Info.cs" />
     <Compile Include="2D\Screen2D.cs" />
     <Compile Include="Camera.cs" />
     <Compile Include="Creatures\Creature.cs" />
