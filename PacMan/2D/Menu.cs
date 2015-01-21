@@ -112,7 +112,7 @@ namespace PacMan
 			float totalHeaderHeight = 0;
 			if (Header != null)
 			{
-				headerSizes = new SizeF[Items.Length];
+				headerSizes = new SizeF[Header.Length];
 				for (int i = 0; i < Header.Length; i++)
 				{
 					headerSizes[i] = gfx.MeasureString(Header[i], headerFont);
