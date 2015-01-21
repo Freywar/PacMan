@@ -154,6 +154,7 @@ namespace PacMan
 				throw new NotSupportedException("Can not render empty menu.");
 
 			Font headerFont = new Font(fontFamily, 48, FontStyle.Bold);
+			Font subHeaderFont = new Font(fontFamily, 24, FontStyle.Bold);
 			SolidBrush headerBrush = new SolidBrush(Color.Yellow);
 
 			SizeF[] headerSizes = new SizeF[0];
@@ -163,7 +164,7 @@ namespace PacMan
 				headerSizes = new SizeF[Header.Length];
 				for (int i = 0; i < Header.Length; i++)
 				{
-					headerSizes[i] = gfx.MeasureString(Header[i], headerFont);
+					headerSizes[i] = gfx.MeasureString(Header[i], i == 0 ? headerFont : subHeaderFont);
 					totalHeaderHeight += headerSizes[i].Height;
 				}
 				totalHeaderHeight += headerSizes[0].Height;
@@ -189,7 +190,7 @@ namespace PacMan
 			{
 				for (int i = 0; i < Header.Length; i++)
 				{
-					gfx.DrawString(Header[i], headerFont, headerBrush, x - headerSizes[i].Width / 2, y);
+					gfx.DrawString(Header[i], i == 0 ? headerFont : subHeaderFont, headerBrush, x - headerSizes[i].Width / 2, y);
 					y += headerSizes[i].Height;
 				}
 			}

@@ -40,7 +40,7 @@ namespace PacMan
 			Font font = new Font(fontFamily, 18, FontStyle.Regular);
 			SolidBrush brush = new SolidBrush(Color.Yellow);
 
-			string score = "Score: " + Score.ToString();
+			string score = "Score:" + Score.ToString();
 			SizeF size = gfx.MeasureString(score, font);
 			gfx.DrawString(score, font, brush, Width - size.Width, 0);
 

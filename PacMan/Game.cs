@@ -720,7 +720,7 @@ namespace PacMan
 			if (currentMapIndex == Maps.Length - 1)
 			{
 				deleteSave();
-				WinMenu.Header[1] = "Score: " + Score.ToString();
+				WinMenu.Header[1] = "Score:" + Score.ToString();
 				State = States.WinMenu;
 			}
 			else
@@ -849,11 +849,11 @@ namespace PacMan
 			PauseMenu.Items[0] = new Menu.Item("Continue", true);
 			PauseMenu.Items[1] = new Menu.Item("Main menu", true);
 
-			WinMenu.Header = new string[2] { "You won", "Score: " + Score.ToString() };
+			WinMenu.Header = new string[2] { "You won", "Score:" + Score.ToString() };
 			WinMenu.Items = new Menu.Item[1];
 			WinMenu.Items[0] = new Menu.Item("Continue", true);
 
-			LoseMenu.Header = new string[2] { "Game over", "Score: " + Score.ToString() };
+			LoseMenu.Header = new string[2] { "Game over", "Score:" + Score.ToString() };
 			LoseMenu.Items = new Menu.Item[2];
 			LoseMenu.Items[0] = new Menu.Item("Restart", true);
 			LoseMenu.Items[1] = new Menu.Item("Main menu", true);
@@ -1051,6 +1051,7 @@ namespace PacMan
 					if (allGhostsDisappeard && CurrentMap.State == Map.States.None)
 					{
 						deleteSave();
+						LoseMenu.Header[1] = "Score:" + Score.ToString();
 						State = States.LoseMenu;
 					}
 					break;
