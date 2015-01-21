@@ -1,18 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using OpenTK;
-using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
-using OpenTK.Input;
-using System.Drawing;
 
 namespace PacMan
 {
-
-	class Mesh
+	/// <summary>
+	/// Mesh class.
+	/// </summary>
+	class Mesh : IDisposable
 	{
 		private uint verticesBufferId;
 		private uint normalsBufferId;
@@ -22,6 +17,9 @@ namespace PacMan
 		private double[] Colors_v = null;
 		private double[] Normals_v = null;
 
+		/// <summary>
+		/// Vertex components.
+		/// </summary>
 		public double[] Vertices
 		{
 			get { return Vertices_v; }
@@ -37,7 +35,27 @@ namespace PacMan
 				GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
 			}
 		}
-
+		/// <summary>
+		/// Normals components.
+		/// </summary>
+		public double[] Normals
+		{
+			get { return Normals_v; }
+			set
+			{
+				Normals_v = value;
+				GL.BindBuffer(BufferTarget.ArrayBuffer, normalsBufferId);
+				GL.BufferData(
+					 BufferTarget.ArrayBuffer,
+					 (IntPtr)(Normals_v.Length * sizeof(double)),
+					 Normals_v,
+					 BufferUsageHint.StaticDraw);
+				GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
+			}
+		}
+		/// <summary>
+		/// Colors components.
+		/// </summary>
 		public double[] Colors
 		{
 			get { return Colors_v; }
@@ -54,22 +72,9 @@ namespace PacMan
 			}
 		}
 
-		public double[] Normals
-		{
-			get { return Normals_v; }
-			set
-			{
-				Normals_v = value;
-				GL.BindBuffer(BufferTarget.ArrayBuffer, normalsBufferId);
-				GL.BufferData(
-					 BufferTarget.ArrayBuffer,
-					 (IntPtr)(Normals_v.Length * sizeof(double)),
-					 Normals_v,
-					 BufferUsageHint.StaticDraw);
-				GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
-			}
-		}
-
+		/// <summary>
+		/// Constructor.
+		/// </summary>
 		public Mesh()
 		{
 			GL.GenBuffers(1, out verticesBufferId);
@@ -77,6 +82,10 @@ namespace PacMan
 			GL.GenBuffers(1, out colorsBufferId);
 		}
 
+		/// <summary>
+		/// Render.
+		/// </summary>
+		/// <param name="type">Primitive type.</param>
 		public void Render(PrimitiveType type)
 		{
 			if (Vertices_v == null)
@@ -113,14 +122,32 @@ namespace PacMan
 				GL.DisableClientState(ArrayCap.ColorArray);
 		}
 
+		/// <summary>
+		/// Render.
+		/// </summary>
 		public void Render()
 		{
 			Render(PrimitiveType.Quads);
+		}
+
+		public void Dispose()
+		{
+			GL.DeleteBuffer(verticesBufferId);
+			GL.DeleteBuffer(normalsBufferId);
+			GL.DeleteBuffer(colorsBufferId);
 		}
 	}
 
 	class Utils
 	{
+		/// <summary>
+		/// Calc distance between two points.
+		/// </summary>
+		/// <param name="x1">First point X.</param>
+		/// <param name="y1">First point Y.</param>
+		/// <param name="x2">Second point X.</param>
+		/// <param name="y2">Second point Y.</param>
+		/// <returns>Distance.</returns>
 		public static double Distance(double x1, double y1, double x2, double y2)
 		{
 			x1 -= x2;
@@ -128,11 +155,24 @@ namespace PacMan
 			return Math.Sqrt(x1 * x1 + y1 * y1);
 		}
 
+		/// <summary>
+		/// Convert coordinates from spheric to decart.
+		/// </summary>
+		/// <param name="alpha">First angle.</param>
+		/// <param name="beta">Second angle.</param>
+		/// <param name="r">Radius.</param>
+		/// <returns>Point in decart coordinates.</returns>
 		public static Vector3d FromSpheric(double alpha, double beta, double r)
 		{
 			return new Vector3d(Math.Cos(alpha) * Math.Cos(beta) * r, Math.Sin(alpha) * r, Math.Cos(alpha) * Math.Sin(beta) * r);
 		}
 
+		/// <summary>
+		/// Push vector into mesh components array.
+		/// </summary>
+		/// <param name="array">Array.</param>
+		/// <param name="vector">Vector.</param>
+		/// <param name="offset">First free index in array.</param>
 		public static void Push(double[] array, Vector3d vector, ref int offset)
 		{
 			array[offset + 0] = (double)vector.X;
@@ -141,6 +181,12 @@ namespace PacMan
 			offset += 3;
 		}
 
+		/// <summary>
+		/// Push vector into mesh components array.
+		/// </summary>
+		/// <param name="array">Array.</param>
+		/// <param name="vector">Vector.</param>
+		/// <param name="offset">First free index in array.</param>
 		public static void Push(double[] array, Vector4d vector, ref int offset)
 		{
 			array[offset + 0] = (double)vector.X;

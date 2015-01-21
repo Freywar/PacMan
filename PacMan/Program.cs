@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Drawing;
 using OpenTK;
-using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Input;
 using System.Collections.Generic;
-using System.Drawing;
 
 namespace PacMan
 {
@@ -73,6 +70,7 @@ namespace PacMan
 		public static void OnWindowUnload(Object sender, EventArgs e)
 		{
 			Game.Exit();
+			Game.Dispose();
 		}
 
 		[STAThread]

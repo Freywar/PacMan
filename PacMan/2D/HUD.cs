@@ -1,19 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using OpenTK;
-using OpenTK.Graphics;
-using OpenTK.Graphics.OpenGL;
-using OpenTK.Input;
-using System.Xml;
-using System.IO;
-using System.Drawing;
-
+﻿using System.Drawing;
 
 namespace PacMan
 {
+	/// <summary>
+	/// Score and lives screen.
+	/// </summary>
 	class HUD : Screen2D
 	{
 		private int Score_v = 0;
@@ -52,7 +43,6 @@ namespace PacMan
 			string score = "Score: " + Score.ToString();
 			SizeF size = gfx.MeasureString(score, font);
 			gfx.DrawString(score, font, brush, Width - size.Width, 0);
-
 
 			int x = 0;
 			for (int i = 0; i < Lives; i++)

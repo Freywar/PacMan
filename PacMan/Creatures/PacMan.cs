@@ -1,10 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using OpenTK;
-using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Input;
 using System.Drawing;
@@ -21,6 +16,9 @@ namespace PacMan
 		/// </summary>
 		public enum States
 		{
+			/// <summary>
+			/// Appear animation/
+			/// </summary>
 			AppearAnimation,
 			/// <summary>
 			/// Normal.
@@ -30,14 +28,44 @@ namespace PacMan
 			/// Super.
 			/// </summary>
 			Super,
+			/// <summary>
+			/// Disappear animation.
+			/// </summary>
 			DisappearAnimation,
+			/// <summary>
+			/// Not in game.
+			/// </summary>
 			None
 		}
 
+		/// <summary>
+		/// Max opened mouth angle(radians);
+		/// </summary>
 		private const double maxMouthAngle = Math.PI / 4;
+		/// <summary>
+		/// Radius(map cells).
+		/// </summary>
 		private const double radius = 0.45;
+		/// <summary>
+		/// Details count per 360 degrees or 1 map cell.
+		/// </summary>
+		private const int detailsCount = 20;
+		/// <summary>
+		/// Appear and disappear animation duration(seconds).
+		/// </summary>
+		private const double animationDuration = 0.5;
+
 
 		private Mesh body_v = null;
+		private Mesh jaw_v = null;
+		/// <summary>
+		/// Animation progress in [0..1].
+		/// </summary>
+		public double animationState = 0;
+
+		/// <summary>
+		/// Body mesh.
+		/// </summary>
 		private Mesh body
 		{
 			get
@@ -45,11 +73,10 @@ namespace PacMan
 				if (body_v == null)
 				{
 					Vector3d color = new Vector3d(Color.Yellow.R / 255.0, Color.Yellow.G / 255.0, Color.Yellow.B / 255.0);
-					double r = radius;
 
-					double yAngleStep = Math.PI / 10;
-					double xAngleStep = (Math.PI - maxMouthAngle) / 10;
-					int pointsCount = 896;
+					double yAngleStep = Math.PI * 2.0 / detailsCount;
+					double xAngleStep = (Math.PI - maxMouthAngle) * 2.0 / detailsCount;
+					int pointsCount = (int)(Math.PI / yAngleStep) * (int)(2.0 * (Math.PI - maxMouthAngle) / xAngleStep + 1.0) * 4;
 					int vp = 0;
 					int np = 0;
 					int cp = 0;
@@ -59,26 +86,26 @@ namespace PacMan
 					double[] c = new double[pointsCount * 3];
 
 					for (double yAngle = -Math.PI / 2; yAngle < Math.PI / 2; yAngle += yAngleStep)
-						for (double xAngle = maxMouthAngle; xAngle <= Math.PI * 2 - maxMouthAngle; xAngle += xAngleStep)
+						for (double xAngle = maxMouthAngle; xAngle < Math.PI * 2 - maxMouthAngle; xAngle += xAngleStep)
 						{
 							Vector3d normal = Utils.FromSpheric(yAngle, xAngle, 1);
 							Utils.Push(n, normal, ref np);
-							normal.Mult(r);
+							normal.Mult(radius);
 							Utils.Push(v, normal, ref vp);
 
 							normal = Utils.FromSpheric(yAngle + yAngleStep, xAngle, 1);
 							Utils.Push(n, normal, ref np);
-							normal.Mult(r);
+							normal.Mult(radius);
 							Utils.Push(v, normal, ref vp);
 
 							normal = Utils.FromSpheric(yAngle + yAngleStep, xAngle + xAngleStep, 1);
 							Utils.Push(n, normal, ref np);
-							normal.Mult(r);
+							normal.Mult(radius);
 							Utils.Push(v, normal, ref vp);
 
 							normal = Utils.FromSpheric(yAngle, xAngle + xAngleStep, 1);
 							Utils.Push(n, normal, ref np);
-							normal.Mult(r);
+							normal.Mult(radius);
 							Utils.Push(v, normal, ref vp);
 						}
 					for (int i = 0; i < pointsCount; i++)
@@ -92,20 +119,18 @@ namespace PacMan
 				return body_v;
 			}
 		}
-
-		private Mesh jaw_v = null;
+		/// <summary>
+		/// Jaw mesh.
+		/// </summary>
 		private Mesh jaw
 		{
 			get
 			{
 				if (jaw_v == null)
 				{
-
-					double r = radius;
-
-					double yAngleStep = Math.PI / 10;
-					double xAngleStep = maxMouthAngle / 10;
-					int pointsCount = 480;
+					double yAngleStep = Math.PI * 2 / detailsCount;
+					double xAngleStep = maxMouthAngle * 2 / detailsCount;
+					int pointsCount = (int)(Math.PI / yAngleStep) * 4 + (int)(Math.PI / yAngleStep * maxMouthAngle / xAngleStep) * 4;
 					int vp = 0;
 					int np = 0;
 					int cp = 0;
@@ -119,8 +144,8 @@ namespace PacMan
 					for (double yAngle = -Math.PI / 2; yAngle < Math.PI / 2; yAngle += yAngleStep)
 					{
 						Utils.Push(v, new Vector3d(0, 0, 0), ref vp);
-						Utils.Push(v, Utils.FromSpheric(yAngle + yAngleStep, 0, r), ref vp);
-						Utils.Push(v, Utils.FromSpheric(yAngle, 0, r), ref vp);
+						Utils.Push(v, Utils.FromSpheric(yAngle + yAngleStep, 0, radius), ref vp);
+						Utils.Push(v, Utils.FromSpheric(yAngle, 0, radius), ref vp);
 						Utils.Push(v, new Vector3d(0, 0, 0), ref vp);
 						for (int i = 0; i < 4; i++)
 						{
@@ -135,22 +160,22 @@ namespace PacMan
 						{
 							normal = Utils.FromSpheric(yAngle, xAngle, 1);
 							Utils.Push(n, normal, ref np);
-							normal.Mult(r);
+							normal.Mult(radius);
 							Utils.Push(v, normal, ref vp);
 
 							normal = Utils.FromSpheric(yAngle + yAngleStep, xAngle, 1);
 							Utils.Push(n, normal, ref np);
-							normal.Mult(r);
+							normal.Mult(radius);
 							Utils.Push(v, normal, ref vp);
 
 							normal = Utils.FromSpheric(yAngle + yAngleStep, xAngle + xAngleStep, 1);
 							Utils.Push(n, normal, ref np);
-							normal.Mult(r);
+							normal.Mult(radius);
 							Utils.Push(v, normal, ref vp);
 
 							normal = Utils.FromSpheric(yAngle, xAngle + xAngleStep, 1);
 							Utils.Push(n, normal, ref np);
-							normal.Mult(r);
+							normal.Mult(radius);
 							Utils.Push(v, normal, ref vp);
 						}
 					for (int i = cp / 3; i < pointsCount; i++)
@@ -163,7 +188,6 @@ namespace PacMan
 				}
 				return jaw_v;
 			}
-
 		}
 
 		/// <summary>
@@ -183,18 +207,11 @@ namespace PacMan
 		/// Remaining time in Super state.
 		/// </summary>
 		public double SuperTime = 0;
-		public double AnimationState = 0;
 
-		private const double animationDuration = 0.5;
-
-		/// <summary>
-		/// Init on level start.
-		/// </summary>
-		/// <param name="map">Map.</param>
 		public override void Init(Map map)
 		{
 			State = States.None;
-			AnimationState = 0;
+			animationState = 0;
 			X = map.PacManStart.X;
 			Y = map.PacManStart.Y;
 		}
@@ -240,18 +257,18 @@ namespace PacMan
 		{
 			if (State == States.AppearAnimation)
 			{
-				AnimationState += dt / animationDuration;
-				if (AnimationState >= 1)
+				animationState += dt / animationDuration;
+				if (animationState >= 1)
 				{
 					State = States.Normal;
-					AnimationState = 0;
+					animationState = 0;
 				}
 				return null;
 			}
 			if (State == States.DisappearAnimation)
 			{
-				AnimationState += dt / animationDuration;
-				if (AnimationState >= 1)
+				animationState += dt / animationDuration;
+				if (animationState >= 1)
 					State = States.None;
 				return null;
 			}
@@ -278,6 +295,7 @@ namespace PacMan
 			if (key == Key.Right)
 				desiredDirection = Creature.Directions.Right;
 		}
+
 		/// <summary>
 		/// Key release handling.
 		/// </summary>
@@ -292,13 +310,9 @@ namespace PacMan
 				return;
 
 			double mouthAngle = Math.Max(Math.Abs(X - Math.Round(X)), Math.Abs(Y - Math.Round(Y)));
-			mouthAngle *= 2 * Math.PI / 2;
-			mouthAngle = Math.Sin(mouthAngle);
-			mouthAngle *= maxMouthAngle;
+			mouthAngle = Math.Sin(mouthAngle * Math.PI) * maxMouthAngle;
 
-			double angleStep = Math.PI / 10;
-			double smallerAngleStep = (mouthAngle > Math.PI / 2 && mouthAngle < 3 * Math.PI / 2) ? angleStep : (Math.PI / 2 - mouthAngle) / 5;
-
+			GL.PushMatrix();
 			GL.Translate(X, 0.5, Y);
 			switch (Direction)
 			{
@@ -317,11 +331,10 @@ namespace PacMan
 			}
 			GL.Rotate(-90, 1, 0, 0);
 
-			GL.PushMatrix();
 			if (State == States.AppearAnimation)
-				GL.Scale(AnimationState, AnimationState, AnimationState);
+				GL.Scale(animationState, animationState, animationState);
 			if (State == States.DisappearAnimation)
-				GL.Scale(1 - AnimationState, 1 - AnimationState, 1 - AnimationState);
+				GL.Scale(1 - animationState, 1 - animationState, 1 - animationState);
 
 			GL.Rotate(-mouthAngle * 180 / Math.PI, 0, 1, 0);
 			jaw.Render();
@@ -329,41 +342,34 @@ namespace PacMan
 
 			body.Render();
 
+			GL.PushMatrix();
 			GL.Rotate(mouthAngle * 180 / Math.PI, 0, 1, 0);
 			GL.Rotate(180, 1, 0, 0);
 			jaw.Render();
-			GL.Rotate(-180, 1, 0, 0);
-			GL.Rotate(-mouthAngle * 180 / Math.PI, 0, 1, 0);
-
-			GL.Translate(Math.Cos(Math.PI / 6 + mouthAngle) * Math.Cos(Math.PI / 6) * radius, Math.Sin(Math.PI / 6) * radius, Math.Sin(Math.PI / 6 + mouthAngle) * Math.Cos(Math.PI / 6) * radius);
-			eye.Render();
-			GL.Translate(-Math.Cos(Math.PI / 6 + mouthAngle) * Math.Cos(Math.PI / 6) * radius, -Math.Sin(Math.PI / 6) * radius, -Math.Sin(Math.PI / 6 + mouthAngle) * Math.Cos(Math.PI / 6) * radius);
-
-			GL.Translate(Math.Cos(Math.PI / 6 + mouthAngle) * Math.Cos(-Math.PI / 6) * radius, Math.Sin(-Math.PI / 6) * radius, Math.Sin(Math.PI / 6 + mouthAngle) * Math.Cos(-Math.PI / 6) * radius);
-			eye.Render();
-			GL.Translate(-Math.Cos(Math.PI / 6 + mouthAngle) * Math.Cos(-Math.PI / 6) * radius, -Math.Sin(-Math.PI / 6) * radius, -Math.Sin(Math.PI / 6 + mouthAngle) * Math.Cos(-Math.PI / 6) * radius);
-
 			GL.PopMatrix();
 
-			GL.Rotate(90, 1, 0, 0);
+			double cc = Math.Cos(Math.PI / 6 + mouthAngle),
+				cs = Math.Sin(Math.PI / 6 + mouthAngle),
+				lc = Math.Cos(Math.PI / 6),
+				ls = Math.Sin(Math.PI / 6);
+			GL.Translate(cc * lc * radius, ls * radius, cs * lc * radius);
+			eye.Render();
+			GL.Translate(-cc * lc * radius, -ls * radius, -cs * lc * radius);
 
-			switch (Direction)
-			{
-				case Directions.Down:
-					GL.Rotate(90, 0, 1, 0);
-					break;
-				case Directions.Up:
-					GL.Rotate(-90, 0, 1, 0);
-					break;
-				case Directions.Left:
-					GL.Rotate(-180, 0, 1, 0);
-					break;
-				case Directions.Right:
-					GL.Rotate(0, 0, 1, 0);
-					break;
-			}
+			GL.Translate(cc * lc * radius, -ls * radius, cs * lc * radius);
+			eye.Render();
+			GL.Translate(-cc * lc * radius, ls * radius, -cs * lc * radius);
 
-			GL.Translate(-X, -0.5, -Y);
+			GL.PopMatrix();
+		}
+
+		public override void Dispose()
+		{
+			base.Dispose();
+			if (body_v != null)
+				body_v.Dispose();
+			if (jaw_v != null)
+				jaw_v.Dispose();
 		}
 	}
 }

@@ -13,12 +13,29 @@ using System.Drawing;
 
 namespace PacMan
 {
+	/// <summary>
+	/// Menu.
+	/// </summary>
 	class Menu : Screen2D
 	{
+		/// <summary>
+		/// Menu item.
+		/// </summary>
 		public struct Item
 		{
+			/// <summary>
+			/// Text.
+			/// </summary>
 			public string Text;
+			/// <summary>
+			/// Enabled.
+			/// </summary>
 			public bool Enabled;
+			/// <summary>
+			/// Item constructor.
+			/// </summary>
+			/// <param name="text">Text.</param>
+			/// <param name="enabled">Enabled.</param>
 			public Item(string text, bool enabled)
 			{
 				Text = text;
@@ -27,35 +44,56 @@ namespace PacMan
 		}
 
 		/// <summary>
-		/// Строки заголовка.
+		/// Navigation repeat timeout(seconds).
+		/// </summary>
+		private const double navigationTimeout = 0.3;
+
+		/// <summary>
+		/// Index of current menu item.
+		/// </summary>
+		private int selectedIndex = 0;
+		/// <summary>
+		/// Current pressed key or null if none pressed.
+		/// </summary>
+		private Key? pressedKey = null;
+		/// <summary>
+		/// Time elapsed from last navigation if key is pressed.
+		/// </summary>
+		private double navigationTimeElapsed = 0;
+
+		/// <summary>
+		/// Header strings.
 		/// </summary>
 		public string[] Header = null;
 
 		/// <summary>
-		/// Элементы меню.
+		/// Menu items.
 		/// </summary>
 		public Item[] Items = null;
-		private int selectedIndex = 0;
 
-		private Key? pressedKey = null;
-		private double pressedKeyTime = 0;
-
+		/// <summary>
+		/// Initialization.
+		/// </summary>
 		public void Init()
 		{
 			pressedKey = null;
-			pressedKeyTime = 0;
+			navigationTimeElapsed = 0;
 			selectedIndex = 0;
 		}
 
+		/// <summary>
+		/// Update.
+		/// </summary>
+		/// <param name="dt">Time elapsed from last call(seconds).</param>
 		public void Update(double dt)
 		{
 			if (Items == null || Items.Length == 0)
 				throw new NotSupportedException("Can not navigate empty menu.");
 
 			if (pressedKey != null)
-				pressedKeyTime += dt;
+				navigationTimeElapsed += dt;
 
-			if (pressedKeyTime >= 0.3)
+			if (navigationTimeElapsed >= navigationTimeout)
 			{
 				if (pressedKey == Key.Up && selectedIndex > 0)
 				{
@@ -69,10 +107,15 @@ namespace PacMan
 					textureIsValid = false;
 				}
 
-				pressedKeyTime = 0;
+				navigationTimeElapsed = 0;
 			}
 		}
 
+		/// <summary>
+		/// Key press handling.
+		/// </summary>
+		/// <param name="key">Pressed key.</param>
+		/// <returns>Selected index on Enter press or null.</returns>
 		public int? KeyDown(Key key)
 		{
 			if (Items == null || Items.Length == 0)
@@ -81,7 +124,7 @@ namespace PacMan
 			if (key == Key.Up || key == Key.Down)
 			{
 				pressedKey = key;
-				pressedKeyTime = 0.5;
+				navigationTimeElapsed = navigationTimeout;
 			}
 
 			if (key == Key.Enter && Items[selectedIndex].Enabled)
@@ -90,12 +133,17 @@ namespace PacMan
 				return null;
 		}
 
+		/// <summary>
+		/// Key release handling.
+		/// </summary>
+		/// <param name="key">Released key.</param>
+		/// <returns>Always null.</returns>
 		public int? KeyUp(Key key)
 		{
 			if (key == pressedKey)
 			{
 				pressedKey = null;
-				pressedKeyTime = 0;
+				navigationTimeElapsed = 0;
 			}
 			return null;
 		}
@@ -118,7 +166,7 @@ namespace PacMan
 					headerSizes[i] = gfx.MeasureString(Header[i], headerFont);
 					totalHeaderHeight += headerSizes[i].Height;
 				}
-				totalHeaderHeight+=headerSizes[0].Height;
+				totalHeaderHeight += headerSizes[0].Height;
 			}
 
 			Font font = new Font(fontFamily, 24, FontStyle.Regular);

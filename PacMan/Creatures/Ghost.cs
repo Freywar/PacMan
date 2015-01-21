@@ -1,12 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using OpenTK;
-using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
-using OpenTK.Input;
 using System.Drawing;
 
 namespace PacMan
@@ -25,6 +19,9 @@ namespace PacMan
 			/// Waiting outside map.
 			/// </summary>
 			Waiting,
+			/// <summary>
+			/// Appear animation.
+			/// </summary>
 			AppearAnimation,
 			/// <summary>
 			/// Normal.
@@ -34,33 +31,72 @@ namespace PacMan
 			/// Frightened.
 			/// </summary>
 			Frightened,
+			/// <summary>
+			/// Disappear animation.
+			/// </summary>
 			DisappearAnimation,
 			/// <summary>
 			/// Eaten.
 			/// </summary>
 			Eaten,
+			/// <summary>
+			/// Not in game.
+			/// </summary>
 			None
 		}
 
+		/// <summary>
+		/// Radius(map cells).
+		/// </summary>
+		private const double radius = 0.45;
+		/// <summary>
+		/// Details count per 360 degrees or 1 map cell.
+		/// </summary>
+		private const int detailsCount = 20;
+		/// <summary>
+		/// Appear animation duration(seconds);
+		/// </summary>
 		private const double appearAnimationDuration = 2;
+		/// <summary>
+		/// Disappear animation duration(seconds);
+		/// </summary>
 		private const double disappearAnimationDuration = 0.5;
 
-		public double AnimationState = 0;
+		private Mesh cap_v = null;
+		private Mesh frightenedCap_v = null;
+		private Color Color_v = Color.Red;
 
+		/// <summary>
+		/// Animation progress in [0..1].
+		/// </summary>
+		private double animationState = 0;
+		/// <summary>
+		/// Time elapsed in Waiting state(seconds).
+		/// </summary>
+		private double waitTimeElapsed = 0;
+		/// <summary>
+		/// Total time elapsed from level start(seconds).
+		/// </summary>
+		private double totalTimeElapsed = 0;
+
+		/// <summary>
+		/// Create cap mesh.
+		/// </summary>
+		/// <param name="col">Color.</param>
+		/// <returns>Cap mesh.</returns>
 		private Mesh createCap(Color col)
 		{
 			Vector3d color = new Vector3d(col.R / 255.0, col.G / 255.0, col.B / 255.0);
-			double r = 0.45;
 
-			double step = Math.PI / 10;
-			int pointsCount = 800;
+			double step = Math.PI * 2 / detailsCount;
+			int pointsCount = (int)(Math.PI / step) * (int)(Math.PI / 2 / step) * detailsCount;
 			int vp = 0;
 			int np = 0;
 			int cp = 0;
 
 			double[] v = new double[pointsCount * 3];
 			double[] n = new double[pointsCount * 3];
-			double[] c = new double[pointsCount * 4];
+			double[] c = new double[pointsCount * 3];
 
 			for (double alpha = -Math.PI / 2; alpha < Math.PI / 2; alpha += step)
 				for (double beta = 0; beta < Math.PI * 2; beta += step)
@@ -69,25 +105,25 @@ namespace PacMan
 
 					Vector3d normal = Utils.FromSpheric(alpha, beta, 1);
 					Utils.Push(n, normal, ref np);
-					normal.Mult(r);
+					normal.Mult(radius);
 					Utils.Push(v, normal, ref vp);
 					Utils.Push(c, color, ref cp);
 
 					normal = Utils.FromSpheric(alpha + step, beta, 1);
 					Utils.Push(n, normal, ref np);
-					normal.Mult(r);
+					normal.Mult(radius);
 					Utils.Push(v, normal, ref vp);
 					Utils.Push(c, color, ref cp);
 
 					normal = Utils.FromSpheric(alpha + step, beta + step, 1);
 					Utils.Push(n, normal, ref np);
-					normal.Mult(r);
+					normal.Mult(radius);
 					Utils.Push(v, normal, ref vp);
 					Utils.Push(c, color, ref cp);
 
 					normal = Utils.FromSpheric(alpha, beta + step, 1);
 					Utils.Push(n, normal, ref np);
-					normal.Mult(r);
+					normal.Mult(radius);
 					Utils.Push(v, normal, ref vp);
 					Utils.Push(c, color, ref cp);
 				}
@@ -98,8 +134,9 @@ namespace PacMan
 			res.Colors = c;
 			return res;
 		}
-
-		private Mesh cap_v = null;
+		/// <summary>
+		/// Cap mesh with current color.
+		/// </summary>
 		private Mesh cap
 		{
 			get
@@ -112,70 +149,22 @@ namespace PacMan
 				return cap_v;
 			}
 		}
-
-		private Mesh frigtenedCap_v = null;
-		private Mesh frigtenedCap
+		/// <summary>
+		/// Cap mesh with LightBlue color.
+		/// </summary>
+		private Mesh frightenedCap
 		{
 			get
 			{
-				if (frigtenedCap_v == null)
+				if (frightenedCap_v == null)
 				{
-					frigtenedCap_v = createCap(Color.LightBlue);
+					frightenedCap_v = createCap(Color.LightBlue);
 				}
 
-				return frigtenedCap_v;
+				return frightenedCap_v;
 			}
 		}
 
-		/// <summary>
-		/// Name.
-		/// </summary>
-		public String Name = "Ghost";
-		/// <summary>
-		/// Color.
-		/// </summary>
-		public Color Color = Color.Red;
-		/// <summary>
-		/// Delay before appearance after level start or death(seconds).
-		/// </summary>
-		public double Delay = 0;
-		/// <summary>
-		/// State.
-		/// </summary>
-		public States State = States.Normal;
-		/// <summary>
-		/// Frightened speed.
-		/// </summary>
-		public double FrightenedSpeed = 1;
-		/// <summary>
-		/// Eaten speed.
-		/// </summary>
-		public double EatenSpeed = 1;
-		protected override double CurrentSpeed
-		{
-			get
-			{
-				switch (State)
-				{
-					case States.Normal:
-						return Speed;
-					case States.Frightened:
-						return FrightenedSpeed;
-					case States.Eaten:
-						return EatenSpeed;
-					case States.AppearAnimation:
-					case States.Waiting:
-					case States.DisappearAnimation:
-					case States.None:
-					default:
-						return 0;
-				}
-			}
-		}
-
-		private double waitedTime = 0;
-
-		private double rAnimationTime = 0;
 		/// <summary>
 		/// Calculate skirt fluctuation.
 		/// </summary>
@@ -186,36 +175,46 @@ namespace PacMan
 		{
 			if (y <= 0)
 				return 0;
-			y = y * 2;
-			y = y * y * 0.2;
-			double delta = 0;
 
+			y = 4 * y * y * 0.2;
+
+			double delta = 0;
 			if (State == States.AppearAnimation)
 			{
-				if (AnimationState < 0.25)
-					delta = -y * Utils.NormSin(AnimationState * 4);
-				if (AnimationState >= 0.25 && AnimationState < 0.5)
-					delta = -y * (1 - Utils.NormSin(AnimationState * 4 - 1));
-				if (AnimationState >= 0.5 && AnimationState < 0.75)
-					delta = y * Utils.NormSin(AnimationState * 4 - 2);
-				if (AnimationState >= 0.75 && AnimationState < 1)
-					delta = y * (1 - Utils.NormSin(AnimationState * 4 - 3));
+				if (animationState < 0.25)
+					delta = -y * Utils.NormSin(animationState * 4);
+				if (animationState >= 0.25 && animationState < 0.5)
+					delta = -y * (1 - Utils.NormSin(animationState * 4 - 1));
+				if (animationState >= 0.5 && animationState < 0.75)
+					delta = y * Utils.NormSin(animationState * 4 - 2);
+				if (animationState >= 0.75 && animationState < 1)
+					delta = y * (1 - Utils.NormSin(animationState * 4 - 3));
 			}
 
 			if (State == States.DisappearAnimation)
 			{
-				if (AnimationState < 0.5)
-					delta = y * Utils.NormSin(AnimationState * 2);
+				if (animationState < 0.5)
+					delta = y * Utils.NormSin(animationState * 2);
 				else
-					delta = y * (1 - Utils.NormSin(AnimationState * 2 - 1));
+					delta = y * (1 - Utils.NormSin(animationState * 2 - 1));
 			}
 
 			return (
-			Math.Cos(beta * 4 + rAnimationTime) * y +
-			Math.Cos(beta * 8 + rAnimationTime * 2) * y +
-			Math.Cos(beta * 16 + rAnimationTime * 4) * y +
-			Math.Cos(beta * 32 + rAnimationTime * 8) * y
-			) / 4 + delta;
+			Math.Cos(beta * 4 + totalTimeElapsed) +
+			Math.Cos(beta * 8 + totalTimeElapsed * 2) +
+			Math.Cos(beta * 16 + totalTimeElapsed * 4) +
+			Math.Cos(beta * 32 + totalTimeElapsed * 8)
+			) * y / 4 + delta;
+		}
+
+		private void renderSkirtPoint(double dy, double beta, double r, double yStep)
+		{
+			double prevDr = DR(dy - yStep, beta);
+			double dr = DR(dy, beta);
+			double alpha = Math.Atan2(yStep, dr - prevDr);
+
+			GL.Normal3(Math.Cos(beta) * Math.Sin(alpha), Math.Cos(alpha), Math.Sin(beta) * Math.Sin(alpha));
+			GL.Vertex3(Math.Cos(beta) * (r + dr), -dy, Math.Sin(beta) * (r + dr));
 		}
 
 		#region Path detection.
@@ -346,11 +345,69 @@ namespace PacMan
 			Direction = chooseDirection(map, target, Direction);
 		}
 
+		/// <summary>
+		/// Name.
+		/// </summary>
+		public String Name = "Ghost";
+		/// <summary>
+		/// Color.
+		/// </summary>
+		public Color Color
+		{
+			get
+			{
+				return Color_v;
+			}
+			set
+			{
+				Color_v = value;
+				cap_v = null;
+			}
+		}
+		/// <summary>
+		/// Delay before appearance after level start or death(seconds).
+		/// </summary>
+		public double Delay = 0;
+		/// <summary>
+		/// State.
+		/// </summary>
+		public States State = States.Normal;
+		/// <summary>
+		/// Frightened speed.
+		/// </summary>
+		public double FrightenedSpeed = 1;
+		/// <summary>
+		/// Eaten speed.
+		/// </summary>
+		public double EatenSpeed = 1;
+		public override double CurrentSpeed
+		{
+			get
+			{
+				switch (State)
+				{
+					case States.Normal:
+						return Speed;
+					case States.Frightened:
+						return FrightenedSpeed;
+					case States.Eaten:
+						return EatenSpeed;
+					case States.AppearAnimation:
+					case States.Waiting:
+					case States.DisappearAnimation:
+					case States.None:
+					default:
+						return 0;
+				}
+			}
+		}
+
 		public override void Init(Map map)
 		{
 			State = States.None;
-			waitedTime = 0;
-			AnimationState = 0;
+			animationState = 0;
+			waitTimeElapsed = 0;
+			totalTimeElapsed = 0;
 			X = map.GhostStart.X;
 			Y = map.GhostStart.Y;
 		}
@@ -359,6 +416,7 @@ namespace PacMan
 		{
 			throw new NotSupportedException("PacMan required.");
 		}
+
 		/// <summary>
 		/// Position and direction update.
 		/// </summary>
@@ -368,17 +426,15 @@ namespace PacMan
 		/// <returns>Visited cell center or null if none visited.</returns>
 		public Point? Update(double dt, Map map, PacMan pacman)
 		{
-			rAnimationTime += dt;
+			totalTimeElapsed += dt;
 
 			Point? result = null;
-
-			//return result;
 
 			switch (State)
 			{
 				case States.Waiting:
-					waitedTime += dt;
-					if (waitedTime >= Delay)
+					waitTimeElapsed += dt;
+					if (waitTimeElapsed >= Delay)
 					{
 						updateDirection(map, pacman);
 						State = States.AppearAnimation;
@@ -386,11 +442,11 @@ namespace PacMan
 
 					break;
 				case States.AppearAnimation:
-					AnimationState += dt / appearAnimationDuration;
-					if (AnimationState >= 1)
+					animationState += dt / appearAnimationDuration;
+					if (animationState >= 1)
 					{
 						State = States.Normal;
-						AnimationState = 0;
+						animationState = 0;
 					}
 					break;
 				case States.Normal:
@@ -413,11 +469,11 @@ namespace PacMan
 						moveRemainingCellPart(dt, map);
 					break;
 				case States.DisappearAnimation:
-					AnimationState += dt / disappearAnimationDuration;
-					if (AnimationState >= 1)
+					animationState += dt / disappearAnimationDuration;
+					if (animationState >= 1)
 					{
 						State = States.None;
-						AnimationState = 0;
+						animationState = 0;
 					}
 					break;
 			}
@@ -425,26 +481,12 @@ namespace PacMan
 			return result;
 		}
 
-		private void renderSkirtPoint(double dy, double beta, double r, double yStep)
-		{
-			double prevDr = DR(dy - yStep, beta);
-			double dr = DR(dy, beta);
-			double alpha = Math.Atan2(yStep, dr - prevDr);
-
-			GL.Normal3(Math.Cos(beta) * Math.Sin(alpha), Math.Cos(alpha), Math.Sin(beta) * Math.Sin(alpha));
-			GL.Vertex3(Math.Cos(beta) * (r + dr), -dy, Math.Sin(beta) * (r + dr));
-		}
-
-		/// <summary>
-		/// Render.
-		/// </summary>
 		public override void Render()
 		{
-			//return;
-
 			if (State == States.Waiting || State == States.None)
 				return;
 
+			GL.PushMatrix();
 			GL.Translate(X, 0.5, Y);
 			switch (Direction)
 			{
@@ -461,75 +503,63 @@ namespace PacMan
 					break;
 			}
 
-			GL.PushMatrix();
 			if (State == States.AppearAnimation)
 			{
-				GL.Rotate(360 * Utils.NormSin(AnimationState), 0, 1, 0);
-				if (AnimationState < 0.5)
-					GL.Translate(0, -1 + 1.5 * Utils.NormSin(AnimationState * 2), 0);
+				GL.Rotate(360 * Utils.NormSin(animationState), 0, 1, 0);
+				if (animationState < 0.5)
+					GL.Translate(0, -1 + 1.5 * Utils.NormSin(animationState * 2), 0);
 				else
-					GL.Translate(0, 0.5 * (1 - Utils.NormSin(AnimationState * 2 - 1)), 0);
+					GL.Translate(0, 0.5 * (1 - Utils.NormSin(animationState * 2 - 1)), 0);
 			}
 			if (State == States.DisappearAnimation)
-				GL.Translate(0, -Utils.NormSin(AnimationState), 0);
+				GL.Translate(0, -Utils.NormSin(animationState), 0);
 
-			double r = 0.45;
-			double angleStep = Math.PI / 10;
-			double yStep = 0.1;
+			double angleStep = Math.PI * 2.0 / detailsCount;
+			double yStep = 2.0 / detailsCount;
 			if (State != States.Eaten)
 			{
-				GL.Color3(State == States.Frightened ? Color.LightBlue : Color);
-
 				if (State == States.Frightened)
-					frigtenedCap.Render();
+					frightenedCap.Render();
 				else
 					cap.Render();
 
-				GL.Begin(PrimitiveType.Quads);
-
 				//skirt
+				GL.Color3(State == States.Frightened ? Color.LightBlue : Color);
+				GL.Begin(PrimitiveType.Quads);
 				for (double dy = 0; dy < 0.5; dy += 0.1)
 					for (double beta = 0; beta < Math.PI * 2; beta += angleStep)
 					{
-						renderSkirtPoint(dy, beta, r, yStep);
-						renderSkirtPoint(dy, beta + angleStep, r, yStep);
-						renderSkirtPoint(dy + yStep, beta + angleStep, r, yStep);
-						renderSkirtPoint(dy + yStep, beta, r, yStep);
+						renderSkirtPoint(dy, beta, radius, yStep);
+						renderSkirtPoint(dy, beta + angleStep, radius, yStep);
+						renderSkirtPoint(dy + yStep, beta + angleStep, radius, yStep);
+						renderSkirtPoint(dy + yStep, beta, radius, yStep);
 					}
 				GL.End();
 			}
 
-			GL.Translate(Math.Sin(Math.PI / 6) * r, Math.Sin(Math.PI / 6) * Math.Cos(Math.PI / 6) * r, Math.Cos(Math.PI / 6) * Math.Cos(Math.PI / 6) * r);
+			double s = Math.Sin(Math.PI / 6), c = Math.Cos(Math.PI / 6);
+			GL.PushMatrix();
+			GL.Translate(s * radius, s * c * radius, c * c * radius);
 			GL.Rotate(-90, 0, 1, 0);
 			eye.Render();
-			GL.Rotate(90, 0, 1, 0);
-			GL.Translate(-Math.Sin(Math.PI / 6) * r, -Math.Sin(Math.PI / 6) * Math.Cos(Math.PI / 6) * r, -Math.Cos(Math.PI / 6) * Math.Cos(Math.PI / 6) * r);
-
-			GL.Translate(Math.Sin(-Math.PI / 6) * r, Math.Sin(Math.PI / 6) * Math.Cos(-Math.PI / 6) * r, Math.Cos(Math.PI / 6) * Math.Cos(-Math.PI / 6) * r);
-			GL.Rotate(-90, 0, 1, 0);
-			eye.Render();
-			GL.Rotate(90, 0, 1, 0);
-			GL.Translate(-Math.Sin(-Math.PI / 6) * r, -Math.Sin(Math.PI / 6) * Math.Cos(-Math.PI / 6) * r, -Math.Cos(Math.PI / 6) * Math.Cos(-Math.PI / 6) * r);
-
-
 			GL.PopMatrix();
 
-			switch (Direction)
-			{
-				case Directions.Down:
-					break;
-				case Directions.Up:
-					GL.Rotate(-180, 0, 1, 0);
-					break;
-				case Directions.Left:
-					GL.Rotate(90, 0, 1, 0);
-					break;
-				case Directions.Right:
-					GL.Rotate(-90, 0, 1, 0);
-					break;
+			GL.PushMatrix();
+			GL.Translate(-s * radius, s * c * radius, c * c * radius);
+			GL.Rotate(-90, 0, 1, 0);
+			eye.Render();
+			GL.PopMatrix();
 
-			}
-			GL.Translate(-X, -0.5, -Y);
+			GL.PopMatrix();
+		}
+
+		public override void Dispose()
+		{
+			base.Dispose();
+			if (cap_v != null)
+				cap_v.Dispose();
+			if (frightenedCap_v != null)
+				cap_v.Dispose();
 		}
 	}
 }

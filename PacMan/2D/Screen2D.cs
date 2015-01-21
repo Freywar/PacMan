@@ -17,14 +17,16 @@ namespace PacMan
 	/// <summary>
 	/// Base class for all 2D graphics.
 	/// </summary>
-	abstract class Screen2D
+	abstract class Screen2D : IDisposable
 	{
 		private Bitmap texture_v = null;
 		private int Width_v = 0;
 		private int Height_v = 0;
-		
 		private FontFamily fontFamily_v = null;
 
+		/// <summary>
+		/// Default font family.
+		/// </summary>
 		protected FontFamily fontFamily
 		{
 			get
@@ -157,9 +159,17 @@ namespace PacMan
 			GL.BindTexture(TextureTarget.Texture2D, 0);
 		}
 
+		/// <summary>
+		/// Force texture update.
+		/// </summary>
 		public void Invalidate()
 		{
 			textureIsValid = false;
+		}
+
+		public void Dispose()
+		{
+			texture = null;
 		}
 	}
 }

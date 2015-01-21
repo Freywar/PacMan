@@ -1,24 +1,23 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using OpenTK;
-using OpenTK.Graphics;
-using OpenTK.Graphics.OpenGL;
-using OpenTK.Input;
-using System.Xml;
-using System.IO;
 using System.Drawing;
 
 namespace PacMan
 {
+	/// <summary>
+	/// Additional info screen.
+	/// </summary>
 	class Info : Screen2D
 	{
-		public string[] Items;
+		/// <summary>
+		/// Info strings.
+		/// </summary>
+		public string[] Items = null;
 
 		protected override void render2D(Graphics gfx)
 		{
+			if (Items == null || Items.Length == 0)
+				throw new NotSupportedException("Nothing to render.");
+
 			Font font = new Font(fontFamily, 12, FontStyle.Regular);
 			SolidBrush brush = new SolidBrush(Color.White);
 

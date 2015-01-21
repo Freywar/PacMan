@@ -1,10 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using OpenTK;
-using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Input;
 
@@ -15,8 +9,31 @@ namespace PacMan
 	/// </summary>
 	class Camera
 	{
+		/// <summary>
+		/// Default rotation speed(degrees per second).
+		/// </summary>
 		private const double rotationSpeed = 30;
+		/// <summary>
+		/// Default translation speed(map cells per second).
+		/// </summary>
 		private const double translationSpeed = 10;
+
+		private double XAngle_v = 45;
+		private double YAngle_v = 0;
+		private double R_v = 10;
+
+		/// <summary>
+		/// Rotation speed around X axis in degrees per second.
+		/// </summary>
+		private double xAngleSpeed;
+		/// <summary>
+		/// Rotation speed around Y axis in degrees per second.
+		/// </summary>
+		private double yAngleSpeed;
+		/// <summary>
+		/// Speed in map cells per second.
+		/// </summary>
+		private double rSpeed;
 
 		/// <summary>
 		/// Follow PacMan
@@ -31,10 +48,6 @@ namespace PacMan
 		/// Target Y in map cells
 		/// </summary>
 		public double Y = 0;
-
-		private double XAngle_v = 45;
-		private double YAngle_v = 0;
-		private double R_v = 10;
 
 		/// <summary>
 		/// Angle by X axis in degrees.
@@ -82,19 +95,6 @@ namespace PacMan
 					R_v = 1;
 			}
 		}
-
-		/// <summary>
-		/// Rotation speed around X axis in degrees per second.
-		/// </summary>
-		private double xAngleSpeed;
-		/// <summary>
-		/// Rotation speed around Y axis in degrees per second.
-		/// </summary>
-		private double yAngleSpeed;
-		/// <summary>
-		/// Speed in map cells per second.
-		/// </summary>
-		private double rSpeed;
 
 		/// <summary>
 		/// Camera initialization on level start.

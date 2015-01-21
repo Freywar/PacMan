@@ -1,24 +1,18 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using OpenTK;
-using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Input;
 using System.Xml;
 using System.IO;
 using System.Drawing;
 
-
 namespace PacMan
 {
-
 	/// <summary>
 	/// Main game class.
 	/// </summary>
-	class Game
+	class Game : IDisposable
 	{
 		/// <summary>
 		/// Game states.
@@ -29,9 +23,21 @@ namespace PacMan
 			/// Main menu.
 			/// </summary>
 			MainMenu,
+			/// <summary>
+			/// Appear animation.
+			/// </summary>
 			AppearAnimation,
-			LifeLostAnimation,
+			/// <summary>
+			/// Win animation.
+			/// </summary>
 			WinAnimation,
+			/// <summary>
+			/// Animation after life has been lost.
+			/// </summary>
+			LifeLoseAnimation,
+			/// <summary>
+			/// Lose animation.
+			/// </summary>
 			LoseAnimation,
 			/// <summary>
 			/// Game.
@@ -44,12 +50,15 @@ namespace PacMan
 			/// <summary>
 			/// Win screen.
 			/// </summary>
-			WonMenu,
+			WinMenu,
 			/// <summary>
 			/// Lose screen.
 			/// </summary>
-			LostMenu
+			LoseMenu
 		}
+
+		private int Width_v = 0;
+		private int Height_v = 0;
 
 		/// <summary>
 		/// Game state.
@@ -75,63 +84,45 @@ namespace PacMan
 		/// Current map.
 		/// </summary>
 		private Map CurrentMap = null;
-		private HUD HUD = new HUD();
-		private Menu MainMenu = new Menu();
-		private Menu PauseMenu = new Menu();
-		private Menu WonMenu = new Menu();
-		private Menu LostMenu = new Menu();
-		private XmlDocument SaveData = null;
-
-		private double animationTime = 0;
-		private const double delay = 0;
-		private PacMan.States? savedPacManState = null;
-
 		/// <summary>
 		/// Powerup duration(seconds).
 		/// </summary>
 		private double PowerupDuration = 30;
-
-		private int Width_v = 0;
-		private int Height_v = 0;
-
-		/// <summary>
-		/// Window width(pixels).
-		/// </summary>
-		public int Width
-		{
-			get { return Width_v; }
-			set
-			{
-				HUD.Width = value;
-				MainMenu.Width = value;
-				PauseMenu.Width = value;
-				WonMenu.Width = value;
-				LostMenu.Width = value;
-				Width_v = value;
-			}
-		}
-		/// <summary>
-		/// Window height(pixels).
-		/// </summary>
-		public int Height
-		{
-			get { return Height_v; }
-			set
-			{
-				HUD.Height = value;
-				MainMenu.Height = value;
-				PauseMenu.Height = value;
-				WonMenu.Height = value;
-				LostMenu.Height = value;
-				Height_v = value;
-			}
-		}
 		/// <summary>
 		/// Score.
 		/// </summary>
 		private int Score = 0;
+		/// <summary>
+		/// Lives and score screen.
+		/// </summary>
+		private HUD HUD = new HUD();
+		/// <summary>
+		/// Main menu.
+		/// </summary>
+		private Menu MainMenu = new Menu();
+		/// <summary>
+		/// Pause menu.
+		/// </summary>
+		private Menu PauseMenu = new Menu();
+		/// <summary>
+		/// menu after game has been won.
+		/// </summary>
+		private Menu WinMenu = new Menu();
+		/// <summary>
+		/// menu after game has been lost.
+		/// </summary>
+		private Menu LoseMenu = new Menu();
 
-		#region Load config from file.
+		/// <summary>
+		/// Temp storage for PacMan loaded state during game appear animation.
+		/// </summary>
+		private PacMan.States? savedPacManState = null;
+		/// <summary>
+		/// Save data.
+		/// </summary>
+		private XmlDocument SaveData = null;
+
+		#region Config.
 
 		private void loadPacmanConfig(XmlNode node)
 		{
@@ -263,13 +254,119 @@ namespace PacMan
 				throw new Exception("Invalid root element in config file.");
 		}
 
+		private XmlNode savePacmanConfig(XmlDocument document)
+		{
+			XmlNode pacmanNode = document.CreateElement("pacman");
+
+			XmlAttribute speedAttr = document.CreateAttribute("speed");
+			speedAttr.Value = PacMan.Speed.ToString();
+			pacmanNode.Attributes.Append(speedAttr);
+
+			return pacmanNode;
+		}
+
+		private XmlNode saveGhostsConfig(XmlDocument document)
+		{
+			XmlNode ghostsNode = document.CreateElement("ghosts");
+
+			foreach (Ghost ghost in Ghosts)
+			{
+				XmlNode ghostNode = document.CreateElement("ghost");
+
+				XmlAttribute nameAttr = document.CreateAttribute("name");
+				nameAttr.Value = ghost.Name;
+				ghostNode.Attributes.Append(nameAttr);
+
+				XmlAttribute colorAttr = document.CreateAttribute("color");
+				colorAttr.Value = ghost.Color.ToKnownColor().ToString();
+				ghostNode.Attributes.Append(colorAttr);
+
+				XmlAttribute speedAttr = document.CreateAttribute("speed");
+				speedAttr.Value = ghost.Speed.ToString();
+				ghostNode.Attributes.Append(speedAttr);
+
+				XmlAttribute frightenedSpeedAttr = document.CreateAttribute("frightenedSpeed");
+				frightenedSpeedAttr.Value = ghost.FrightenedSpeed.ToString();
+				ghostNode.Attributes.Append(frightenedSpeedAttr);
+
+				XmlAttribute eatenSpeedAttr = document.CreateAttribute("eatenSpeed");
+				eatenSpeedAttr.Value = ghost.EatenSpeed.ToString();
+				ghostNode.Attributes.Append(eatenSpeedAttr);
+
+				XmlAttribute delayAttr = document.CreateAttribute("delay");
+				delayAttr.Value = ghost.Delay.ToString();
+				ghostNode.Attributes.Append(delayAttr);
+
+				ghostsNode.AppendChild(ghostNode);
+			}
+
+			return ghostsNode;
+		}
+
+		private XmlNode saveMapsConfig(XmlDocument document)
+		{
+			XmlNode mapsNode = document.CreateElement("maps");
+
+			foreach (Map map in Maps)
+			{
+				XmlNode mapNode = document.CreateElement("map");
+
+				XmlAttribute nameAttr = document.CreateAttribute("name");
+				nameAttr.Value = map.Name;
+				mapNode.Attributes.Append(nameAttr);
+
+				XmlAttribute pathAttr = document.CreateAttribute("path");
+				pathAttr.Value = map.Path;
+				mapNode.Attributes.Append(pathAttr);
+
+				mapsNode.AppendChild(mapNode);
+			}
+
+			return mapsNode;
+		}
+
+		/// <summary>
+		/// Save config to file.
+		/// </summary>
+		private void saveConfigToFile()
+		{
+			XmlDocument settings = new XmlDocument();
+			XmlNode root = settings.CreateElement("game");
+			settings.AppendChild(root);
+
+			root.AppendChild(savePacmanConfig(settings));
+			root.AppendChild(saveGhostsConfig(settings));
+			root.AppendChild(saveMapsConfig(settings));
+
+			XmlNode powerupNode = settings.CreateElement("powerup");
+
+			XmlAttribute durationAttr = settings.CreateAttribute("duration");
+			durationAttr.Value = PowerupDuration.ToString();
+			powerupNode.Attributes.Append(durationAttr);
+
+			root.AppendChild(powerupNode);
+
+			if (SaveData != null)
+			{
+
+				XmlNode save = settings.CreateElement("save");
+
+				StringWriter stringWriter = new StringWriter();
+				SaveData.WriteTo(new XmlTextWriter(stringWriter));
+				save.InnerText = Convert.ToBase64String(Encoding.UTF8.GetBytes(stringWriter.ToString()));
+
+				root.AppendChild(save);
+			}
+
+			settings.Save("config.xml");
+		}
+
 		#endregion
 
-		private void createSaveData()
-		{
-			SaveData = new XmlDocument();
-			XmlNode saveDataRoot = SaveData.CreateElement("save");
+		#region Save/Load.
 
+		private XmlNode saveMap(XmlDocument document)
+		{
 			XmlNode map = SaveData.CreateElement("map");
 
 			XmlAttribute name = SaveData.CreateAttribute("name");
@@ -297,9 +394,11 @@ namespace PacMan
 
 			map.AppendChild(clearedCells);
 
-			saveDataRoot.AppendChild(map);
+			return map;
+		}
 
-
+		private XmlNode savePacman(XmlDocument document)
+		{
 			XmlNode pacman = SaveData.CreateElement("pacman");
 
 			XmlAttribute xAttr = SaveData.CreateAttribute("X");
@@ -326,40 +425,56 @@ namespace PacMan
 			direction.Value = PacMan.Direction.ToString();
 			pacman.Attributes.Append(direction);
 
-			saveDataRoot.AppendChild(pacman);
+			return pacman;
+		}
 
-
+		private XmlNode saveGhosts(XmlDocument document)
+		{
 			XmlNode ghosts = SaveData.CreateElement("ghosts");
 
 			foreach (Ghost Ghost in Ghosts)
 			{
 				XmlNode ghost = SaveData.CreateElement("ghost");
 
-				name = SaveData.CreateAttribute("name");
+				XmlAttribute name = SaveData.CreateAttribute("name");
 				name.Value = Ghost.Name;
 				ghost.Attributes.Append(name);
 
-				xAttr = SaveData.CreateAttribute("X");
+				XmlAttribute xAttr = SaveData.CreateAttribute("X");
 				xAttr.Value = Ghost.X.ToString();
 				ghost.Attributes.Append(xAttr);
 
-				yAttr = SaveData.CreateAttribute("Y");
+				XmlAttribute yAttr = SaveData.CreateAttribute("Y");
 				yAttr.Value = Ghost.Y.ToString();
 				ghost.Attributes.Append(yAttr);
 
-				state = SaveData.CreateAttribute("state");
+				XmlAttribute state = SaveData.CreateAttribute("state");
 				state.Value = Ghost.State.ToString();
 				ghost.Attributes.Append(state);
 
-				direction = SaveData.CreateAttribute("direction");
+				XmlAttribute direction = SaveData.CreateAttribute("direction");
 				direction.Value = Ghost.Direction.ToString();
 				ghost.Attributes.Append(direction);
 
 				ghosts.AppendChild(ghost);
 			}
 
-			saveDataRoot.AppendChild(ghosts);
+			return ghosts;
+		}
 
+		/// <summary>
+		/// Save game.
+		/// </summary>
+		private void save()
+		{
+			SaveData = new XmlDocument();
+			XmlNode saveDataRoot = SaveData.CreateElement("save");
+
+			saveDataRoot.AppendChild(saveMap(SaveData));
+
+			saveDataRoot.AppendChild(savePacman(SaveData));
+
+			saveDataRoot.AppendChild(saveGhosts(SaveData));
 
 			XmlNode score = SaveData.CreateElement("score");
 
@@ -375,161 +490,208 @@ namespace PacMan
 			SaveData.AppendChild(saveDataRoot);
 		}
 
-		private void clearSaveData()
+		/// <summary>
+		/// Delete saved game.
+		/// </summary>
+		private void deleteSave()
 		{
 			SaveData = null;
 			MainMenu.Items[1].Enabled = false;
 			MainMenu.Invalidate();
 		}
 
-		private void saveConfigToFile()
+		private void loadMap(XmlNode node)
 		{
-			XmlDocument settings = new XmlDocument();
-			XmlNode root = settings.CreateElement("game");
-			settings.AppendChild(root);
-
-			XmlNode pacmanNode = settings.CreateElement("pacman");
-
-			XmlAttribute speedAttr = settings.CreateAttribute("speed");
-			speedAttr.Value = PacMan.Speed.ToString();
-			pacmanNode.Attributes.Append(speedAttr);
-
-			root.AppendChild(pacmanNode);
-
-			XmlNode ghostsNode = settings.CreateElement("ghosts");
-
-			foreach (Ghost ghost in Ghosts)
+			foreach (XmlNode child in node)
 			{
-				XmlNode ghostNode = settings.CreateElement("ghost");
-
-				XmlAttribute nameAttr = settings.CreateAttribute("name");
-				nameAttr.Value = ghost.Name;
-				ghostNode.Attributes.Append(nameAttr);
-
-				XmlAttribute colorAttr = settings.CreateAttribute("color");
-				colorAttr.Value = ghost.Color.ToKnownColor().ToString();
-				ghostNode.Attributes.Append(colorAttr);
-
-				speedAttr = settings.CreateAttribute("speed");
-				speedAttr.Value = ghost.Speed.ToString();
-				ghostNode.Attributes.Append(speedAttr);
-
-				XmlAttribute frightenedSpeedAttr = settings.CreateAttribute("frightenedSpeed");
-				frightenedSpeedAttr.Value = ghost.FrightenedSpeed.ToString();
-				ghostNode.Attributes.Append(frightenedSpeedAttr);
-
-				XmlAttribute eatenSpeedAttr = settings.CreateAttribute("eatenSpeed");
-				eatenSpeedAttr.Value = ghost.EatenSpeed.ToString();
-				ghostNode.Attributes.Append(eatenSpeedAttr);
-
-				XmlAttribute delayAttr = settings.CreateAttribute("delay");
-				delayAttr.Value = ghost.Delay.ToString();
-				ghostNode.Attributes.Append(delayAttr);
-
-				ghostsNode.AppendChild(ghostNode);
+				if (child.Name == "clearedCells")
+				{
+					foreach (XmlNode cellNode in child)
+					{
+						if (cellNode.Name == "cell")
+						{
+							int? x = null;
+							int? y = null;
+							foreach (XmlAttribute attr in cellNode.Attributes)
+							{
+								if (attr.Name == "x")
+									x = Convert.ToInt32(attr.Value);
+								if (attr.Name == "y")
+									y = Convert.ToInt32(attr.Value);
+							}
+							if (x != null & y != null)
+								CurrentMap[(int)y][(int)x] = Map.Objects.None;
+						}
+					}
+				}
 			}
+		}
 
-			root.AppendChild(ghostsNode);
-
-
-			XmlNode mapsNode = settings.CreateElement("maps");
-
-			foreach (Map map in Maps)
+		private void loadPacMan(XmlNode node)
+		{
+			foreach (XmlAttribute attr in node.Attributes)
 			{
-				XmlNode mapNode = settings.CreateElement("map");
+				switch (attr.Name)
+				{
+					case "X":
+						PacMan.X = Convert.ToDouble(attr.Value);
+						break;
+					case "Y":
+						PacMan.Y = Convert.ToDouble(attr.Value);
+						break;
+					case "lives":
+						PacMan.Lives = Convert.ToInt32(attr.Value);
+						break;
+					case "state":
+						{
+							switch (attr.Value)
+							{
+								case "Normal":
+									savedPacManState = PacMan.States.Normal;
+									break;
+								case "Super":
+									savedPacManState = PacMan.States.Super;
+									break;
 
-				XmlAttribute nameAttr = settings.CreateAttribute("name");
-				nameAttr.Value = map.Name;
-				mapNode.Attributes.Append(nameAttr);
-
-				XmlAttribute pathAttr = settings.CreateAttribute("path");
-				pathAttr.Value = map.Path;
-				mapNode.Attributes.Append(pathAttr);
-
-				mapsNode.AppendChild(mapNode);
+							}
+						}
+						break;
+					case "direction":
+						{
+							switch (attr.Value)
+							{
+								case "None":
+									PacMan.Direction = Creature.Directions.None;
+									break;
+								case "Up":
+									PacMan.Direction = Creature.Directions.Up;
+									break;
+								case "Down":
+									PacMan.Direction = Creature.Directions.Down;
+									break;
+								case "Left":
+									PacMan.Direction = Creature.Directions.Left;
+									break;
+								case "Right":
+									PacMan.Direction = Creature.Directions.Right;
+									break;
+							}
+						}
+						break;
+					case "superTime":
+						PacMan.SuperTime = Convert.ToDouble(attr.Value);
+						break;
+				}
 			}
+		}
 
-			root.AppendChild(mapsNode);
-
-
-			XmlNode powerupNode = settings.CreateElement("powerup");
-
-			XmlAttribute durationAttr = settings.CreateAttribute("duration");
-			durationAttr.Value = PowerupDuration.ToString();
-			powerupNode.Attributes.Append(durationAttr);
-
-			root.AppendChild(powerupNode);
-
-			if (SaveData != null)
+		private void loadGhosts(XmlNode node)
+		{
+			foreach (XmlNode ghostNode in node.ChildNodes)
 			{
-				StringWriter stringWriter = new StringWriter();
-				XmlTextWriter xmlTextWriter = new XmlTextWriter(stringWriter);
-				SaveData.WriteTo(xmlTextWriter);
-				string saveData = stringWriter.ToString();
+				string name = null;
+				foreach (XmlAttribute attr in ghostNode.Attributes)
+					if (attr.Name == "name")
+						name = attr.Value;
 
-				XmlNode save = settings.CreateElement("save");
+				Ghost currentGhost = null;
+				if (name != null)
+					foreach (Ghost ghost in Ghosts)
+						if (ghost.Name == name)
+							currentGhost = ghost;
 
-				Convert.ToBase64String(Encoding.UTF8.GetBytes(saveData));
-				save.InnerText = Convert.ToBase64String(Encoding.UTF8.GetBytes(saveData));
-
-				root.AppendChild(save);
+				if (currentGhost != null)
+					foreach (XmlAttribute attr in ghostNode.Attributes)
+					{
+						switch (attr.Name)
+						{
+							case "X":
+								currentGhost.X = Convert.ToDouble(attr.Value);
+								break;
+							case "Y":
+								currentGhost.Y = Convert.ToDouble(attr.Value);
+								break;
+							case "state":
+								{
+									switch (attr.Value)
+									{
+										case "Waiting":
+											currentGhost.State = Ghost.States.Waiting;
+											break;
+										case "Normal":
+											currentGhost.State = Ghost.States.Normal;
+											break;
+										case "Frightened":
+											currentGhost.State = Ghost.States.Frightened;
+											break;
+										case "Eaten":
+											currentGhost.State = Ghost.States.Eaten;
+											break;
+									}
+								}
+								break;
+							case "direction":
+								{
+									switch (attr.Value)
+									{
+										case "None":
+											currentGhost.Direction = Creature.Directions.None;
+											break;
+										case "Up":
+											currentGhost.Direction = Creature.Directions.Up;
+											break;
+										case "Down":
+											currentGhost.Direction = Creature.Directions.Down;
+											break;
+										case "Left":
+											currentGhost.Direction = Creature.Directions.Left;
+											break;
+										case "Right":
+											currentGhost.Direction = Creature.Directions.Right;
+											break;
+									}
+								}
+								break;
+						}
+					}
 			}
-
-
-			settings.Save("config.xml");
 		}
 
 		/// <summary>
-		/// Initialization on game launch.
+		/// Load saved game.
 		/// </summary>
-		public void Init()
+		private void load()
 		{
-			bool autostart = loadConfig();
-
-			MainMenu.Header = new string[1] { "PACMAN" };
-			MainMenu.Items = new Menu.Item[3];
-			MainMenu.Items[0] = new Menu.Item("Start", true);
-			MainMenu.Items[1] = new Menu.Item("Continue", SaveData != null);
-			MainMenu.Items[2] = new Menu.Item("Exit", true);
-
-			PauseMenu.Header = new string[1] { "Pause" };
-			PauseMenu.Items = new Menu.Item[2];
-			PauseMenu.Items[0] = new Menu.Item("Continue", true);
-			PauseMenu.Items[1] = new Menu.Item("Main menu", true);
-
-			WonMenu.Header = new string[2] { "You won", "Score: " + Score.ToString() };
-			WonMenu.Items = new Menu.Item[1];
-			WonMenu.Items[0] = new Menu.Item("Continue", true);
-
-			LostMenu.Header = new string[2] { "Game over", "Score: " + Score.ToString() };
-			LostMenu.Items = new Menu.Item[2];
-			LostMenu.Items[0] = new Menu.Item("Restart", true);
-			LostMenu.Items[1] = new Menu.Item("Main menu", true);
-
-			float[] light_diffuse = { 1.0f, 1.0f, 1.0f, 1.0f };
-			float[] light_position = { 0.0f, 0.0f, 2.0f, 0.0f };
-			float[] light_ambient = { 0.3f, 0.3f, 0.3f, 1.0f };
-
-			GL.ClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-			GL.ShadeModel(ShadingModel.Smooth);
-
-			GL.Light(LightName.Light0, LightParameter.Position, light_position);
-			GL.Light(LightName.Light0, LightParameter.Ambient, light_ambient);
-			GL.Light(LightName.Light0, LightParameter.Diffuse, light_diffuse);
-
-			MainMenu.Init();
-			State = States.MainMenu;
-
-			if (autostart)
-				startGame();
+			foreach (XmlNode node in SaveData.DocumentElement.ChildNodes)
+			{
+				switch (node.Name)
+				{
+					case "map":
+						loadMap(node);
+						break;
+					case "pacman":
+						loadPacMan(node);
+						break;
+					case "ghosts":
+						loadGhosts(node);
+						break;
+					case "score":
+						foreach (XmlAttribute attr in node.Attributes)
+							if (attr.Name == "value")
+								Score = Convert.ToInt32(attr.Value);
+						break;
+				}
+			}
 		}
+
+		#endregion
 
 		/// <summary>
 		/// Start new game.
 		/// </summary>
 		private void startGame()
 		{
-			clearSaveData();
+			deleteSave();
 
 			CurrentMap = Maps[0];
 			CurrentMap.Init();
@@ -546,6 +708,36 @@ namespace PacMan
 			State = States.AppearAnimation;
 		}
 
+		/// <summary>
+		/// Start next map.
+		/// </summary>
+		private void nextMap()
+		{
+			int currentMapIndex = 0;
+			for (int i = 0; i < Maps.Length; i++)
+				if (CurrentMap == Maps[i])
+					currentMapIndex = i;
+			if (currentMapIndex == Maps.Length - 1)
+			{
+				deleteSave();
+				WinMenu.Header[1] = "Score: " + Score.ToString();
+				State = States.WinMenu;
+			}
+			else
+			{
+				CurrentMap = Maps[currentMapIndex + 1];
+				CurrentMap.Init();
+				PacMan.Init(CurrentMap);
+				foreach (Ghost ghost in Ghosts)
+					ghost.Init(CurrentMap);
+				Camera.Init(CurrentMap, PacMan);
+				State = States.AppearAnimation;
+			}
+		}
+
+		/// <summary>
+		/// Start game from save.
+		/// </summary>
 		private void loadGame()
 		{
 			if (SaveData == null)
@@ -584,168 +776,7 @@ namespace PacMan
 				ghost.Init(CurrentMap);
 			Camera.Init(CurrentMap, PacMan);
 
-			foreach (XmlNode node in SaveData.DocumentElement.ChildNodes)
-			{
-				switch (node.Name)
-				{
-					case "map":
-						foreach (XmlNode child in node)
-						{
-							if (child.Name == "clearedCells")
-							{
-								foreach (XmlNode cellNode in child)
-								{
-									if (cellNode.Name == "cell")
-									{
-										int? x = null;
-										int? y = null;
-										foreach (XmlAttribute attr in cellNode.Attributes)
-										{
-											if (attr.Name == "x")
-												x = Convert.ToInt32(attr.Value);
-											if (attr.Name == "y")
-												y = Convert.ToInt32(attr.Value);
-										}
-										if (x != null & y != null)
-											CurrentMap[(int)y][(int)x] = Map.Objects.None;
-									}
-								}
-							}
-						}
-						break;
-					case "pacman":
-						foreach (XmlAttribute attr in node.Attributes)
-						{
-							switch (attr.Name)
-							{
-								case "X":
-									PacMan.X = Convert.ToDouble(attr.Value);
-									break;
-								case "Y":
-									PacMan.Y = Convert.ToDouble(attr.Value);
-									break;
-								case "lives":
-									PacMan.Lives = Convert.ToInt32(attr.Value);
-									break;
-								case "state":
-									{
-										switch (attr.Value)
-										{
-											case "Normal":
-												savedPacManState = PacMan.States.Normal;
-												break;
-											case "Super":
-												savedPacManState = PacMan.States.Super;
-												break;
-
-										}
-									}
-									break;
-								case "direction":
-									{
-										switch (attr.Value)
-										{
-											case "None":
-												PacMan.Direction = Creature.Directions.None;
-												break;
-											case "Up":
-												PacMan.Direction = Creature.Directions.Up;
-												break;
-											case "Down":
-												PacMan.Direction = Creature.Directions.Down;
-												break;
-											case "Left":
-												PacMan.Direction = Creature.Directions.Left;
-												break;
-											case "Right":
-												PacMan.Direction = Creature.Directions.Right;
-												break;
-										}
-									}
-									break;
-								case "superTime":
-									PacMan.SuperTime = Convert.ToDouble(attr.Value);
-									break;
-							}
-						}
-						break;
-					case "ghosts":
-						foreach (XmlNode ghostNode in node.ChildNodes)
-						{
-							string name = null;
-							foreach (XmlAttribute attr in ghostNode.Attributes)
-								if (attr.Name == "name")
-									name = attr.Value;
-
-							Ghost currentGhost = null;
-							if (name != null)
-								foreach (Ghost ghost in Ghosts)
-									if (ghost.Name == name)
-										currentGhost = ghost;
-
-							if (currentGhost != null)
-								foreach (XmlAttribute attr in ghostNode.Attributes)
-								{
-									switch (attr.Name)
-									{
-										case "X":
-											currentGhost.X = Convert.ToDouble(attr.Value);
-											break;
-										case "Y":
-											currentGhost.Y = Convert.ToDouble(attr.Value);
-											break;
-										case "state":
-											{
-												switch (attr.Value)
-												{
-													case "Waiting":
-														currentGhost.State = Ghost.States.Waiting;
-														break;
-													case "Normal":
-														currentGhost.State = Ghost.States.Normal;
-														break;
-													case "Frightened":
-														currentGhost.State = Ghost.States.Frightened;
-														break;
-													case "Eaten":
-														currentGhost.State = Ghost.States.Eaten;
-														break;
-												}
-											}
-											break;
-										case "direction":
-											{
-												switch (attr.Value)
-												{
-													case "None":
-														currentGhost.Direction = Creature.Directions.None;
-														break;
-													case "Up":
-														currentGhost.Direction = Creature.Directions.Up;
-														break;
-													case "Down":
-														currentGhost.Direction = Creature.Directions.Down;
-														break;
-													case "Left":
-														currentGhost.Direction = Creature.Directions.Left;
-														break;
-													case "Right":
-														currentGhost.Direction = Creature.Directions.Right;
-														break;
-												}
-											}
-											break;
-									}
-								}
-						}
-						break;
-					case "score":
-						foreach (XmlAttribute attr in node.Attributes)
-							if (attr.Name == "value")
-								Score = Convert.ToInt32(attr.Value);
-						break;
-				}
-			}
+			load();
 
 			HUD.Score = Score;
 			HUD.Lives = PacMan.Lives;
@@ -753,40 +784,96 @@ namespace PacMan
 			State = States.AppearAnimation;
 		}
 
-		private void nextMap()
-		{
-			int currentMapIndex = 0;
-			for (int i = 0; i < Maps.Length; i++)
-				if (CurrentMap == Maps[i])
-					currentMapIndex = i;
-			if (currentMapIndex == Maps.Length - 1)
-			{
-				clearSaveData();
-				WonMenu.Header[1] = "Score: " + Score.ToString();
-				State = States.WonMenu;
-			}
-			else
-			{
-				CurrentMap = Maps[currentMapIndex + 1];
-				CurrentMap.Init();
-				PacMan.Init(CurrentMap);
-				foreach (Ghost ghost in Ghosts)
-					ghost.Init(CurrentMap);
-				Camera.Init(CurrentMap, PacMan);
-				State = States.AppearAnimation;
-			}
-		}
-
 		/// <summary>
-		/// Restart level after death.
+		/// Restart map after death.
 		/// </summary>
-		private void restartLevel()
+		private void restartMap()
 		{
 			PacMan.Init(CurrentMap);
 			foreach (Ghost ghost in Ghosts)
 				ghost.Init(CurrentMap);
 
 			State = States.AppearAnimation;
+		}
+
+
+		/// <summary>
+		/// Window width(pixels).
+		/// </summary>
+		public int Width
+		{
+			get { return Width_v; }
+			set
+			{
+				HUD.Width = value;
+				MainMenu.Width = value;
+				PauseMenu.Width = value;
+				WinMenu.Width = value;
+				LoseMenu.Width = value;
+				Width_v = value;
+			}
+		}
+		/// <summary>
+		/// Window height(pixels).
+		/// </summary>
+		public int Height
+		{
+			get { return Height_v; }
+			set
+			{
+				HUD.Height = value;
+				MainMenu.Height = value;
+				PauseMenu.Height = value;
+				WinMenu.Height = value;
+				LoseMenu.Height = value;
+				Height_v = value;
+			}
+		}
+
+
+		/// <summary>
+		/// Initialization on game launch.
+		/// </summary>
+		public void Init()
+		{
+			bool autostart = loadConfig();
+
+			MainMenu.Header = new string[1] { "PACMAN" };
+			MainMenu.Items = new Menu.Item[3];
+			MainMenu.Items[0] = new Menu.Item("Start", true);
+			MainMenu.Items[1] = new Menu.Item("Continue", SaveData != null);
+			MainMenu.Items[2] = new Menu.Item("Exit", true);
+
+			PauseMenu.Header = new string[1] { "Pause" };
+			PauseMenu.Items = new Menu.Item[2];
+			PauseMenu.Items[0] = new Menu.Item("Continue", true);
+			PauseMenu.Items[1] = new Menu.Item("Main menu", true);
+
+			WinMenu.Header = new string[2] { "You won", "Score: " + Score.ToString() };
+			WinMenu.Items = new Menu.Item[1];
+			WinMenu.Items[0] = new Menu.Item("Continue", true);
+
+			LoseMenu.Header = new string[2] { "Game over", "Score: " + Score.ToString() };
+			LoseMenu.Items = new Menu.Item[2];
+			LoseMenu.Items[0] = new Menu.Item("Restart", true);
+			LoseMenu.Items[1] = new Menu.Item("Main menu", true);
+
+			float[] light_diffuse = { 1.0f, 1.0f, 1.0f, 1.0f };
+			float[] light_position = { 0.0f, 0.0f, 2.0f, 0.0f };
+			float[] light_ambient = { 0.3f, 0.3f, 0.3f, 1.0f };
+
+			GL.ClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+			GL.ShadeModel(ShadingModel.Smooth);
+
+			GL.Light(LightName.Light0, LightParameter.Position, light_position);
+			GL.Light(LightName.Light0, LightParameter.Ambient, light_ambient);
+			GL.Light(LightName.Light0, LightParameter.Diffuse, light_diffuse);
+
+			MainMenu.Init();
+			State = States.MainMenu;
+
+			if (autostart)
+				startGame();
 		}
 
 		/// <summary>
@@ -868,7 +955,7 @@ namespace PacMan
 								if (Utils.Distance(PacMan.X, PacMan.Y, ghost.X, ghost.Y) < 1)
 								{
 									PacMan.Lives--;
-									State = PacMan.Lives != 0 ? States.LifeLostAnimation : States.LoseAnimation;
+									State = PacMan.Lives != 0 ? States.LifeLoseAnimation : States.LoseAnimation;
 								}
 								break;
 							case Ghost.States.Frightened:
@@ -896,7 +983,7 @@ namespace PacMan
 					break;
 
 
-				case States.LifeLostAnimation:
+				case States.LifeLoseAnimation:
 					if (PacMan.State == PacMan.States.Normal)
 						PacMan.State = PacMan.States.DisappearAnimation;
 
@@ -916,7 +1003,7 @@ namespace PacMan
 					}
 
 					if (allGhostsDisappeard)
-						restartLevel();
+						restartMap();
 
 					break;
 
@@ -963,8 +1050,8 @@ namespace PacMan
 
 					if (allGhostsDisappeard && CurrentMap.State == Map.States.None)
 					{
-						clearSaveData();
-						State = States.LostMenu;
+						deleteSave();
+						State = States.LoseMenu;
 					}
 					break;
 
@@ -972,12 +1059,12 @@ namespace PacMan
 					PauseMenu.Update(dt);
 					break;
 
-				case States.WonMenu:
-					WonMenu.Update(dt);
+				case States.WinMenu:
+					WinMenu.Update(dt);
 					break;
 
-				case States.LostMenu:
-					LostMenu.Update(dt);
+				case States.LoseMenu:
+					LoseMenu.Update(dt);
 					break;
 			}
 			return false;
@@ -1004,10 +1091,14 @@ namespace PacMan
 					if (key == Key.Escape)
 						return true;
 					break;
+				case States.AppearAnimation:
 				case States.Playing:
+				case States.LifeLoseAnimation:
+				case States.LoseAnimation:
+				case States.WinAnimation:
 					PacMan.KeyDown(key);
 					Camera.KeyDown(key);
-					if (key == Key.Escape)
+					if (State == States.Playing && key == Key.Escape)
 						State = States.PauseMenu;
 					break;
 				case States.PauseMenu:
@@ -1016,21 +1107,21 @@ namespace PacMan
 						State = States.Playing;
 					if (selectedIndex == 1)
 					{
-						createSaveData();
+						save();
 						State = States.MainMenu;
 					}
 					if (key == Key.Escape)
 						State = States.Playing;
 					break;
-				case States.WonMenu:
-					selectedIndex = WonMenu.KeyDown(key);
+				case States.WinMenu:
+					selectedIndex = WinMenu.KeyDown(key);
 					if (selectedIndex == 0)
 						State = States.MainMenu;
 					if (key == Key.Escape)
 						State = States.MainMenu;
 					break;
-				case States.LostMenu:
-					selectedIndex = LostMenu.KeyDown(key);
+				case States.LoseMenu:
+					selectedIndex = LoseMenu.KeyDown(key);
 					if (selectedIndex == 0)
 						startGame();
 					if (selectedIndex == 1)
@@ -1055,16 +1146,20 @@ namespace PacMan
 				case States.MainMenu:
 					selectedIndex = MainMenu.KeyUp(key);
 					break;
+				case States.AppearAnimation:
 				case States.Playing:
+				case States.LifeLoseAnimation:
+				case States.LoseAnimation:
+				case States.WinAnimation:
 					PacMan.KeyUp(key);
 					Camera.KeyUp(key);
 					break;
 				case States.PauseMenu:
 					selectedIndex = PauseMenu.KeyUp(key);
 					break;
-				case States.WonMenu:
+				case States.WinMenu:
 					break;
-				case States.LostMenu:
+				case States.LoseMenu:
 					break;
 			}
 			return false;
@@ -1084,7 +1179,7 @@ namespace PacMan
 				case States.AppearAnimation:
 				case States.Playing:
 				case States.WinAnimation:
-				case States.LifeLostAnimation:
+				case States.LifeLoseAnimation:
 				case States.LoseAnimation:
 
 
@@ -1123,21 +1218,39 @@ namespace PacMan
 					PauseMenu.Render();
 					break;
 
-				case States.WonMenu:
-					WonMenu.Render();
+				case States.WinMenu:
+					WinMenu.Render();
 					break;
 
-				case States.LostMenu:
-					LostMenu.Render();
+				case States.LoseMenu:
+					LoseMenu.Render();
 					break;
 			}
 		}
 
+		/// <summary>
+		/// Save data on exit.
+		/// </summary>
 		public void Exit()
 		{
 			if (State == States.Playing)
-				createSaveData();
+				save();
 			saveConfigToFile();
+		}
+
+		public void Dispose()
+		{
+			foreach (Map map in Maps)
+				map.Dispose();
+			PacMan.Dispose();
+			foreach (Ghost ghost in Ghosts)
+				ghost.Dispose();
+
+			HUD.Dispose();
+			MainMenu.Dispose();
+			PauseMenu.Dispose();
+			WinMenu.Dispose();
+			LoseMenu.Dispose();
 		}
 	}
 }
