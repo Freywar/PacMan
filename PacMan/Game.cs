@@ -122,6 +122,8 @@ namespace PacMan
 		/// </summary>
 		private XmlDocument SaveData = null;
 
+		private bool hudIsVisible = true;
+
 		#region Config.
 
 		private void loadPacmanConfig(XmlNode node)
@@ -1131,6 +1133,8 @@ namespace PacMan
 						State = States.MainMenu;
 					break;
 			}
+			if (key == Key.F2)
+			hudIsVisible = !hudIsVisible;
 			return false;
 		}
 
@@ -1211,7 +1215,7 @@ namespace PacMan
 					GL.Disable(EnableCap.ColorMaterial);
 					GL.Disable(EnableCap.CullFace);
 
-					if (CurrentMap.State == Map.States.Normal)
+					if (CurrentMap.State == Map.States.Normal && hudIsVisible)
 						HUD.Render();
 
 					break;
