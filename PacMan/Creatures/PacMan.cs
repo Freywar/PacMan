@@ -55,9 +55,10 @@ namespace PacMan
 		/// </summary>
 		private const double animationDuration = 0.5;
 
-
 		private Mesh body_v = null;
 		private Mesh jaw_v = null;
+		private Mesh evilEye_v = null;
+
 		/// <summary>
 		/// Animation progress in [0..1].
 		/// </summary>
@@ -187,6 +188,39 @@ namespace PacMan
 					jaw_v.Colors = c;
 				}
 				return jaw_v;
+			}
+		}
+		/// <summary>
+		/// Red eyes for super state.
+		/// </summary>
+		protected Mesh evilEye
+		{
+			get
+			{
+				if (evilEye_v == null)
+				{
+					double[] v = new double[eye.Vertices.Length];
+					double[] n = new double[eye.Normals.Length];
+					double[] c = new double[eye.Colors.Length];
+
+					for (int i = 0; i < v.Length; i++)
+					{
+						v[i] = eye.Vertices[i];
+						n[i] = eye.Normals[i];
+					}
+					for (int i = 0; i < c.Length; i += 3)
+					{
+						c[i] = eye.Colors[i];
+						c[i + 1] = 0;
+						c[i + 2] = 0;
+					}
+
+					evilEye_v = new Mesh();
+					evilEye_v.Vertices = v;
+					evilEye_v.Normals = n;
+					evilEye_v.Colors = c;
+				}
+				return evilEye_v;
 			}
 		}
 
@@ -352,12 +386,14 @@ namespace PacMan
 				cs = Math.Sin(Math.PI / 6 + mouthAngle),
 				lc = Math.Cos(Math.PI / 6),
 				ls = Math.Sin(Math.PI / 6);
+
+			Mesh currentEye = State == States.Super ? evilEye : eye;
 			GL.Translate(cc * lc * radius, ls * radius, cs * lc * radius);
-			eye.Render();
+			currentEye.Render();
 			GL.Translate(-cc * lc * radius, -ls * radius, -cs * lc * radius);
 
 			GL.Translate(cc * lc * radius, -ls * radius, cs * lc * radius);
-			eye.Render();
+			currentEye.Render();
 			GL.Translate(-cc * lc * radius, ls * radius, -cs * lc * radius);
 
 			GL.PopMatrix();
