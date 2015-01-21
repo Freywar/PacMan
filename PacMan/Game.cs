@@ -84,6 +84,7 @@ namespace PacMan
 
 		private double animationTime = 0;
 		private const double delay = 0;
+		private PacMan.States? savedPacManState = null;
 
 		/// <summary>
 		/// Powerup duration(seconds).
@@ -272,18 +273,39 @@ namespace PacMan
 			name.Value = CurrentMap.Name;
 			map.Attributes.Append(name);
 
+			XmlNode clearedCells = root.CreateElement("clearedCells");
+
+			for (int y = 0; y < CurrentMap.Height; y++)
+				for (int x = 0; x < CurrentMap.Height; x++)
+					if (CurrentMap[y][x] != CurrentMap.OriginalFields[y][x])
+					{
+						XmlNode cell = root.CreateElement("cell");
+
+						XmlAttribute cxAttr = root.CreateAttribute("x");
+						cxAttr.Value = x.ToString();
+						cell.Attributes.Append(cxAttr);
+
+						XmlAttribute cyAttr = root.CreateAttribute("y");
+						cyAttr.Value = y.ToString();
+						cell.Attributes.Append(cyAttr);
+
+						clearedCells.AppendChild(cell);
+					}
+
+			map.AppendChild(clearedCells);
+
 			SaveData.AppendChild(map);
 
 
 			XmlNode pacman = root.CreateElement("pacman");
 
-			XmlAttribute x = root.CreateAttribute("X");
-			x.Value = PacMan.X.ToString();
-			pacman.Attributes.Append(x);
+			XmlAttribute xAttr = root.CreateAttribute("X");
+			xAttr.Value = PacMan.X.ToString();
+			pacman.Attributes.Append(xAttr);
 
-			XmlAttribute y = root.CreateAttribute("Y");
-			y.Value = PacMan.Y.ToString();
-			pacman.Attributes.Append(y);
+			XmlAttribute yAttr = root.CreateAttribute("Y");
+			yAttr.Value = PacMan.Y.ToString();
+			pacman.Attributes.Append(yAttr);
 
 			XmlAttribute lives = root.CreateAttribute("lives");
 			lives.Value = PacMan.Lives.ToString();
@@ -314,13 +336,13 @@ namespace PacMan
 				name.Value = Ghost.Name;
 				ghost.Attributes.Append(name);
 
-				x = root.CreateAttribute("X");
-				x.Value = Ghost.X.ToString();
-				ghost.Attributes.Append(x);
+				xAttr = root.CreateAttribute("X");
+				xAttr.Value = Ghost.X.ToString();
+				ghost.Attributes.Append(xAttr);
 
-				y = root.CreateAttribute("Y");
-				y.Value = Ghost.Y.ToString();
-				ghost.Attributes.Append(y);
+				yAttr = root.CreateAttribute("Y");
+				yAttr.Value = Ghost.Y.ToString();
+				ghost.Attributes.Append(yAttr);
 
 				state = root.CreateAttribute("state");
 				state.Value = Ghost.State.ToString();
@@ -351,7 +373,7 @@ namespace PacMan
 		private void clearSaveData()
 		{
 			SaveData = null;
-			MainMenu.Items[1].Enabled = true;
+			MainMenu.Items[1].Enabled = false;
 			MainMenu.Invalidate();
 		}
 
@@ -433,10 +455,11 @@ namespace PacMan
 
 			root.AppendChild(powerupNode);
 
-
-			XmlNode saveDataNode = settings.ImportNode(SaveData, true);
 			if (SaveData != null)
+			{
+				XmlNode saveDataNode = settings.ImportNode(SaveData, true);
 				root.AppendChild(saveDataNode);
+			}
 
 
 			settings.Save("config.xml");
@@ -503,6 +526,9 @@ namespace PacMan
 				ghost.Init(CurrentMap);
 			Camera.Init(CurrentMap, PacMan);
 
+			HUD.Score = Score;
+			HUD.Lives = PacMan.Lives;
+
 			State = States.AppearAnimation;
 		}
 
@@ -545,6 +571,31 @@ namespace PacMan
 			{
 				switch (node.Name)
 				{
+					case "map":
+						foreach (XmlNode child in node)
+						{
+							if (child.Name == "clearedCells")
+							{
+								foreach (XmlNode cellNode in child)
+								{
+									if (cellNode.Name == "cell")
+									{
+										int? x = null;
+										int? y = null;
+										foreach (XmlAttribute attr in cellNode.Attributes)
+										{
+											if (attr.Name == "x")
+												x = Convert.ToInt32(attr.Value);
+											if (attr.Name == "y")
+												y = Convert.ToInt32(attr.Value);
+										}
+										if (x != null & y != null)
+											CurrentMap[(int)y][(int)x] = Map.Objects.None;
+									}
+								}
+							}
+						}
+						break;
 					case "pacman":
 						foreach (XmlAttribute attr in node.Attributes)
 						{
@@ -564,10 +615,10 @@ namespace PacMan
 										switch (attr.Value)
 										{
 											case "Normal":
-												PacMan.State = PacMan.States.Normal;
+												savedPacManState = PacMan.States.Normal;
 												break;
 											case "Super":
-												PacMan.State = PacMan.States.Super;
+												savedPacManState = PacMan.States.Super;
 												break;
 
 										}
@@ -679,6 +730,9 @@ namespace PacMan
 				}
 			}
 
+			HUD.Score = Score;
+			HUD.Lives = PacMan.Lives;
+
 			State = States.AppearAnimation;
 		}
 
@@ -691,6 +745,7 @@ namespace PacMan
 			if (currentMapIndex == Maps.Length - 1)
 			{
 				clearSaveData();
+				WonMenu.Header[1] = "Score: "+Score.ToString();
 				State = States.WonMenu;
 			}
 			else
@@ -734,14 +789,22 @@ namespace PacMan
 
 					CurrentMap.Update(dt);
 					if (CurrentMap.State == Map.States.Normal)
+					{
 						PacMan.State = PacMan.States.AppearAnimation;
 
-					PacMan.Update(dt, CurrentMap);
-					if (PacMan.State == PacMan.States.Normal)
-					{
-						foreach (Ghost ghost in Ghosts)
-							ghost.State = Ghost.States.Waiting;
-						State = States.Playing;
+						PacMan.Update(dt, CurrentMap);
+						if (PacMan.State == PacMan.States.Normal)
+						{
+							if (savedPacManState != null)
+							{
+								PacMan.State = (PacMan.States)savedPacManState;
+								savedPacManState = null;
+							}
+							foreach (Ghost ghost in Ghosts)
+								if (ghost.State == Ghost.States.None)
+									ghost.State = Ghost.States.Waiting;
+							State = States.Playing;
+						}
 					}
 					break;
 
@@ -879,8 +942,10 @@ namespace PacMan
 					}
 
 					if (allGhostsDisappeard && CurrentMap.State == Map.States.None)
+					{
+						clearSaveData();
 						State = States.LostMenu;
-
+					}
 					break;
 
 				case States.PauseMenu:

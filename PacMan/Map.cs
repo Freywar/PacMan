@@ -127,6 +127,7 @@ namespace PacMan
 		/// Map grid
 		/// </summary>
 		public Objects[][] Fields;
+		public Objects[][] OriginalFields = null;
 
 		/// <summary>
 		/// Start point of PacMan
@@ -202,59 +203,68 @@ namespace PacMan
 		/// </summary>
 		public void Init()
 		{
-
-			StringBuilder sb = new StringBuilder();
-			using (StreamReader sr = new StreamReader(Path))
+			if (OriginalFields == null)
 			{
-				String line;
-				// Read and display lines from the file until the end of 
-				// the file is reached.
-				while ((line = sr.ReadLine()) != null)
+				StringBuilder sb = new StringBuilder();
+				using (StreamReader sr = new StreamReader(Path))
 				{
-					sb.AppendLine(line);
-				}
-			}
-			string data = sb.ToString();
-
-			string[] rows = Regex.Replace(Regex.Replace(data, "\\r", ""), "\\n*$", "").Split('\n');
-			Height = rows.Length;
-			Width = rows[0].Length;
-			Fields = new Objects[Height][];
-
-			for (int y = 0; y < rows.Length; y++)
-			{
-				if (rows[y].Length != Width)
-					throw new Exception("Invalid map data");
-				Fields[y] = new Objects[Width];
-				for (int x = 0; x < rows[y].Length; x++)
-					switch (rows[y][x])
+					String line;
+					// Read and display lines from the file until the end of 
+					// the file is reached.
+					while ((line = sr.ReadLine()) != null)
 					{
-						case '.':
-							Fields[y][x] = Objects.Point;
-							break;
-						case 'O':
-							Fields[y][x] = Objects.Powerup;
-							break;
-						case '#':
-							Fields[y][x] = Objects.Wall;
-							break;
-						case 'C':
-							PacManStart = new Point(x, y);
-							Fields[y][x] = Objects.None;
-							break;
-						case 'M':
-							GhostStart = new Point(x, y);
-							Fields[y][x] = Objects.None;
-							break;
-						case '-':
-							Fields[y][x] = Objects.None;
-							break;
-
+						sb.AppendLine(line);
 					}
-			}
-			if (PointsCount == 0 || PacManStart == Point.Empty || GhostStart == Point.Empty)
-				throw new Exception("Invalid map data");
+				}
+				string data = sb.ToString();
 
+				string[] rows = Regex.Replace(Regex.Replace(data, "\\r", ""), "\\n*$", "").Split('\n');
+				Height = rows.Length;
+				Width = rows[0].Length;
+				Fields = new Objects[Height][];
+				OriginalFields = new Objects[Height][];
+
+				for (int y = 0; y < rows.Length; y++)
+				{
+					if (rows[y].Length != Width)
+						throw new Exception("Invalid map data");
+					Fields[y] = new Objects[Width];
+					OriginalFields[y] = new Objects[Width];
+					for (int x = 0; x < rows[y].Length; x++)
+						switch (rows[y][x])
+						{
+							case '.':
+								Fields[y][x] = OriginalFields[y][x] = Objects.Point;
+								break;
+							case 'O':
+								Fields[y][x] = OriginalFields[y][x] = Objects.Powerup;
+								break;
+							case '#':
+								Fields[y][x] = OriginalFields[y][x] = Objects.Wall;
+								break;
+							case 'C':
+								PacManStart = new Point(x, y);
+								Fields[y][x] = OriginalFields[y][x] = Objects.None;
+								break;
+							case 'M':
+								GhostStart = new Point(x, y);
+								Fields[y][x] = OriginalFields[y][x] = Objects.None;
+								break;
+							case '-':
+								Fields[y][x] = OriginalFields[y][x] = Objects.None;
+								break;
+
+						}
+				}
+				if (PointsCount == 0 || PacManStart == Point.Empty || GhostStart == Point.Empty)
+					throw new Exception("Invalid map data");
+			}
+			else
+			{
+				for (int y = 0; y < Height; y++)
+					for (int x = 0; x < Height; x++)
+						Fields[y][x] = OriginalFields[y][x];
+			}
 			AnimationState = 0;
 			State = States.None;
 		}
