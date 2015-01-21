@@ -804,7 +804,7 @@ namespace PacMan
 						}
 					}
 
-					if (CurrentMap.PointsCount == 0 || Score > 100)
+					if (CurrentMap.PointsCount == 0)
 						State = States.WinAnimation;
 
 
