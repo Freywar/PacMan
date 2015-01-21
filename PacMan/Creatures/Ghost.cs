@@ -355,7 +355,7 @@ namespace PacMan
 			Y = map.GhostStart.Y;
 		}
 
-		public override Point Update(double dt, Map map)
+		public override Point? Update(double dt, Map map)
 		{
 			throw new NotSupportedException("PacMan required.");
 		}
@@ -365,12 +365,12 @@ namespace PacMan
 		/// <param name="dt">Time passed from last call(seconds).</param>
 		/// <param name="map">Map.</param>
 		/// <param name="pacman">PacMan.</param>
-		/// <returns>Visited cell center or Point.Empty.</returns>
-		public Point Update(double dt, Map map, PacMan pacman)
+		/// <returns>Visited cell center or null if none visited.</returns>
+		public Point? Update(double dt, Map map, PacMan pacman)
 		{
 			rAnimationTime += dt;
 
-			Point result = Point.Empty;
+			Point? result = null;
 
 			//return result;
 

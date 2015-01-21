@@ -224,6 +224,9 @@ namespace PacMan
 				Fields = new Objects[Height][];
 				OriginalFields = new Objects[Height][];
 
+				Point? pacmanStart = null;
+				Point? ghostStart = null;
+
 				for (int y = 0; y < rows.Length; y++)
 				{
 					if (rows[y].Length != Width)
@@ -243,11 +246,11 @@ namespace PacMan
 								Fields[y][x] = OriginalFields[y][x] = Objects.Wall;
 								break;
 							case 'C':
-								PacManStart = new Point(x, y);
+								pacmanStart = new Point(x, y);
 								Fields[y][x] = OriginalFields[y][x] = Objects.None;
 								break;
 							case 'M':
-								GhostStart = new Point(x, y);
+								ghostStart = new Point(x, y);
 								Fields[y][x] = OriginalFields[y][x] = Objects.None;
 								break;
 							case '-':
@@ -256,8 +259,10 @@ namespace PacMan
 
 						}
 				}
-				if (PointsCount == 0 || PacManStart == Point.Empty || GhostStart == Point.Empty)
+				if (PointsCount == 0 || pacmanStart == null || ghostStart == null)
 					throw new Exception("Invalid map data");
+				PacManStart = (Point)pacmanStart;
+				GhostStart = (Point)ghostStart;
 			}
 			else
 			{

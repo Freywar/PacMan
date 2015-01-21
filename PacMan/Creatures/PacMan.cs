@@ -236,7 +236,7 @@ namespace PacMan
 			}
 		}
 
-		public override Point Update(double dt, Map map)
+		public override Point? Update(double dt, Map map)
 		{
 			if (State == States.AppearAnimation)
 			{
@@ -246,15 +246,17 @@ namespace PacMan
 					State = States.Normal;
 					AnimationState = 0;
 				}
-				return Point.Empty;
+				return null;
 			}
 			if (State == States.DisappearAnimation)
 			{
 				AnimationState += dt / animationDuration;
 				if (AnimationState >= 1)
 					State = States.None;
-				return Point.Empty;
+				return null;
 			}
+			if (State == States.None)
+				return null;
 			return base.Update(dt, map);
 		}
 

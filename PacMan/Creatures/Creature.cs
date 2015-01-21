@@ -204,10 +204,10 @@ namespace PacMan
 		/// </summary>
 		/// <param name="dt">Time passed from last call(seconds).</param>
 		/// <param name="map">Map.</param>
-		/// <returns>Visited cell center or Point.Empty.</returns>
-		virtual public Point Update(double dt, Map map)
+		/// <returns>Visited cell center or null if none visited.</returns>
+		virtual public Point? Update(double dt, Map map)
 		{
-			Point result = Point.Empty;
+			Point? result = null;
 			double dtAfterMove;
 			while ((dtAfterMove = moveToClosestCenter(dt, map)) != dt)
 			{

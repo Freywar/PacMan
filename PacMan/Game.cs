@@ -745,16 +745,18 @@ namespace PacMan
 			if (currentMapIndex == Maps.Length - 1)
 			{
 				clearSaveData();
-				WonMenu.Header[1] = "Score: "+Score.ToString();
+				WonMenu.Header[1] = "Score: " + Score.ToString();
 				State = States.WonMenu;
 			}
 			else
 			{
 				CurrentMap = Maps[currentMapIndex + 1];
+				CurrentMap.Init();
 				PacMan.Init(CurrentMap);
 				foreach (Ghost ghost in Ghosts)
 					ghost.Init(CurrentMap);
 				Camera.Init(CurrentMap, PacMan);
+				State = States.AppearAnimation;
 			}
 		}
 
@@ -810,16 +812,17 @@ namespace PacMan
 
 				case States.Playing:
 
-					Point pacManVisitedCell = PacMan.Update(dt, CurrentMap);
+					Point? pacManVisitedCell = PacMan.Update(dt, CurrentMap);
 					foreach (Ghost ghost in Ghosts)
 						ghost.Update(dt, CurrentMap, PacMan);
 					Camera.Update(dt, CurrentMap, PacMan);
 
-					if (pacManVisitedCell != Point.Empty)
+					if (pacManVisitedCell != null)
 					{
-						if (CurrentMap[pacManVisitedCell.Y][pacManVisitedCell.X] == Map.Objects.Point)
+						Point visitedCell = (Point)pacManVisitedCell;
+						if (CurrentMap[visitedCell.Y][visitedCell.X] == Map.Objects.Point)
 							Score += 10;
-						if (CurrentMap[pacManVisitedCell.Y][pacManVisitedCell.X] == Map.Objects.Powerup)
+						if (CurrentMap[visitedCell.Y][visitedCell.X] == Map.Objects.Powerup)
 						{
 							Score += 100;
 							PacMan.State = PacMan.States.Super;
@@ -827,7 +830,7 @@ namespace PacMan
 							foreach (Ghost ghost in Ghosts)
 								ghost.State = Ghost.States.Frightened;
 						}
-						CurrentMap[pacManVisitedCell.Y][pacManVisitedCell.X] = Map.Objects.None;
+						CurrentMap[visitedCell.Y][visitedCell.X] = Map.Objects.None;
 					}
 					if (PacMan.State == PacMan.States.Super)
 						PacMan.SuperTime -= dt;
