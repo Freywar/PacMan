@@ -80,7 +80,7 @@ namespace PacMan
 		private Menu PauseMenu = new Menu();
 		private Menu WonMenu = new Menu();
 		private Menu LostMenu = new Menu();
-		private XmlNode SaveData = null;
+		private XmlDocument SaveData = null;
 
 		private double animationTime = 0;
 		private const double delay = 0;
@@ -247,7 +247,10 @@ namespace PacMan
 									PowerupDuration = Convert.ToDouble(attr.Value);
 							break;
 						case "save":
-							SaveData = node;
+							SaveData = new XmlDocument();
+							StringReader stringReader = new StringReader(Encoding.UTF8.GetString(Convert.FromBase64String(node.InnerText)));
+							XmlTextReader xmlTextReader = new XmlTextReader(stringReader);
+							SaveData.Load(xmlTextReader);
 							break;
 					}
 				foreach (XmlAttribute attr in settings.DocumentElement.Attributes)
@@ -264,28 +267,28 @@ namespace PacMan
 
 		private void createSaveData()
 		{
-			XmlDocument root = new XmlDocument();
-			SaveData = root.CreateElement("save");
+			SaveData = new XmlDocument();
+			XmlNode saveDataRoot = SaveData.CreateElement("save");
 
-			XmlNode map = root.CreateElement("map");
+			XmlNode map = SaveData.CreateElement("map");
 
-			XmlAttribute name = root.CreateAttribute("name");
+			XmlAttribute name = SaveData.CreateAttribute("name");
 			name.Value = CurrentMap.Name;
 			map.Attributes.Append(name);
 
-			XmlNode clearedCells = root.CreateElement("clearedCells");
+			XmlNode clearedCells = SaveData.CreateElement("clearedCells");
 
 			for (int y = 0; y < CurrentMap.Height; y++)
 				for (int x = 0; x < CurrentMap.Height; x++)
 					if (CurrentMap[y][x] != CurrentMap.OriginalFields[y][x])
 					{
-						XmlNode cell = root.CreateElement("cell");
+						XmlNode cell = SaveData.CreateElement("cell");
 
-						XmlAttribute cxAttr = root.CreateAttribute("x");
+						XmlAttribute cxAttr = SaveData.CreateAttribute("x");
 						cxAttr.Value = x.ToString();
 						cell.Attributes.Append(cxAttr);
 
-						XmlAttribute cyAttr = root.CreateAttribute("y");
+						XmlAttribute cyAttr = SaveData.CreateAttribute("y");
 						cyAttr.Value = y.ToString();
 						cell.Attributes.Append(cyAttr);
 
@@ -294,80 +297,82 @@ namespace PacMan
 
 			map.AppendChild(clearedCells);
 
-			SaveData.AppendChild(map);
+			saveDataRoot.AppendChild(map);
 
 
-			XmlNode pacman = root.CreateElement("pacman");
+			XmlNode pacman = SaveData.CreateElement("pacman");
 
-			XmlAttribute xAttr = root.CreateAttribute("X");
+			XmlAttribute xAttr = SaveData.CreateAttribute("X");
 			xAttr.Value = PacMan.X.ToString();
 			pacman.Attributes.Append(xAttr);
 
-			XmlAttribute yAttr = root.CreateAttribute("Y");
+			XmlAttribute yAttr = SaveData.CreateAttribute("Y");
 			yAttr.Value = PacMan.Y.ToString();
 			pacman.Attributes.Append(yAttr);
 
-			XmlAttribute lives = root.CreateAttribute("lives");
+			XmlAttribute lives = SaveData.CreateAttribute("lives");
 			lives.Value = PacMan.Lives.ToString();
 			pacman.Attributes.Append(lives);
 
-			XmlAttribute state = root.CreateAttribute("state");
+			XmlAttribute state = SaveData.CreateAttribute("state");
 			state.Value = PacMan.State.ToString();
 			pacman.Attributes.Append(state);
 
-			XmlAttribute superTime = root.CreateAttribute("superTime");
+			XmlAttribute superTime = SaveData.CreateAttribute("superTime");
 			superTime.Value = PacMan.SuperTime.ToString();
 			pacman.Attributes.Append(superTime);
 
-			XmlAttribute direction = root.CreateAttribute("direction");
+			XmlAttribute direction = SaveData.CreateAttribute("direction");
 			direction.Value = PacMan.Direction.ToString();
 			pacman.Attributes.Append(direction);
 
-			SaveData.AppendChild(pacman);
+			saveDataRoot.AppendChild(pacman);
 
 
-			XmlNode ghosts = root.CreateElement("ghosts");
+			XmlNode ghosts = SaveData.CreateElement("ghosts");
 
 			foreach (Ghost Ghost in Ghosts)
 			{
-				XmlNode ghost = root.CreateElement("ghost");
+				XmlNode ghost = SaveData.CreateElement("ghost");
 
-				name = root.CreateAttribute("name");
+				name = SaveData.CreateAttribute("name");
 				name.Value = Ghost.Name;
 				ghost.Attributes.Append(name);
 
-				xAttr = root.CreateAttribute("X");
+				xAttr = SaveData.CreateAttribute("X");
 				xAttr.Value = Ghost.X.ToString();
 				ghost.Attributes.Append(xAttr);
 
-				yAttr = root.CreateAttribute("Y");
+				yAttr = SaveData.CreateAttribute("Y");
 				yAttr.Value = Ghost.Y.ToString();
 				ghost.Attributes.Append(yAttr);
 
-				state = root.CreateAttribute("state");
+				state = SaveData.CreateAttribute("state");
 				state.Value = Ghost.State.ToString();
 				ghost.Attributes.Append(state);
 
-				direction = root.CreateAttribute("direction");
+				direction = SaveData.CreateAttribute("direction");
 				direction.Value = Ghost.Direction.ToString();
 				ghost.Attributes.Append(direction);
 
 				ghosts.AppendChild(ghost);
 			}
 
-			SaveData.AppendChild(ghosts);
+			saveDataRoot.AppendChild(ghosts);
 
 
-			XmlNode score = root.CreateElement("score");
+			XmlNode score = SaveData.CreateElement("score");
 
-			XmlAttribute value = root.CreateAttribute("value");
+			XmlAttribute value = SaveData.CreateAttribute("value");
 			value.Value = Score.ToString();
 			score.Attributes.Append(value);
 
-			SaveData.AppendChild(score);
+			saveDataRoot.AppendChild(score);
 
 			MainMenu.Items[1].Enabled = true;
 			MainMenu.Invalidate();
+
+			SaveData.AppendChild(saveDataRoot);
 		}
 
 		private void clearSaveData()
@@ -457,8 +462,17 @@ namespace PacMan
 
 			if (SaveData != null)
 			{
-				XmlNode saveDataNode = settings.ImportNode(SaveData, true);
-				root.AppendChild(saveDataNode);
+				StringWriter stringWriter = new StringWriter();
+				XmlTextWriter xmlTextWriter = new XmlTextWriter(stringWriter);
+				SaveData.WriteTo(xmlTextWriter);
+				string saveData = stringWriter.ToString();
+
+				XmlNode save = settings.CreateElement("save");
+
+				Convert.ToBase64String(Encoding.UTF8.GetBytes(saveData));
+				save.InnerText = Convert.ToBase64String(Encoding.UTF8.GetBytes(saveData));
+
+				root.AppendChild(save);
 			}
 
 
@@ -539,7 +553,7 @@ namespace PacMan
 
 			Map savedMap = null;
 
-			foreach (XmlNode node in SaveData)
+			foreach (XmlNode node in SaveData.DocumentElement)
 			{
 				if (node.Name == "map")
 				{
@@ -556,7 +570,10 @@ namespace PacMan
 			}
 
 			if (savedMap == null)
+			{
 				startGame();
+				return;
+			}
 
 			CurrentMap = savedMap;
 			CurrentMap.Init();
@@ -567,7 +584,7 @@ namespace PacMan
 				ghost.Init(CurrentMap);
 			Camera.Init(CurrentMap, PacMan);
 
-			foreach (XmlNode node in SaveData.ChildNodes)
+			foreach (XmlNode node in SaveData.DocumentElement.ChildNodes)
 			{
 				switch (node.Name)
 				{
