@@ -256,7 +256,7 @@ namespace PacMan
 				throw new Exception("Invalid map data");
 
 			AnimationState = 0;
-			State = States.AppearAnimation;
+			State = States.None;
 		}
 
 		public void Update(double dt)
@@ -780,12 +780,12 @@ namespace PacMan
 		/// </summary>
 		public void Render()
 		{
-			GL.Color3(0, 0, 0);
+			GL.Color3(Color.Black);
 			GL.Begin(PrimitiveType.Quads);
-			GL.Vertex3(-Width / 2 - 0.5, 0, -Height / 2 - 0.5);
-			GL.Vertex3(-Width / 2 - 0.5, 0, Height / 2 + 0.5);
-			GL.Vertex3(Width / 2 + 0.5, 0, Height / 2 + 0.5);
-			GL.Vertex3(Width / 2 + 0.5, 0, -Height / 2 - 0.5);
+			GL.Vertex3(-0.5, 0, -0.5);
+			GL.Vertex3(-0.5, 0, Height - 0.5);
+			GL.Vertex3(Width - 0.5, 0, Height - 0.5);
+			GL.Vertex3(Width - 0.5, 0, -0.5);
 			GL.End();
 
 			for (int y = 0; y < Height; y++)

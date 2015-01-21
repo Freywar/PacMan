@@ -30,6 +30,9 @@ namespace PacMan
 			/// </summary>
 			MainMenu,
 			AppearAnimation,
+			LifeLostAnimation,
+			WinAnimation,
+			LoseAnimation,
 			/// <summary>
 			/// Game.
 			/// </summary>
@@ -78,9 +81,9 @@ namespace PacMan
 		private Menu WonMenu = new Menu();
 		private Menu LostMenu = new Menu();
 		private XmlNode SaveData = null;
-		private double AnimationState = 0;
 
-		private const double animationTime = 2;
+		private double animationTime = 0;
+		private const double delay = 0;
 
 		/// <summary>
 		/// Powerup duration(seconds).
@@ -500,7 +503,7 @@ namespace PacMan
 				ghost.Init(CurrentMap);
 			Camera.Init(CurrentMap, PacMan);
 
-			State = States.Playing;
+			State = States.AppearAnimation;
 		}
 
 		private void loadGame()
@@ -676,7 +679,7 @@ namespace PacMan
 				}
 			}
 
-			State = States.Playing;
+			State = States.AppearAnimation;
 		}
 
 		private void nextMap()
@@ -709,7 +712,7 @@ namespace PacMan
 			foreach (Ghost ghost in Ghosts)
 				ghost.Init(CurrentMap);
 
-			State = States.Playing;
+			State = States.AppearAnimation;
 		}
 
 		/// <summary>
@@ -725,44 +728,24 @@ namespace PacMan
 					MainMenu.Update(dt);
 					break;
 
+				case States.AppearAnimation:
+					if (CurrentMap.State == Map.States.None)
+						CurrentMap.State = Map.States.AppearAnimation;
+
+					CurrentMap.Update(dt);
+					if (CurrentMap.State == Map.States.Normal)
+						PacMan.State = PacMan.States.AppearAnimation;
+
+					PacMan.Update(dt, CurrentMap);
+					if (PacMan.State == PacMan.States.Normal)
+					{
+						foreach (Ghost ghost in Ghosts)
+							ghost.State = Ghost.States.Waiting;
+						State = States.Playing;
+					}
+					break;
+
 				case States.Playing:
-
-					if (CurrentMap.State == Map.States.AppearAnimation)
-					{
-						CurrentMap.Update(dt);
-						if (CurrentMap.State != Map.States.Normal)
-							return false;
-					}
-
-					if (PacMan.State == PacMan.States.AppearAnimation)
-					{
-						PacMan.Update(dt, CurrentMap);
-						if (PacMan.State != PacMan.States.Normal)
-							return false;
-					}
-
-					if (PacMan.State == PacMan.States.DisappearAnimation)
-					{
-						PacMan.Update(dt, CurrentMap);
-						foreach (Ghost ghost in Ghosts)
-							if (ghost.State == Ghost.States.DisappearAnimation)
-								ghost.Update(dt, CurrentMap, PacMan);
-
-						return false;
-					}
-					else if (PacMan.State == PacMan.States.None)
-					{
-						bool waitForGhosts = false;
-						foreach (Ghost ghost in Ghosts)
-							if (ghost.State == Ghost.States.DisappearAnimation)
-							{
-								ghost.Update(dt, CurrentMap, PacMan);
-								waitForGhosts = true;
-							}
-						if (!waitForGhosts)
-							restartLevel();
-						return false;
-					}
 
 					Point pacManVisitedCell = PacMan.Update(dt, CurrentMap);
 					foreach (Ghost ghost in Ghosts)
@@ -802,17 +785,7 @@ namespace PacMan
 								if (Utils.Distance(PacMan.X, PacMan.Y, ghost.X, ghost.Y) < 1)
 								{
 									PacMan.Lives--;
-									if (PacMan.Lives == 0)
-									{
-										clearSaveData();
-										State = States.LostMenu;
-									}
-									else
-									{
-										foreach (Ghost g in Ghosts)
-											g.State = Ghost.States.DisappearAnimation;
-										PacMan.State = PacMan.States.DisappearAnimation;
-									}
+									State = PacMan.Lives != 0 ? States.LifeLostAnimation : States.LoseAnimation;
 								}
 								break;
 							case Ghost.States.Frightened:
@@ -831,11 +804,83 @@ namespace PacMan
 						}
 					}
 
-					if (CurrentMap.PointsCount == 0)
-						nextMap();
+					if (CurrentMap.PointsCount == 0 || Score > 100)
+						State = States.WinAnimation;
+
 
 					HUD.Score = Score;
 					HUD.Lives = PacMan.Lives;
+					break;
+
+
+				case States.LifeLostAnimation:
+					if (PacMan.State == PacMan.States.Normal)
+						PacMan.State = PacMan.States.DisappearAnimation;
+
+
+					PacMan.Update(dt, CurrentMap);
+					if (PacMan.State == PacMan.States.None)
+					{
+						foreach (Ghost ghost in Ghosts)
+							ghost.State = Ghost.States.DisappearAnimation;
+					}
+
+					bool allGhostsDisappeard = true;
+					foreach (Ghost ghost in Ghosts)
+					{
+						ghost.Update(dt, CurrentMap, PacMan);
+						allGhostsDisappeard = allGhostsDisappeard && ghost.State == Ghost.States.None;
+					}
+
+					if (allGhostsDisappeard)
+						restartLevel();
+
+					break;
+
+				case States.WinAnimation:
+					if (CurrentMap.State == Map.States.Normal)
+						CurrentMap.State = Map.States.DisappearAnimation;
+
+					CurrentMap.Update(dt);
+
+					allGhostsDisappeard = true;
+					foreach (Ghost ghost in Ghosts)
+					{
+						if (ghost.State != Ghost.States.DisappearAnimation && ghost.State != Ghost.States.None)
+							ghost.State = Ghost.States.DisappearAnimation;
+						ghost.Update(dt, CurrentMap, PacMan);
+						allGhostsDisappeard = allGhostsDisappeard && ghost.State == Ghost.States.None;
+					}
+
+					if (allGhostsDisappeard && CurrentMap.State == Map.States.None)
+						nextMap();
+
+					break;
+
+				case States.LoseAnimation:
+					if (PacMan.State == PacMan.States.Normal)
+						PacMan.State = PacMan.States.DisappearAnimation;
+
+					PacMan.Update(dt, CurrentMap);
+					if (PacMan.State == PacMan.States.None)
+					{
+						foreach (Ghost ghost in Ghosts)
+							ghost.State = Ghost.States.DisappearAnimation;
+						CurrentMap.State = Map.States.DisappearAnimation;
+					}
+
+					CurrentMap.Update(dt);
+
+					allGhostsDisappeard = true;
+					foreach (Ghost ghost in Ghosts)
+					{
+						ghost.Update(dt, CurrentMap, PacMan);
+						allGhostsDisappeard = allGhostsDisappeard && ghost.State == Ghost.States.None;
+					}
+
+					if (allGhostsDisappeard && CurrentMap.State == Map.States.None)
+						State = States.LostMenu;
+
 					break;
 
 				case States.PauseMenu:
@@ -951,7 +996,12 @@ namespace PacMan
 					MainMenu.Render();
 					break;
 
+				case States.AppearAnimation:
 				case States.Playing:
+				case States.WinAnimation:
+				case States.LifeLostAnimation:
+				case States.LoseAnimation:
+
 
 					GL.Enable(EnableCap.Lighting);
 					GL.Enable(EnableCap.Light0);

@@ -348,7 +348,7 @@ namespace PacMan
 
 		public override void Init(Map map)
 		{
-			State = States.Waiting;
+			State = States.None;
 			waitedTime = 0;
 			AnimationState = 0;
 			X = map.GhostStart.X;
@@ -396,6 +396,9 @@ namespace PacMan
 				case States.Normal:
 				case States.Frightened:
 				case States.Eaten:
+					if (pacman.State != PacMan.States.Normal && pacman.State != PacMan.States.Super)
+						break;
+
 					double dtAfterMove;
 					while ((dtAfterMove = moveToClosestCenter(dt, map)) != dt)
 					{

@@ -193,7 +193,7 @@ namespace PacMan
 		/// <param name="map">Map.</param>
 		public override void Init(Map map)
 		{
-			State = States.AppearAnimation;
+			State = States.None;
 			AnimationState = 0;
 			X = map.PacManStart.X;
 			Y = map.PacManStart.Y;
