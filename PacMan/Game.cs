@@ -113,6 +113,7 @@ namespace PacMan
 		/// menu after game has been lost.
 		/// </summary>
 		private Menu LoseMenu = new Menu();
+		private bool EndlessMode = false;
 
 		/// <summary>
 		/// Temp storage for PacMan loaded state during game appear animation.
@@ -134,7 +135,7 @@ namespace PacMan
 				switch (attr.Name)
 				{
 					case "speed":
-						PacMan.Speed = Convert.ToDouble(attr.Value,CultureInfo.InvariantCulture);
+						PacMan.Speed = Convert.ToDouble(attr.Value, CultureInfo.InvariantCulture);
 						break;
 				}
 			}
@@ -247,11 +248,15 @@ namespace PacMan
 							SaveData.Load(xmlTextReader);
 							break;
 					}
+				bool startImmediately = false;
 				foreach (XmlAttribute attr in settings.DocumentElement.Attributes)
+				{
 					if (attr.Name == "autostart" && attr.Value == "true")
-						return true;
-				return false;
-
+						startImmediately = true;
+					if (attr.Name == "endlessMode" && attr.Value == "true")
+						EndlessMode = true;
+				}
+				return startImmediately;
 			}
 			else
 				throw new Exception("Invalid root element in config file.");
@@ -720,7 +725,7 @@ namespace PacMan
 			for (int i = 0; i < Maps.Length; i++)
 				if (CurrentMap == Maps[i])
 					currentMapIndex = i;
-			if (currentMapIndex == Maps.Length - 1)
+			if (!EndlessMode && currentMapIndex == Maps.Length - 1)
 			{
 				deleteSave();
 				WinMenu.Header[1] = "Score:" + Score.ToString();
@@ -728,7 +733,7 @@ namespace PacMan
 			}
 			else
 			{
-				CurrentMap = Maps[currentMapIndex + 1];
+				CurrentMap = Maps[(currentMapIndex + 1) % Maps.Length];
 				CurrentMap.Init();
 				PacMan.Init(CurrentMap);
 				foreach (Ghost ghost in Ghosts)
