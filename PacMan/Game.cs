@@ -267,7 +267,7 @@ namespace PacMan
 			XmlNode pacmanNode = document.CreateElement("pacman");
 
 			XmlAttribute speedAttr = document.CreateAttribute("speed");
-			speedAttr.Value = PacMan.Speed.ToString();
+			speedAttr.Value = PacMan.Speed.ToString(CultureInfo.InvariantCulture);
 			pacmanNode.Attributes.Append(speedAttr);
 
 			return pacmanNode;
@@ -290,19 +290,19 @@ namespace PacMan
 				ghostNode.Attributes.Append(colorAttr);
 
 				XmlAttribute speedAttr = document.CreateAttribute("speed");
-				speedAttr.Value = ghost.Speed.ToString();
+				speedAttr.Value = ghost.Speed.ToString(CultureInfo.InvariantCulture);
 				ghostNode.Attributes.Append(speedAttr);
 
 				XmlAttribute frightenedSpeedAttr = document.CreateAttribute("frightenedSpeed");
-				frightenedSpeedAttr.Value = ghost.FrightenedSpeed.ToString();
+				frightenedSpeedAttr.Value = ghost.FrightenedSpeed.ToString(CultureInfo.InvariantCulture);
 				ghostNode.Attributes.Append(frightenedSpeedAttr);
 
 				XmlAttribute eatenSpeedAttr = document.CreateAttribute("eatenSpeed");
-				eatenSpeedAttr.Value = ghost.EatenSpeed.ToString();
+				eatenSpeedAttr.Value = ghost.EatenSpeed.ToString(CultureInfo.InvariantCulture);
 				ghostNode.Attributes.Append(eatenSpeedAttr);
 
 				XmlAttribute delayAttr = document.CreateAttribute("delay");
-				delayAttr.Value = ghost.Delay.ToString();
+				delayAttr.Value = ghost.Delay.ToString(CultureInfo.InvariantCulture);
 				ghostNode.Attributes.Append(delayAttr);
 
 				ghostsNode.AppendChild(ghostNode);
@@ -349,7 +349,7 @@ namespace PacMan
 			XmlNode powerupNode = settings.CreateElement("powerup");
 
 			XmlAttribute durationAttr = settings.CreateAttribute("duration");
-			durationAttr.Value = PowerupDuration.ToString();
+			durationAttr.Value = PowerupDuration.ToString(CultureInfo.InvariantCulture);
 			powerupNode.Attributes.Append(durationAttr);
 
 			root.AppendChild(powerupNode);
