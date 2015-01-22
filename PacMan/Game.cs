@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+using System.Globalization;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Input;
@@ -133,7 +134,7 @@ namespace PacMan
 				switch (attr.Name)
 				{
 					case "speed":
-						PacMan.Speed = Convert.ToInt32(attr.Value);
+						PacMan.Speed = Convert.ToDouble(attr.Value,CultureInfo.InvariantCulture);
 						break;
 				}
 			}
@@ -164,16 +165,16 @@ namespace PacMan
 								Ghosts[j].Color = Color.FromName(attr.Value);
 								break;
 							case "speed":
-								Ghosts[j].Speed = Convert.ToDouble(attr.Value);
+								Ghosts[j].Speed = Convert.ToDouble(attr.Value, CultureInfo.InvariantCulture);
 								break;
 							case "frightenedSpeed":
-								Ghosts[j].FrightenedSpeed = Convert.ToDouble(attr.Value);
+								Ghosts[j].FrightenedSpeed = Convert.ToDouble(attr.Value, CultureInfo.InvariantCulture);
 								break;
 							case "eatenSpeed":
-								Ghosts[j].EatenSpeed = Convert.ToDouble(attr.Value);
+								Ghosts[j].EatenSpeed = Convert.ToDouble(attr.Value, CultureInfo.InvariantCulture);
 								break;
 							case "delay":
-								Ghosts[j].Delay = Convert.ToDouble(attr.Value);
+								Ghosts[j].Delay = Convert.ToDouble(attr.Value, CultureInfo.InvariantCulture);
 								break;
 						}
 					}
@@ -237,7 +238,7 @@ namespace PacMan
 						case "powerup":
 							foreach (XmlAttribute attr in node.Attributes)
 								if (attr.Name == "duration")
-									PowerupDuration = Convert.ToDouble(attr.Value);
+									PowerupDuration = Convert.ToDouble(attr.Value, CultureInfo.InvariantCulture);
 							break;
 						case "save":
 							SaveData = new XmlDocument();
@@ -536,10 +537,10 @@ namespace PacMan
 				switch (attr.Name)
 				{
 					case "X":
-						PacMan.X = Convert.ToDouble(attr.Value);
+						PacMan.X = Convert.ToDouble(attr.Value, CultureInfo.InvariantCulture);
 						break;
 					case "Y":
-						PacMan.Y = Convert.ToDouble(attr.Value);
+						PacMan.Y = Convert.ToDouble(attr.Value, CultureInfo.InvariantCulture);
 						break;
 					case "lives":
 						PacMan.Lives = Convert.ToInt32(attr.Value);
@@ -581,7 +582,7 @@ namespace PacMan
 						}
 						break;
 					case "superTime":
-						PacMan.SuperTime = Convert.ToDouble(attr.Value);
+						PacMan.SuperTime = Convert.ToDouble(attr.Value, CultureInfo.InvariantCulture);
 						break;
 				}
 			}
@@ -1134,7 +1135,7 @@ namespace PacMan
 					break;
 			}
 			if (key == Key.F2)
-			hudIsVisible = !hudIsVisible;
+				hudIsVisible = !hudIsVisible;
 			return false;
 		}
 
