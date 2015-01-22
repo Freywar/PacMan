@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
 
@@ -135,6 +136,86 @@ namespace PacMan
 			GL.DeleteBuffer(verticesBufferId);
 			GL.DeleteBuffer(normalsBufferId);
 			GL.DeleteBuffer(colorsBufferId);
+		}
+	}
+
+	class ShaderProgram : IDisposable
+	{
+		private int programId;
+		private int vertexShaderId;
+		private int fragmentShaderId;
+
+		private int loadShader(String filename, ShaderType type, int program)
+		{
+			int address = GL.CreateShader(type);
+			using (StreamReader sr = new StreamReader(filename))
+			{
+				GL.ShaderSource(address, sr.ReadToEnd());
+			}
+			GL.CompileShader(address);
+			GL.AttachShader(program, address);
+			string log = GL.GetShaderInfoLog(address);
+			return address;
+		}
+
+		public ShaderProgram(string vs, string fs)
+		{
+			programId = GL.CreateProgram();
+			vertexShaderId = loadShader(vs, ShaderType.VertexShader, programId);
+			fragmentShaderId = loadShader(fs, ShaderType.FragmentShader, programId);
+			GL.LinkProgram(programId);
+			string log = GL.GetProgramInfoLog(programId);
+		}
+
+		public void Enable()
+		{
+			GL.UseProgram(programId);
+		}
+
+		public void SetUniform(string name, Vector4 data)
+		{
+			GL.Uniform4(GL.GetUniformLocation(programId, name), data);
+		}
+
+		public void SetUniform(string name, float data)
+		{
+			GL.Uniform1(GL.GetUniformLocation(programId, name), data);
+		}
+
+		public void Disable()
+		{
+			GL.UseProgram(0);
+		}
+
+		public void Dispose()
+		{
+			GL.DetachShader(programId, fragmentShaderId);
+			GL.DetachShader(programId, vertexShaderId);
+			GL.DeleteShader(fragmentShaderId);
+			GL.DeleteShader(vertexShaderId);
+			GL.DeleteProgram(programId);
+		}
+
+		private static ShaderProgram Default_v = null;
+		public static ShaderProgram Default
+		{
+			get
+			{
+				if (Default_v == null)
+					Default_v = new ShaderProgram("Shaders\\Default_Vert.c", "Shaders\\Default_Frag.c");
+				return Default_v;
+			}
+		}
+
+		private static ShaderProgram StaticColor_v = null;
+		public static ShaderProgram StaticColor
+		{
+			get
+			{
+				if (StaticColor_v == null)
+					StaticColor_v = new ShaderProgram("Shaders\\StaticColor_Vert.c", "Shaders\\StaticColor_Frag.c");
+				return StaticColor_v;
+			}
 		}
 	}
 

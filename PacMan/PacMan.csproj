@@ -71,14 +71,29 @@
     <None Include="Fonts\emulogic.ttf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <Content Include="Shaders\GhostSkirt_Frag.c" />
-    <Content Include="Shaders\GhostSkirt_Vert.c" />
-  </ItemGroup>
-  <ItemGroup>
     <Content Include="config.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <SubType>Designer</SubType>
     </Content>
+    <Content Include="Shaders\Default_Frag.c">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Shaders\StaticColor_Frag.c">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Shaders\StaticColor_Vert.c">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Shaders\GhostSkirt_Frag.c">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Shaders\Default_Vert.c">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Shaders\GhostSkirt_Vert.c">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
     <Content Include="Fonts\emulogic-readme.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

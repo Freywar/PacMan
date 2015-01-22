@@ -63,7 +63,8 @@ namespace PacMan
 		private const double disappearAnimationDuration = 0.5;
 
 		private Mesh cap_v = null;
-		private Mesh frightenedCap_v = null;
+		private Mesh skirt_v = null;
+		private ShaderProgram skirtProgram_v = null;
 		private Color Color_v = Color.Red;
 
 		/// <summary>
@@ -80,62 +81,7 @@ namespace PacMan
 		private double totalTimeElapsed = 0;
 
 		/// <summary>
-		/// Create cap mesh.
-		/// </summary>
-		/// <param name="col">Color.</param>
-		/// <returns>Cap mesh.</returns>
-		private Mesh createCap(Color col)
-		{
-			Vector3d color = new Vector3d(col.R / 255.0, col.G / 255.0, col.B / 255.0);
-
-			double step = Math.PI * 2 / detailsCount;
-			int pointsCount = (int)(Math.PI / step) * (int)(Math.PI / 2 / step) * detailsCount;
-			int vp = 0;
-			int np = 0;
-			int cp = 0;
-
-			double[] v = new double[pointsCount * 3];
-			double[] n = new double[pointsCount * 3];
-			double[] c = new double[pointsCount * 3];
-
-			for (double alpha = -Math.PI / 2; alpha < Math.PI / 2; alpha += step)
-				for (double beta = 0; beta < Math.PI * 2; beta += step)
-				{
-					GL.Color3(Color.White);
-
-					Vector3d normal = Utils.FromSpheric(alpha, beta, 1);
-					Utils.Push(n, normal, ref np);
-					normal.Mult(radius);
-					Utils.Push(v, normal, ref vp);
-					Utils.Push(c, color, ref cp);
-
-					normal = Utils.FromSpheric(alpha + step, beta, 1);
-					Utils.Push(n, normal, ref np);
-					normal.Mult(radius);
-					Utils.Push(v, normal, ref vp);
-					Utils.Push(c, color, ref cp);
-
-					normal = Utils.FromSpheric(alpha + step, beta + step, 1);
-					Utils.Push(n, normal, ref np);
-					normal.Mult(radius);
-					Utils.Push(v, normal, ref vp);
-					Utils.Push(c, color, ref cp);
-
-					normal = Utils.FromSpheric(alpha, beta + step, 1);
-					Utils.Push(n, normal, ref np);
-					normal.Mult(radius);
-					Utils.Push(v, normal, ref vp);
-					Utils.Push(c, color, ref cp);
-				}
-
-			Mesh res = new Mesh();
-			res.Vertices = v;
-			res.Normals = n;
-			res.Colors = c;
-			return res;
-		}
-		/// <summary>
-		/// Cap mesh with current color.
+		/// Cap mesh.
 		/// </summary>
 		private Mesh cap
 		{
@@ -143,25 +89,91 @@ namespace PacMan
 			{
 				if (cap_v == null)
 				{
-					cap_v = createCap(Color);
+					double step = Math.PI * 2 / detailsCount;
+					int pointsCount = (int)(Math.PI / step) * (int)(Math.PI * 2 / step) * 4;
+					int vp = 0;
+					int np = 0;
+					int cp = 0;
+
+					double[] v = new double[pointsCount * 3];
+					double[] n = new double[pointsCount * 3];
+
+					for (double alpha = -Math.PI / 2; alpha < Math.PI / 2; alpha += step)
+						for (double beta = 0; beta < Math.PI * 2; beta += step)
+						{
+							Vector3d normal = Utils.FromSpheric(alpha, beta, 1);
+							Utils.Push(n, normal, ref np);
+							normal.Mult(radius);
+							Utils.Push(v, normal, ref vp);
+
+							normal = Utils.FromSpheric(alpha + step, beta, 1);
+							Utils.Push(n, normal, ref np);
+							normal.Mult(radius);
+							Utils.Push(v, normal, ref vp);
+
+							normal = Utils.FromSpheric(alpha + step, beta + step, 1);
+							Utils.Push(n, normal, ref np);
+							normal.Mult(radius);
+							Utils.Push(v, normal, ref vp);
+
+							normal = Utils.FromSpheric(alpha, beta + step, 1);
+							Utils.Push(n, normal, ref np);
+							normal.Mult(radius);
+							Utils.Push(v, normal, ref vp);
+						}
+
+					cap_v = new Mesh();
+					cap_v.Vertices = v;
+					cap_v.Normals = n;
 				}
 
 				return cap_v;
 			}
 		}
 		/// <summary>
-		/// Cap mesh with LightBlue color.
+		/// Skirt mesh.
 		/// </summary>
-		private Mesh frightenedCap
+		private Mesh skirt
 		{
 			get
 			{
-				if (frightenedCap_v == null)
+				if (skirt_v == null)
 				{
-					frightenedCap_v = createCap(Color.LightBlue);
+
+					double angleStep = Math.PI * 2.0 / detailsCount;
+					double yStep = 2.0 / detailsCount;
+					int pointsCount = (int)(0.5 / yStep) * (int)(Math.PI * 2 / angleStep) * 4;
+					int vp = 0;
+					int np = 0;
+					int cp = 0;
+
+					double[] v = new double[pointsCount * 3];
+					double[] n = new double[pointsCount * 3];
+
+					for (double dy = 0; dy < 0.5; dy += yStep)
+						for (double beta = 0; beta < Math.PI * 2; beta += angleStep)
+						{
+							Utils.Push(v, new Vector3d(beta, dy, 0), ref vp);
+							Utils.Push(v, new Vector3d(beta + angleStep, dy, 0), ref vp);
+							Utils.Push(v, new Vector3d(beta + angleStep, dy + yStep, 0), ref vp);
+							Utils.Push(v, new Vector3d(beta, dy + yStep, 0), ref vp);
+						}
+
+					skirt_v = new Mesh();
+					skirt_v.Vertices = v;
 				}
 
-				return frightenedCap_v;
+				return skirt_v;
+			}
+		}
+
+		private ShaderProgram skirtProgram
+		{
+			get
+			{
+				if (skirtProgram_v == null)
+					skirtProgram_v = new ShaderProgram("Shaders\\GhostSkirt_Vert.c", "Shaders\\GhostSkirt_Frag.c");
+				return skirtProgram_v;
 			}
 		}
 
@@ -205,16 +217,6 @@ namespace PacMan
 			Math.Cos(beta * 16 + totalTimeElapsed * 4) +
 			Math.Cos(beta * 32 + totalTimeElapsed * 8)
 			) * y / 4 + delta;
-		}
-
-		private void renderSkirtPoint(double dy, double beta, double r, double yStep)
-		{
-			double prevDr = DR(dy - yStep, beta);
-			double dr = DR(dy, beta);
-			double alpha = Math.Atan2(yStep, dr - prevDr);
-
-			GL.Normal3(Math.Cos(beta) * Math.Sin(alpha), Math.Cos(alpha), Math.Sin(beta) * Math.Sin(alpha));
-			GL.Vertex3(Math.Cos(beta) * (r + dr), -dy, Math.Sin(beta) * (r + dr));
 		}
 
 		#region Path detection.
@@ -514,28 +516,58 @@ namespace PacMan
 			if (State == States.DisappearAnimation)
 				GL.Translate(0, -Utils.NormSin(animationState), 0);
 
-			double angleStep = Math.PI * 2.0 / detailsCount;
-			double yStep = 2.0 / detailsCount;
+
 			if (State != States.Eaten)
 			{
-				if (State == States.Frightened)
-					frightenedCap.Render();
-				else
-					cap.Render();
+				Color color = State == States.Frightened ? Color.LightBlue : Color;
 
-				//skirt
-				GL.Color3(State == States.Frightened ? Color.LightBlue : Color);
-				GL.Begin(PrimitiveType.Quads);
-				for (double dy = 0; dy < 0.5; dy += 0.1)
-					for (double beta = 0; beta < Math.PI * 2; beta += angleStep)
-					{
-						renderSkirtPoint(dy, beta, radius, yStep);
-						renderSkirtPoint(dy, beta + angleStep, radius, yStep);
-						renderSkirtPoint(dy + yStep, beta + angleStep, radius, yStep);
-						renderSkirtPoint(dy + yStep, beta, radius, yStep);
-					}
-				GL.End();
+				ShaderProgram.StaticColor.Enable();
+
+				ShaderProgram.StaticColor.SetUniform("meshColor",
+					new Vector4(color.R / (float)255.0, color.G / (float)255.0, color.B / (float)255.0, (float)1.0));
+				cap.Render();
+
+				ShaderProgram.StaticColor.Disable();
+
+
+				skirtProgram.Enable();
+
+				skirtProgram.SetUniform("meshColor",
+					new Vector4(color.R / (float)255.0, color.G / (float)255.0, color.B / (float)255.0, (float)1.0));
+
+
+
+				skirtProgram.SetUniform("radius", (float)radius);
+				skirtProgram.SetUniform("yStep", (float)0.1);
+
+				double delta = 0;
+				if (State == States.AppearAnimation)
+				{
+					if (animationState < 0.25)
+						delta = -1 * Utils.NormSin(animationState * 4);
+					if (animationState >= 0.25 && animationState < 0.5)
+						delta = -1 * (1 - Utils.NormSin(animationState * 4 - 1));
+					if (animationState >= 0.5 && animationState < 0.75)
+						delta = 1 * Utils.NormSin(animationState * 4 - 2);
+					if (animationState >= 0.75 && animationState < 1)
+						delta = 1 * (1 - Utils.NormSin(animationState * 4 - 3));
+				}
+
+				if (State == States.DisappearAnimation)
+				{
+					if (animationState < 0.5)
+						delta = 1 * Utils.NormSin(animationState * 2);
+					else
+						delta = 1 * (1 - Utils.NormSin(animationState * 2 - 1));
+				}
+				skirtProgram.SetUniform("delta", (float)delta);
+				skirtProgram.SetUniform("totalTimeElapsed", (float)totalTimeElapsed);
+				skirt.Render();
+
+				skirtProgram.Disable();
 			}
+
+			ShaderProgram.Default.Enable();
 
 			double s = Math.Sin(Math.PI / 6), c = Math.Cos(Math.PI / 6);
 			GL.PushMatrix();
@@ -550,6 +582,8 @@ namespace PacMan
 			eye.Render();
 			GL.PopMatrix();
 
+			ShaderProgram.Default.Disable();
+
 			GL.PopMatrix();
 		}
 
@@ -558,8 +592,10 @@ namespace PacMan
 			base.Dispose();
 			if (cap_v != null)
 				cap_v.Dispose();
-			if (frightenedCap_v != null)
-				cap_v.Dispose();
+			if (skirt_v != null)
+				skirt_v.Dispose();
+			if (skirtProgram_v != null)
+				skirtProgram_v.Dispose();
 		}
 	}
 }

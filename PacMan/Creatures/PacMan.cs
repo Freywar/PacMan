@@ -370,11 +370,27 @@ namespace PacMan
 			if (State == States.DisappearAnimation)
 				GL.Scale(1 - animationState, 1 - animationState, 1 - animationState);
 
+
+			ShaderProgram.Default.Enable();
+
 			GL.Rotate(-mouthAngle * 180 / Math.PI, 0, 1, 0);
 			jaw.Render();
 			GL.Rotate(mouthAngle * 180 / Math.PI, 0, 1, 0);
 
+			ShaderProgram.Default.Disable();
+
+
+			ShaderProgram.StaticColor.Enable();
+
+			ShaderProgram.StaticColor.SetUniform("meshColor",
+			new Vector4(Color.Yellow.R / (float)255.0, Color.Yellow.G / (float)255.0, Color.Yellow.B / (float)255.0, (float)1.0));
+
 			body.Render();
+
+			ShaderProgram.StaticColor.Disable();
+
+
+			ShaderProgram.Default.Enable();
 
 			GL.PushMatrix();
 			GL.Rotate(mouthAngle * 180 / Math.PI, 0, 1, 0);
@@ -395,6 +411,9 @@ namespace PacMan
 			GL.Translate(cc * lc * radius, -ls * radius, cs * lc * radius);
 			currentEye.Render();
 			GL.Translate(-cc * lc * radius, ls * radius, -cs * lc * radius);
+
+			ShaderProgram.Default.Disable();
+
 
 			GL.PopMatrix();
 		}

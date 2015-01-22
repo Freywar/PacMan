@@ -71,6 +71,7 @@ namespace PacMan
 		private Mesh wallSide_v = null;
 		private Mesh wallclosedCorner_v = null;
 		private Mesh wallOpenCorner_v = null;
+		private Mesh floor_v = null;
 
 		/// <summary>
 		/// Animation progress in [0..1]
@@ -86,17 +87,13 @@ namespace PacMan
 			{
 				if (sphere_v == null)
 				{
-					Vector3d color = new Vector3d(1, 1, 1);
-
 					double step = Math.PI * 2.0 / detailsCount;
 					int pointsCount = (int)(Math.PI / step) * (int)(Math.PI * 2 / step) * 4;
 					int vp = 0;
 					int np = 0;
-					int cp = 0;
 
 					double[] v = new double[pointsCount * 3];
 					double[] n = new double[pointsCount * 3];
-					double[] c = new double[pointsCount * 4];
 
 					for (double alpha = -Math.PI / 2; alpha < Math.PI / 2; alpha += step)
 						for (double beta = 0; beta < Math.PI * 2; beta += step)
@@ -106,31 +103,58 @@ namespace PacMan
 							Vector3d normal = Utils.FromSpheric(alpha, beta, 1);
 							Utils.Push(n, normal, ref np);
 							Utils.Push(v, normal, ref vp);
-							Utils.Push(c, color, ref cp);
 
 							normal = Utils.FromSpheric(alpha + step, beta, 1);
 							Utils.Push(n, normal, ref np);
 							Utils.Push(v, normal, ref vp);
-							Utils.Push(c, color, ref cp);
 
 							normal = Utils.FromSpheric(alpha + step, beta + step, 1);
 							Utils.Push(n, normal, ref np);
 							Utils.Push(v, normal, ref vp);
-							Utils.Push(c, color, ref cp);
 
 							normal = Utils.FromSpheric(alpha, beta + step, 1);
 							Utils.Push(n, normal, ref np);
 							Utils.Push(v, normal, ref vp);
-							Utils.Push(c, color, ref cp);
 						}
 
 					sphere_v = new Mesh();
 					sphere_v.Vertices = v;
 					sphere_v.Normals = n;
-					sphere_v.Colors = c;
 				}
 
 				return sphere_v;
+			}
+		}
+
+		private Mesh floor
+		{
+			get
+			{
+				if (floor_v == null)
+				{
+					Vector3d normal = new Vector3d(0, 1, 0);
+
+					int pointsCount = 4;
+					int vp = 0;
+					int np = 0;
+
+					double[] v = new double[pointsCount * 3];
+					double[] n = new double[pointsCount * 3];
+
+					Utils.Push(v, new Vector3d(0.5, 0.0, 0.5), ref vp);
+					Utils.Push(v, new Vector3d(0.5, 0.0, Height - 0.5), ref vp);
+					Utils.Push(v, new Vector3d(Width - 0.5, 0.0, Height - 0.5), ref vp);
+					Utils.Push(v, new Vector3d(Width - 0.5, 0.0, 0.5), ref vp);
+
+					for (int i = 0; i < 4; i++)
+						Utils.Push(n, normal, ref np);
+
+					floor_v = new Mesh();
+					floor_v.Vertices = v;
+					floor_v.Normals = n;
+				}
+
+				return floor_v;
 			}
 		}
 
@@ -143,16 +167,14 @@ namespace PacMan
 				if (wallCenter_v == null)
 				{
 					double ps2 = 1.0 / 6.0;
-					Vector3d color = new Vector3d(wallColor.R / 255.0, wallColor.G / 255.0, wallColor.B / 255.0); Vector3d normal = new Vector3d(0, 1, 0);
+					Vector3d normal = new Vector3d(0, 1, 0);
 
 					int pointsCount = 4;
 					int vp = 0;
 					int np = 0;
-					int cp = 0;
 
 					double[] v = new double[pointsCount * 3];
 					double[] n = new double[pointsCount * 3];
-					double[] c = new double[pointsCount * 4];
 
 					Utils.Push(v, new Vector3d(-ps2, 1.0, -ps2), ref vp);
 					Utils.Push(v, new Vector3d(-ps2, 1.0, ps2), ref vp);
@@ -160,15 +182,11 @@ namespace PacMan
 					Utils.Push(v, new Vector3d(ps2, 1.0, -ps2), ref vp);
 
 					for (int i = 0; i < 4; i++)
-					{
 						Utils.Push(n, normal, ref np);
-						Utils.Push(c, color, ref cp);
-					}
 
 					wallCenter_v = new Mesh();
 					wallCenter_v.Vertices = v;
 					wallCenter_v.Normals = n;
-					wallCenter_v.Colors = c;
 				}
 
 				return wallCenter_v;
@@ -188,11 +206,9 @@ namespace PacMan
 					int pointsCount = 8;
 					int vp = 0;
 					int np = 0;
-					int cp = 0;
 
 					double[] v = new double[pointsCount * 3];
 					double[] n = new double[pointsCount * 3];
-					double[] c = new double[pointsCount * 3];
 
 					Utils.Push(v, new Vector3d(-ps2, 1.0, -ps2), ref vp);
 					Utils.Push(v, new Vector3d(-ps2, 1.0, ps2), ref vp);
@@ -205,22 +221,15 @@ namespace PacMan
 
 					Vector3d normal = new Vector3d(0, 1, 0);
 					for (int i = 0; i < 4; i++)
-					{
 						Utils.Push(n, normal, ref np);
-						Utils.Push(c, color, ref cp);
-					}
 
 					normal = new Vector3d(1, 0, 0);
 					for (int i = 4; i < 8; i++)
-					{
 						Utils.Push(n, normal, ref np);
-						Utils.Push(c, color, ref cp);
-					}
 
 					wallSide_v = new Mesh();
 					wallSide_v.Vertices = v;
 					wallSide_v.Normals = n;
-					wallSide_v.Colors = c;
 				}
 
 				return wallSide_v;
@@ -235,16 +244,13 @@ namespace PacMan
 				{
 					double ps2 = 1.0 / 6.0;
 					double step = Math.PI * 2 / detailsCount;
-					Vector3d color = new Vector3d(wallColor.R / 255.0, wallColor.G / 255.0, wallColor.B / 255.0);
 
 					int pointsCount = 12 + (int)(Math.PI / 2 / step) * 4 + (int)(Math.PI / 2 / step) * 4;
 					int vp = 0;
 					int np = 0;
-					int cp = 0;
 
 					double[] v = new double[pointsCount * 3];
 					double[] n = new double[pointsCount * 3];
-					double[] c = new double[pointsCount * 3];
 
 					Utils.Push(v, new Vector3d(-ps2, 1.0, -ps2), ref vp);
 					Utils.Push(v, new Vector3d(-ps2, 1.0, 0), ref vp);
@@ -312,13 +318,9 @@ namespace PacMan
 						Utils.Push(v, normal, ref vp);
 					}
 
-					for (int i = 0; i < pointsCount; i++)
-						Utils.Push(c, color, ref cp);
-
 					wallclosedCorner_v = new Mesh();
 					wallclosedCorner_v.Vertices = v;
 					wallclosedCorner_v.Normals = n;
-					wallclosedCorner_v.Colors = c;
 				}
 
 				return wallclosedCorner_v;
@@ -333,16 +335,13 @@ namespace PacMan
 				{
 					double ps2 = 1.0 / 6.0;
 					double step = Math.PI / 10;
-					Vector3d color = new Vector3d(wallColor.R / 255.0, wallColor.G / 255.0, wallColor.B / 255.0);
 
 					int pointsCount = (int)(Math.PI / 2 / step) * 4 + (int)(Math.PI / 2 / step) * 4;
 					int vp = 0;
 					int np = 0;
-					int cp = 0;
 
 					double[] v = new double[pointsCount * 3];
 					double[] n = new double[pointsCount * 3];
-					double[] c = new double[pointsCount * 3];
 
 					Vector3d normal = new Vector3d(0, 1, 0);
 
@@ -394,13 +393,9 @@ namespace PacMan
 						Utils.Push(v, normal, ref vp);
 					}
 
-					for (int i = 0; i < pointsCount; i++)
-						Utils.Push(c, color, ref cp);
-
 					wallOpenCorner_v = new Mesh();
 					wallOpenCorner_v.Vertices = v;
 					wallOpenCorner_v.Normals = n;
-					wallOpenCorner_v.Colors = c;
 				}
 
 				return wallOpenCorner_v;
@@ -809,13 +804,11 @@ namespace PacMan
 		/// </summary>
 		public void Render()
 		{
-			GL.Color3(Color.Black);
-			GL.Begin(PrimitiveType.Quads);
-			GL.Vertex3(-0.5, 0, -0.5);
-			GL.Vertex3(-0.5, 0, Height - 0.5);
-			GL.Vertex3(Width - 0.5, 0, Height - 0.5);
-			GL.Vertex3(Width - 0.5, 0, -0.5);
-			GL.End();
+			ShaderProgram.StaticColor.Enable();
+
+			ShaderProgram.StaticColor.SetUniform("meshColor", new Vector4(0, 0, 0, 1));
+
+			floor.Render();
 
 			for (int y = 0; y < Height; y++)
 				for (int x = 0; x < Width; x++)
@@ -823,11 +816,15 @@ namespace PacMan
 					{
 
 						case Objects.Wall:
+							ShaderProgram.StaticColor.SetUniform("meshColor",
+							 new Vector4(wallColor.R / (float)255.0, wallColor.G / (float)255.0, wallColor.B / (float)255.0, (float)1.0));
 							renderWall(x, y);
 							break;
 
 						case Objects.Point:
 						case Objects.Powerup:
+							ShaderProgram.StaticColor.SetUniform("meshColor", new Vector4(1, 1, 1, 1));
+
 							double r = Fields[y][x] == Objects.Point ? 0.1 : 0.3;
 
 							if (State == States.AppearAnimation)
@@ -840,7 +837,7 @@ namespace PacMan
 							GL.PushMatrix();
 							GL.Translate(x, 0.5, y);
 							GL.Scale(r, r, r);
-							sphere.Render(PrimitiveType.Quads);
+							sphere.Render();
 							GL.PopMatrix();
 							break;
 
@@ -848,6 +845,8 @@ namespace PacMan
 						default:
 							break;
 					}
+
+			ShaderProgram.StaticColor.Disable();
 		}
 
 		public void Dispose()
