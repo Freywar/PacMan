@@ -73,6 +73,7 @@
     </None>
     <Content Include="config.xml">
       <SubType>Designer</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Shaders\Default_Frag.c">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
