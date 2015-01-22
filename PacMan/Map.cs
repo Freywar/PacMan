@@ -715,8 +715,12 @@ namespace PacMan
 					}
 				}
 				string data = sb.ToString();
+				data = Regex.Replace(data, "\\r", "");
+				data = Regex.Replace(data, "//.*?\\n", "\n");
+				data = Regex.Replace(data, "\\n*$", "");
+				data = Regex.Replace(data, "^\\n*", "");
 
-				string[] rows = Regex.Replace(Regex.Replace(data, "\\r", ""), "\\n*$", "").Split('\n');
+				string[] rows =data.Split('\n');
 				Height = rows.Length;
 				Width = rows[0].Length;
 				Fields = new Objects[Height][];

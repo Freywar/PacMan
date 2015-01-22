@@ -1,4 +1,14 @@
-﻿-###################-
+﻿// Each symbol represents symbol cell except C-style one-line comments.
+// Lines' lengths must be aligned. Map must contain one PacMan's start cell and one ghosts' start cell and at least one point/powerup.
+// Possible objects:
+// # - wall
+// . - point
+// O - powerup
+// C - PacMan's start cell
+// M - ghosts' start cell 
+// - - empty cell
+//
+-###################-
 -#........#........#-
 -#O##.###.#.###.##O#-
 -#.................#-

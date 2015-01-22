@@ -172,7 +172,7 @@ namespace PacMan
 			get
 			{
 				if (skirtProgram_v == null)
-					skirtProgram_v = new ShaderProgram("Shaders\\GhostSkirt_Vert.c", "Shaders\\GhostSkirt_Frag.c");
+					skirtProgram_v = new ShaderProgram("Shaders\\GhostSkirt_Vert.glsl", "Shaders\\GhostSkirt_Frag.glsl");
 				return skirtProgram_v;
 			}
 		}

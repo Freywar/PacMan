@@ -7,8 +7,10 @@
 		<ghost name="Pinky" color="pink" speed="3.4" frightenedSpeed="2.4" eatenSpeed="10.0" delay="3.0"></ghost>
 		<ghost name="Inky" color="cyan" speed="3.3" frightenedSpeed="2.3" eatenSpeed="10.0" delay ="6.0"></ghost>
 		<ghost name="Clyde" color="orange" speed="3.2" frightenedSpeed="2.2" eatenSpeed="10.0" delay="9.0"></ghost>
+		<!--more ghosts-->
 	</ghosts>
 	<maps>
 		<map name="Default" path="default.map"></map>
+		<!--more maps-->
 	</maps>
 </game>

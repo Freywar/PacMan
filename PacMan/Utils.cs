@@ -202,7 +202,7 @@ namespace PacMan
 			get
 			{
 				if (Default_v == null)
-					Default_v = new ShaderProgram("Shaders\\Default_Vert.c", "Shaders\\Default_Frag.c");
+					Default_v = new ShaderProgram("Shaders\\Default_Vert.glsl", "Shaders\\Default_Frag.glsl");
 				return Default_v;
 			}
 		}
@@ -213,7 +213,7 @@ namespace PacMan
 			get
 			{
 				if (StaticColor_v == null)
-					StaticColor_v = new ShaderProgram("Shaders\\StaticColor_Vert.c", "Shaders\\StaticColor_Frag.c");
+					StaticColor_v = new ShaderProgram("Shaders\\StaticColor_Vert.glsl", "Shaders\\StaticColor_Frag.glsl");
 				return StaticColor_v;
 			}
 		}

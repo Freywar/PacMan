@@ -1000,7 +1000,8 @@ namespace PacMan
 					if (PacMan.State == PacMan.States.None)
 					{
 						foreach (Ghost ghost in Ghosts)
-							ghost.State = Ghost.States.DisappearAnimation;
+							if (ghost.State != Ghost.States.DisappearAnimation && ghost.State != Ghost.States.None)
+								ghost.State = Ghost.States.DisappearAnimation;
 					}
 
 					bool allGhostsDisappeard = true;
@@ -1043,8 +1044,10 @@ namespace PacMan
 					if (PacMan.State == PacMan.States.None)
 					{
 						foreach (Ghost ghost in Ghosts)
-							ghost.State = Ghost.States.DisappearAnimation;
-						CurrentMap.State = Map.States.DisappearAnimation;
+							if (ghost.State != Ghost.States.DisappearAnimation && ghost.State != Ghost.States.None)
+								ghost.State = Ghost.States.DisappearAnimation;
+						if (CurrentMap.State == Map.States.Normal)
+							CurrentMap.State = Map.States.DisappearAnimation;
 					}
 
 					CurrentMap.Update(dt);
