@@ -223,34 +223,34 @@ namespace PacMan
 
 		private int[][] distanceMap = null;
 
-		private void fillDistanceMapRec(Map map, int x, int y, int distance)
+		private void fillDistanceMapRec(Map map, int x, int z, int distance)
 		{
-			if ((distanceMap[y][x] != -1 && distanceMap[y][x] <= distance) || !map.IsWalkable(y, x))
+			if ((distanceMap[z][x] != -1 && distanceMap[z][x] <= distance) || !map.IsWalkable(z, x))
 				return;
 
-			distanceMap[y][x] = distance;
+			distanceMap[z][x] = distance;
 
-			fillDistanceMapRec(map, x, map.WrapY(y - 1), distance + 1);
-			fillDistanceMapRec(map, x, map.WrapY(y + 1), distance + 1);
-			fillDistanceMapRec(map, map.WrapX(x - 1), y, distance + 1);
-			fillDistanceMapRec(map, map.WrapX(x + 1), y, distance + 1);
+			fillDistanceMapRec(map, x, map.WrapZ(z - 1), distance + 1);
+			fillDistanceMapRec(map, x, map.WrapZ(z + 1), distance + 1);
+			fillDistanceMapRec(map, map.WrapX(x - 1), z, distance + 1);
+			fillDistanceMapRec(map, map.WrapX(x + 1), z, distance + 1);
 
 		}
 
-		private void fillDistanceMap(Map map, Point target)
+		private void fillDistanceMap(Map map, Vector3i target)
 		{
-			if (distanceMap == null || distanceMap.Length != map.Height || distanceMap[0].Length != map.Width)
+			if (distanceMap == null || distanceMap.Length != map.Depth || distanceMap[0].Length != map.Width)
 			{
-				distanceMap = new int[map.Height][];
-				for (int y = 0; y < distanceMap.Length; y++)
-					distanceMap[y] = new int[map.Width];
+				distanceMap = new int[map.Depth][];
+				for (int z = 0; z < distanceMap.Length; z++)
+					distanceMap[z] = new int[map.Width];
 			}
 
-			for (int y = 0; y < map.Height; y++)
+			for (int z = 0; z < map.Depth; z++)
 				for (int x = 0; x < map.Width; x++)
-					distanceMap[y][x] = -1;
+					distanceMap[z][x] = -1;
 
-			fillDistanceMapRec(map, target.X, target.Y, 0);
+			fillDistanceMapRec(map, target.X, target.Z, 0);
 		}
 
 		/// <summary>
@@ -259,44 +259,44 @@ namespace PacMan
 		/// <param name="map">Map.</param>
 		/// <param name="target">Target.</param>
 		/// <returns>Direction.</returns>
-		private Directions chooseDirection(Map map, Point target, Directions currentDirection)
+		private Directions chooseDirection(Map map, Vector3i target, Directions currentDirection)
 		{
 			fillDistanceMap(map, target);
-			if (distanceMap[(int)Y][(int)X] == -1)
+			if (distanceMap[(int)Z][(int)X] == -1)
 				currentDirection = cw(currentDirection);
 
 			int px = (int)map.WrapX(X);
-			int py = (int)map.WrapY(Y);
-			int bestDistance = distanceMap[py][px];
+			int pz = (int)map.WrapZ(Z);
+			int bestDistance = distanceMap[pz][px];
 
-			py = (int)map.WrapY(Y - 1);
-			if (distanceMap[py][px] != -1 && distanceMap[py][px] < bestDistance)
+			pz = (int)map.WrapZ(Z - 1);
+			if (distanceMap[pz][px] != -1 && distanceMap[pz][px] < bestDistance)
 			{
 				currentDirection = Directions.Up;
-				bestDistance = distanceMap[py][px];
+				bestDistance = distanceMap[pz][px];
 			}
 
-			py = (int)map.WrapX(Y + 1);
-			if (distanceMap[py][px] != -1 && distanceMap[py][px] < bestDistance)
+			pz = (int)map.WrapX(Z + 1);
+			if (distanceMap[pz][px] != -1 && distanceMap[pz][px] < bestDistance)
 			{
 				currentDirection = Directions.Down;
-				bestDistance = distanceMap[py][px];
+				bestDistance = distanceMap[pz][px];
 			}
 
-			py = (int)map.WrapY(Y);
+			pz = (int)map.WrapZ(Z);
 
 			px = (int)map.WrapX(X - 1);
-			if (distanceMap[py][px] != -1 && distanceMap[py][px] < bestDistance)
+			if (distanceMap[pz][px] != -1 && distanceMap[pz][px] < bestDistance)
 			{
 				currentDirection = Directions.Left;
-				bestDistance = distanceMap[py][px];
+				bestDistance = distanceMap[pz][px];
 			}
 
 			px = (int)map.WrapX(X + 1);
-			if (distanceMap[py][px] != -1 && distanceMap[py][px] < bestDistance)
+			if (distanceMap[pz][px] != -1 && distanceMap[pz][px] < bestDistance)
 			{
 				currentDirection = Directions.Right;
-				bestDistance = distanceMap[py][px];
+				bestDistance = distanceMap[pz][px];
 			}
 
 			return currentDirection;
@@ -316,31 +316,31 @@ namespace PacMan
 		/// <param name="pacman">PacMan.</param>
 		protected void updateDirection(Map map, PacMan pacman)
 		{
-			Point target;
+			Vector3i target;
 			switch (State)
 			{
 				case States.Waiting:
 				case States.AppearAnimation:
 				case States.Normal:
-					target = new Point((int)pacman.X, (int)pacman.Y);
+					target = new Vector3i((int)pacman.X, 0, (int)pacman.Z);
 					break;
 				case States.Frightened:
-					target = new Point((int)pacman.X, (int)pacman.Y);
+					target = new Vector3i((int)pacman.X, 0, (int)pacman.Z);
 					fillDistanceMap(map, target);
 					double maxDistance = 0;
-					for (int y = 0; y < map.Height; y++)
+					for (int z = 0; z < map.Depth; z++)
 						for (int x = 0; x < map.Width; x++)
-							if (distanceMap[y][x] > maxDistance)
+							if (distanceMap[z][x] > maxDistance)
 							{
-								target = new Point(x, y);
-								maxDistance = distanceMap[y][x];
+								target = new Vector3i(x,0, z);
+								maxDistance = distanceMap[z][x];
 							}
 					break;
 				case States.Eaten:
 					target = map.GhostStart;
 					break;
 				default:
-					target = new Point((int)X, (int)Y);
+					target = new Vector3i((int)X, 0, (int)Z);
 					break;
 			}
 
@@ -411,10 +411,10 @@ namespace PacMan
 			waitTimeElapsed = 0;
 			totalTimeElapsed = 0;
 			X = map.GhostStart.X;
-			Y = map.GhostStart.Y;
+			Z = map.GhostStart.Z;
 		}
 
-		public override Point? Update(double dt, Map map)
+		public override Vector3i? Update(double dt, Map map)
 		{
 			throw new NotSupportedException("PacMan required.");
 		}
@@ -460,12 +460,12 @@ namespace PacMan
 					double dtAfterMove;
 					while ((dtAfterMove = moveToClosestCenter(dt, map)) != dt)
 					{
-						result = new Point((int)X, (int)Y);
+						result = new Point((int)X, (int)Z);
 
 						updateDirection(map, pacman);
 						dt = dtAfterMove;
 					}
-					if (Math.Floor(X) == X && Math.Floor(Y) == Y)
+					if (Math.Floor(X) == X && Math.Floor(Z) == Z)
 						updateDirection(map, pacman);
 					if (dt > 0)
 						moveRemainingCellPart(dt, map);
@@ -489,7 +489,7 @@ namespace PacMan
 				return;
 
 			GL.PushMatrix();
-			GL.Translate(X, 0.5, Y);
+			GL.Translate(X, 0, Z);
 			switch (Direction)
 			{
 				case Directions.Down:

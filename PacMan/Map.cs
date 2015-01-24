@@ -141,10 +141,10 @@ namespace PacMan
 					double[] v = new double[pointsCount * 3];
 					double[] n = new double[pointsCount * 3];
 
-					Utils.Push(v, new Vector3d(0.5, 0.0, 0.5), ref vp);
-					Utils.Push(v, new Vector3d(0.5, 0.0, Height - 0.5), ref vp);
-					Utils.Push(v, new Vector3d(Width - 0.5, 0.0, Height - 0.5), ref vp);
-					Utils.Push(v, new Vector3d(Width - 0.5, 0.0, 0.5), ref vp);
+					Utils.Push(v, new Vector3d(0.5, -0.5, 0.5), ref vp);
+					Utils.Push(v, new Vector3d(0.5, -0.5, Depth - 0.5), ref vp);
+					Utils.Push(v, new Vector3d(Width - 0.5, -0.5, Depth - 0.5), ref vp);
+					Utils.Push(v, new Vector3d(Width - 0.5, -0.5, 0.5), ref vp);
 
 					for (int i = 0; i < 4; i++)
 						Utils.Push(n, normal, ref np);
@@ -176,10 +176,10 @@ namespace PacMan
 					double[] v = new double[pointsCount * 3];
 					double[] n = new double[pointsCount * 3];
 
-					Utils.Push(v, new Vector3d(-ps2, 1.0, -ps2), ref vp);
-					Utils.Push(v, new Vector3d(-ps2, 1.0, ps2), ref vp);
-					Utils.Push(v, new Vector3d(ps2, 1.0, ps2), ref vp);
-					Utils.Push(v, new Vector3d(ps2, 1.0, -ps2), ref vp);
+					Utils.Push(v, new Vector3d(-ps2, 0.5, -ps2), ref vp);
+					Utils.Push(v, new Vector3d(-ps2, 0.5, ps2), ref vp);
+					Utils.Push(v, new Vector3d(ps2, 0.5, ps2), ref vp);
+					Utils.Push(v, new Vector3d(ps2, 0.5, -ps2), ref vp);
 
 					for (int i = 0; i < 4; i++)
 						Utils.Push(n, normal, ref np);
@@ -210,14 +210,14 @@ namespace PacMan
 					double[] v = new double[pointsCount * 3];
 					double[] n = new double[pointsCount * 3];
 
-					Utils.Push(v, new Vector3d(-ps2, 1.0, -ps2), ref vp);
-					Utils.Push(v, new Vector3d(-ps2, 1.0, ps2), ref vp);
-					Utils.Push(v, new Vector3d(0, 1.0, ps2), ref vp);
-					Utils.Push(v, new Vector3d(0, 1.0, -ps2), ref vp);
-					Utils.Push(v, new Vector3d(0, 0.0, -ps2), ref vp);
-					Utils.Push(v, new Vector3d(0, 1.0, -ps2), ref vp);
-					Utils.Push(v, new Vector3d(0, 1.0, ps2), ref vp);
-					Utils.Push(v, new Vector3d(0, 0.0, ps2), ref vp);
+					Utils.Push(v, new Vector3d(-ps2, 0.5, -ps2), ref vp);
+					Utils.Push(v, new Vector3d(-ps2, 0.5, ps2), ref vp);
+					Utils.Push(v, new Vector3d(0, 0.5, ps2), ref vp);
+					Utils.Push(v, new Vector3d(0, 0.5, -ps2), ref vp);
+					Utils.Push(v, new Vector3d(0, -0.5, -ps2), ref vp);
+					Utils.Push(v, new Vector3d(0, 0.5, -ps2), ref vp);
+					Utils.Push(v, new Vector3d(0, 0.5, ps2), ref vp);
+					Utils.Push(v, new Vector3d(0, -0.5, ps2), ref vp);
 
 					Vector3d normal = new Vector3d(0, 1, 0);
 					for (int i = 0; i < 4; i++)
@@ -252,20 +252,20 @@ namespace PacMan
 					double[] v = new double[pointsCount * 3];
 					double[] n = new double[pointsCount * 3];
 
-					Utils.Push(v, new Vector3d(-ps2, 1.0, -ps2), ref vp);
-					Utils.Push(v, new Vector3d(-ps2, 1.0, 0), ref vp);
-					Utils.Push(v, new Vector3d(0, 1.0, 0), ref vp);
-					Utils.Push(v, new Vector3d(0, 1.0, -ps2), ref vp);
+					Utils.Push(v, new Vector3d(-ps2, 0.5, -ps2), ref vp);
+					Utils.Push(v, new Vector3d(-ps2, 0.5, 0), ref vp);
+					Utils.Push(v, new Vector3d(0, 0.5, 0), ref vp);
+					Utils.Push(v, new Vector3d(0, 0.5, -ps2), ref vp);
 
-					Utils.Push(v, new Vector3d(0, 1.0, -ps2), ref vp);
-					Utils.Push(v, new Vector3d(0, 1.0, 0), ref vp);
-					Utils.Push(v, new Vector3d(ps2, 1.0, 0), ref vp);
-					Utils.Push(v, new Vector3d(ps2, 1.0, -ps2), ref vp);
+					Utils.Push(v, new Vector3d(0, 0.5, -ps2), ref vp);
+					Utils.Push(v, new Vector3d(0, 0.5, 0), ref vp);
+					Utils.Push(v, new Vector3d(ps2, 0.5, 0), ref vp);
+					Utils.Push(v, new Vector3d(ps2, 0.5, -ps2), ref vp);
 
-					Utils.Push(v, new Vector3d(-ps2, 1.0, 0), ref vp);
-					Utils.Push(v, new Vector3d(-ps2, 1.0, ps2), ref vp);
-					Utils.Push(v, new Vector3d(0, 1.0, ps2), ref vp);
-					Utils.Push(v, new Vector3d(0, 1.0, 0), ref vp);
+					Utils.Push(v, new Vector3d(-ps2, 0.5, 0), ref vp);
+					Utils.Push(v, new Vector3d(-ps2, 0.5, ps2), ref vp);
+					Utils.Push(v, new Vector3d(0, 0.5, ps2), ref vp);
+					Utils.Push(v, new Vector3d(0, 0.5, 0), ref vp);
 
 					Vector3d normal = new Vector3d(0, 1, 0);
 					for (int i = 0; i < 12; i++)
@@ -273,12 +273,12 @@ namespace PacMan
 
 					for (double alpha = 0; alpha < Math.PI / 2; alpha += step)
 					{
-						Utils.Push(v, new Vector3d(0, 1.0, 0), ref vp);
-						Utils.Push(v, new Vector3d(ps2 - ps2 * Math.Sin(alpha + step), 1.0,
+						Utils.Push(v, new Vector3d(0, 0.5, 0), ref vp);
+						Utils.Push(v, new Vector3d(ps2 - ps2 * Math.Sin(alpha + step), 0.5,
 							 ps2 - ps2 * Math.Cos(alpha + step)), ref vp);
-						Utils.Push(v, new Vector3d(ps2 - ps2 * Math.Sin(alpha), 1.0,
+						Utils.Push(v, new Vector3d(ps2 - ps2 * Math.Sin(alpha), 0.5,
 							 ps2 - ps2 * Math.Cos(alpha)), ref vp);
-						Utils.Push(v, new Vector3d(0, 1.0, 0), ref vp);
+						Utils.Push(v, new Vector3d(0, 0.5, 0), ref vp);
 						for (int i = 0; i < 4; i++)
 							Utils.Push(n, normal, ref np);
 
@@ -290,6 +290,7 @@ namespace PacMan
 						Utils.Push(n, normal, ref np);
 						normal.Mult(ps2);
 						normal.X = ps2 - normal.X;
+						normal.Y=-0.5;
 						normal.Z = ps2 - normal.Z;
 						Utils.Push(v, normal, ref vp);
 
@@ -297,7 +298,7 @@ namespace PacMan
 						Utils.Push(n, normal, ref np);
 						normal.Mult(ps2);
 						normal.X = ps2 - normal.X;
-						normal.Y = 1;
+						normal.Y = 0.5;
 						normal.Z = ps2 - normal.Z;
 						Utils.Push(v, normal, ref vp);
 
@@ -305,7 +306,7 @@ namespace PacMan
 						Utils.Push(n, normal, ref np);
 						normal.Mult(ps2);
 						normal.X = ps2 - normal.X;
-						normal.Y = 1;
+						normal.Y = 0.5;
 						normal.Z = ps2 - normal.Z;
 						Utils.Push(v, normal, ref vp);
 
@@ -314,6 +315,7 @@ namespace PacMan
 						Utils.Push(n, normal, ref np);
 						normal.Mult(ps2);
 						normal.X = ps2 - normal.X;
+						normal.Y =- 0.5;
 						normal.Z = ps2 - normal.Z;
 						Utils.Push(v, normal, ref vp);
 					}
@@ -347,17 +349,15 @@ namespace PacMan
 
 					for (double alpha = 0; alpha < Math.PI / 2; alpha += step)
 					{
-						Utils.Push(v, new Vector3d(-ps2, 1.0, -ps2), ref vp);
-						Utils.Push(v, new Vector3d(-ps2, 1.0, -ps2), ref vp);
-						Utils.Push(v, new Vector3d(-ps2 + ps2 * Math.Sin(alpha), 1.0,
+						Utils.Push(v, new Vector3d(-ps2, 0.5, -ps2), ref vp);
+						Utils.Push(v, new Vector3d(-ps2, 0.5, -ps2), ref vp);
+						Utils.Push(v, new Vector3d(-ps2 + ps2 * Math.Sin(alpha), 0.5,
 							 -ps2 + ps2 * Math.Cos(alpha)), ref vp);
-						Utils.Push(v, new Vector3d(-ps2 + ps2 * Math.Sin(alpha + step), 1.0,
+						Utils.Push(v, new Vector3d(-ps2 + ps2 * Math.Sin(alpha + step), 0.5,
 							 -ps2 + ps2 * Math.Cos(alpha + step)), ref vp);
-
 
 						for (int i = 0; i < 4; i++)
 							Utils.Push(n, normal, ref np);
-
 					}
 
 					for (double alpha = 0; alpha < Math.PI / 2; alpha += step)
@@ -366,6 +366,7 @@ namespace PacMan
 						Utils.Push(n, normal, ref np);
 						normal.Mult(ps2);
 						normal.X = normal.X - ps2;
+						normal.Y=-0.5;
 						normal.Z = normal.Z - ps2;
 						Utils.Push(v, normal, ref vp);
 
@@ -373,6 +374,7 @@ namespace PacMan
 						Utils.Push(n, normal, ref np);
 						normal.Mult(ps2);
 						normal.X = normal.X - ps2;
+						normal.Y=-0.5;
 						normal.Z = normal.Z - ps2;
 						Utils.Push(v, normal, ref vp);
 
@@ -380,7 +382,7 @@ namespace PacMan
 						Utils.Push(n, normal, ref np);
 						normal.Mult(ps2);
 						normal.X = normal.X - ps2;
-						normal.Y = 1;
+						normal.Y = 0.5;
 						normal.Z = normal.Z - ps2;
 						Utils.Push(v, normal, ref vp);
 
@@ -388,7 +390,7 @@ namespace PacMan
 						Utils.Push(n, normal, ref np);
 						normal.Mult(ps2);
 						normal.X = normal.X - ps2;
-						normal.Y = 1;
+						normal.Y = 0.5;
 						normal.Z = normal.Z - ps2;
 						Utils.Push(v, normal, ref vp);
 					}
@@ -402,9 +404,9 @@ namespace PacMan
 			}
 		}
 
-		private void renderWall(int x, int y)
+		private void renderWall(int x, int z)
 		{
-			GL.Translate(x, 0, y);
+			GL.Translate(x, 0, z);
 
 			GL.PushMatrix();
 			if (State == States.AppearAnimation)
@@ -421,7 +423,7 @@ namespace PacMan
 
 			//right
 			GL.Translate(ps, 0, 0);
-			if (x < Width - 1 && Fields[y][x + 1] == Objects.Wall)
+			if (x < Width - 1 && Fields[z][x + 1] == Objects.Wall)
 				wallCenter.Render();
 			else
 				wallSide.Render();
@@ -430,7 +432,7 @@ namespace PacMan
 			//left
 			GL.Translate(-ps, 0, 0);
 			GL.Rotate(180, 0, 1, 0);
-			if (x > 0 && Fields[y][x - 1] == Objects.Wall)
+			if (x > 0 && Fields[z][x - 1] == Objects.Wall)
 				wallCenter.Render();
 			else
 				wallSide.Render();
@@ -440,7 +442,7 @@ namespace PacMan
 			//bottom
 			GL.Translate(0, 0, ps);
 			GL.Rotate(-90, 0, 1, 0);
-			if (y < Height - 1 && Fields[y + 1][x] == Objects.Wall)
+			if (z < Depth - 1 && Fields[z + 1][x] == Objects.Wall)
 				wallCenter.Render();
 			else
 				wallSide.Render();
@@ -450,7 +452,7 @@ namespace PacMan
 			//top
 			GL.Translate(0, 0, -ps);
 			GL.Rotate(90, 0, 1, 0);
-			if (y > 0 && Fields[y - 1][x] == Objects.Wall)
+			if (z > 0 && Fields[z - 1][x] == Objects.Wall)
 				wallCenter.Render();
 			else
 				wallSide.Render();
@@ -459,18 +461,18 @@ namespace PacMan
 
 			//rightbottom
 			GL.Translate(ps, 0, ps);
-			if (x < Width - 1 && y < Height - 1 && Fields[y + 1][x] == Objects.Wall && Fields[y][x + 1] == Objects.Wall && Fields[y + 1][x + 1] == Objects.Wall)
+			if (x < Width - 1 && z < Depth - 1 && Fields[z + 1][x] == Objects.Wall && Fields[z][x + 1] == Objects.Wall && Fields[z + 1][x + 1] == Objects.Wall)
 				wallCenter.Render();
-			else if (x < Width - 1 && y < Height - 1 && Fields[y + 1][x] == Objects.Wall && Fields[y][x + 1] == Objects.Wall)
+			else if (x < Width - 1 && z < Depth - 1 && Fields[z + 1][x] == Objects.Wall && Fields[z][x + 1] == Objects.Wall)
 				wallclosedCorner.Render();
-			else if (x < Width - 1 && Fields[y][x + 1] == Objects.Wall)
+			else if (x < Width - 1 && Fields[z][x + 1] == Objects.Wall)
 			{
 				GL.Rotate(-90, 0, 1, 0);
 				wallSide.Render();
 				GL.Rotate(90, 0, 1, 0);
 			}
 
-			else if (y < Height - 1 && Fields[y + 1][x] == Objects.Wall)
+			else if (z < Depth - 1 && Fields[z + 1][x] == Objects.Wall)
 				wallSide.Render();
 			else
 				wallOpenCorner.Render();
@@ -480,14 +482,14 @@ namespace PacMan
 			//righttop
 			GL.Translate(ps, 0, -ps);
 			GL.Rotate(90, 0, 1, 0);
-			if (x < Width - 1 && y > 0 && Fields[y - 1][x] == Objects.Wall && Fields[y][x + 1] == Objects.Wall && Fields[y - 1][x + 1] == Objects.Wall)
+			if (x < Width - 1 && z > 0 && Fields[z - 1][x] == Objects.Wall && Fields[z][x + 1] == Objects.Wall && Fields[z - 1][x + 1] == Objects.Wall)
 				wallCenter.Render();
-			else if (x < Width - 1 && y > 0 && Fields[y - 1][x] == Objects.Wall && Fields[y][x + 1] == Objects.Wall)
+			else if (x < Width - 1 && z > 0 && Fields[z - 1][x] == Objects.Wall && Fields[z][x + 1] == Objects.Wall)
 				wallclosedCorner.Render();
-			else if (x < Width - 1 && Fields[y][x + 1] == Objects.Wall)
+			else if (x < Width - 1 && Fields[z][x + 1] == Objects.Wall)
 				wallSide.Render();
 
-			else if (y > 0 && Fields[y - 1][x] == Objects.Wall)
+			else if (z > 0 && Fields[z - 1][x] == Objects.Wall)
 			{
 				GL.Rotate(-90, 0, 1, 0);
 				wallSide.Render();
@@ -501,17 +503,17 @@ namespace PacMan
 			//lefttop
 			GL.Translate(-ps, 0, -ps);
 			GL.Rotate(180, 0, 1, 0);
-			if (x > 0 && y > 0 && Fields[y - 1][x] == Objects.Wall && Fields[y][x - 1] == Objects.Wall && Fields[y - 1][x - 1] == Objects.Wall)
+			if (x > 0 && z > 0 && Fields[z - 1][x] == Objects.Wall && Fields[z][x - 1] == Objects.Wall && Fields[z - 1][x - 1] == Objects.Wall)
 				wallCenter.Render();
-			else if (x > 0 && y > 0 && Fields[y - 1][x] == Objects.Wall && Fields[y][x - 1] == Objects.Wall)
+			else if (x > 0 && z > 0 && Fields[z - 1][x] == Objects.Wall && Fields[z][x - 1] == Objects.Wall)
 				wallclosedCorner.Render();
-			else if (x > 0 && Fields[y][x - 1] == Objects.Wall)
+			else if (x > 0 && Fields[z][x - 1] == Objects.Wall)
 			{
 				GL.Rotate(-90, 0, 1, 0);
 				wallSide.Render();
 				GL.Rotate(90, 0, 1, 0);
 			}
-			else if (y > 0 && Fields[y - 1][x] == Objects.Wall)
+			else if (z > 0 && Fields[z - 1][x] == Objects.Wall)
 				wallSide.Render();
 			else
 				wallOpenCorner.Render();
@@ -521,14 +523,14 @@ namespace PacMan
 			//leftbottom
 			GL.Translate(-ps, 0, ps);
 			GL.Rotate(-90, 0, 1, 0);
-			if (x > 0 && y < Height - 1 && Fields[y + 1][x] == Objects.Wall && Fields[y][x - 1] == Objects.Wall && Fields[y + 1][x - 1] == Objects.Wall)
+			if (x > 0 && z < Depth - 1 && Fields[z + 1][x] == Objects.Wall && Fields[z][x - 1] == Objects.Wall && Fields[z + 1][x - 1] == Objects.Wall)
 				wallCenter.Render();
-			else if (x > 0 && y < Height - 1 && Fields[y + 1][x] == Objects.Wall && Fields[y][x - 1] == Objects.Wall)
+			else if (x > 0 && z < Depth - 1 && Fields[z + 1][x] == Objects.Wall && Fields[z][x - 1] == Objects.Wall)
 				wallclosedCorner.Render();
-			else if (x > 0 && Fields[y][x - 1] == Objects.Wall)
+			else if (x > 0 && Fields[z][x - 1] == Objects.Wall)
 
 				wallSide.Render();
-			else if (y < Height - 1 && Fields[y + 1][x] == Objects.Wall)
+			else if (z < Depth - 1 && Fields[z + 1][x] == Objects.Wall)
 			{
 				GL.Rotate(-90, 0, 1, 0);
 				wallSide.Render();
@@ -542,7 +544,7 @@ namespace PacMan
 
 			GL.PopMatrix();
 
-			GL.Translate(-x, 0, -y);
+			GL.Translate(-x, 0, -z);
 
 			GL.End();
 		}
@@ -567,9 +569,9 @@ namespace PacMan
 		/// </summary>
 		public int Width;
 		/// <summary>
-		/// Height in cells
+		/// Depth in cells
 		/// </summary>
-		public int Height;
+		public int Depth;
 		/// <summary>
 		/// Map grid
 		/// </summary>
@@ -578,11 +580,11 @@ namespace PacMan
 		/// <summary>
 		/// Start point of PacMan
 		/// </summary>
-		public Point PacManStart = Point.Empty;
+		public Vector3i PacManStart = new Vector3i(0, 0, 0);
 		/// <summary>
 		/// Start point of ghosts
 		/// </summary>
-		public Point GhostStart = Point.Empty;
+		public Vector3i GhostStart = new Vector3i(0, 0, 0);
 
 		/// <summary>
 		/// Wrap X coordinate inside map borders.
@@ -598,17 +600,17 @@ namespace PacMan
 			return X;
 		}
 		/// <summary>
-		/// Wrap Y coordinate inside map borders.
+		/// Wrap Z coordinate inside map borders.
 		/// </summary>
-		/// <param name="Y">Y coordinate.</param>
-		/// <returns>Y coordinate inside map borders.</returns>
-		public double WrapY(double Y)
+		/// <param name="Z">Z coordinate.</param>
+		/// <returns>Z coordinate inside map borders.</returns>
+		public double WrapZ(double Z)
 		{
-			if (Y >= Height)
-				return Y - Height;
-			if (Y < 0)
-				return Y + Height;
-			return Y;
+			if (Z >= Depth)
+				return Z - Depth;
+			if (Z < 0)
+				return Z + Depth;
+			return Z;
 		}
 
 		/// <summary>
@@ -625,61 +627,61 @@ namespace PacMan
 			return X;
 		}
 		/// <summary>
-		/// Wrap Y coordinate inside map borders.
+		/// Wrap Z coordinate inside map borders.
 		/// </summary>
-		/// <param name="Y">Y coordinate.</param>
-		/// <returns>Y coordinate inside map borders.</returns>
-		public int WrapY(int Y)
+		/// <param name="Z">Z coordinate.</param>
+		/// <returns>Z coordinate inside map borders.</returns>
+		public int WrapZ(int Z)
 		{
-			if (Y >= Height)
-				return Y - Height;
-			if (Y < 0)
-				return Y + Height;
-			return Y;
+			if (Z >= Depth)
+				return Z - Depth;
+			if (Z < 0)
+				return Z + Depth;
+			return Z;
 		}
 
 		/// <summary>
 		/// Shortcut to map row.
 		/// </summary>
-		/// <param name="y">Row index.</param>
+		/// <param name="z">Row index.</param>
 		/// <returns>Row.</returns>
-		public Objects[] this[int y] { get { return Fields[y]; } }
+		public Objects[] this[int z] { get { return Fields[z]; } }
 
 		/// <summary>
 		/// Shortcut to map cell.
 		/// </summary>
-		/// <param name="y">Row index.</param>
+		/// <param name="z">Row index.</param>
 		/// <param name="x">Column index.</param>
 		/// <returns>Cell.</returns>
-		public Objects this[int y, int x] { get { return Fields[WrapY(y)][WrapX(x)]; } }
+		public Objects this[int z, int x] { get { return Fields[WrapZ(z)][WrapX(x)]; } }
 
 		/// <summary>
 		/// Shortcut to map cell.
 		/// </summary>
-		/// <param name="y">Row index.</param>
+		/// <param name="z">Row index.</param>
 		/// <param name="x">Column index.</param>
 		/// <returns>Cell.</returns>
-		public Objects this[double y, double x] { get { return Fields[(int)WrapY(y)][(int)WrapX(x)]; } }
+		public Objects this[double z, double x] { get { return Fields[(int)WrapZ(z)][(int)WrapX(x)]; } }
 
 		/// <summary>
 		/// Cell does not contains walls.
 		/// </summary>
-		/// <param name="y">Y coordinate, wrapping included.</param>
+		/// <param name="z">Z coordinate, wrapping included.</param>
 		/// <param name="x">X coordinate, wrapping included.</param>
 		/// <returns>True, if cell is walkable.</returns>
-		public bool IsWalkable(int y, int x)
+		public bool IsWalkable(int z, int x)
 		{
-			return this[y, x] != Objects.Wall;
+			return this[z, x] != Objects.Wall;
 		}
 		/// <summary>
 		/// Cell does not contains walls.
 		/// </summary>
-		/// <param name="y">Y coordinate, wrapping included.</param>
+		/// <param name="z">Z coordinate, wrapping included.</param>
 		/// <param name="x">X coordinate, wrapping included.</param>
 		/// <returns>True, if cell is walkable.</returns>
-		public bool IsWalkable(double y, double x)
+		public bool IsWalkable(double z, double x)
 		{
-			return this[y, x] != Objects.Wall;
+			return this[z, x] != Objects.Wall;
 		}
 
 		/// <summary>
@@ -690,9 +692,9 @@ namespace PacMan
 			get
 			{
 				int result = 0;
-				for (int y = 0; y < Height; y++)
+				for (int z = 0; z < Depth; z++)
 					for (int x = 0; x < Width; x++)
-						if (Fields[y][x] == Objects.Point || Fields[y][x] == Objects.Powerup)
+						if (Fields[z][x] == Objects.Point || Fields[z][x] == Objects.Powerup)
 							result++;
 				return result;
 			}
@@ -720,57 +722,57 @@ namespace PacMan
 				data = Regex.Replace(data, "\\n*$", "");
 				data = Regex.Replace(data, "^\\n*", "");
 
-				string[] rows =data.Split('\n');
-				Height = rows.Length;
+				string[] rows = data.Split('\n');
+				Depth = rows.Length;
 				Width = rows[0].Length;
-				Fields = new Objects[Height][];
-				OriginalFields = new Objects[Height][];
+				Fields = new Objects[Depth][];
+				OriginalFields = new Objects[Depth][];
 
-				Point? pacmanStart = null;
-				Point? ghostStart = null;
+				Vector3i? pacmanStart = null;
+				Vector3i? ghostStart = null;
 
-				for (int y = 0; y < rows.Length; y++)
+				for (int z = 0; z < rows.Length; z++)
 				{
-					if (rows[y].Length != Width)
+					if (rows[z].Length != Width)
 						throw new Exception("Invalid map data");
-					Fields[y] = new Objects[Width];
-					OriginalFields[y] = new Objects[Width];
-					for (int x = 0; x < rows[y].Length; x++)
-						switch (rows[y][x])
+					Fields[z] = new Objects[Width];
+					OriginalFields[z] = new Objects[Width];
+					for (int x = 0; x < rows[z].Length; x++)
+						switch (rows[z][x])
 						{
 							case '.':
-								Fields[y][x] = OriginalFields[y][x] = Objects.Point;
+								Fields[z][x] = OriginalFields[z][x] = Objects.Point;
 								break;
 							case 'O':
-								Fields[y][x] = OriginalFields[y][x] = Objects.Powerup;
+								Fields[z][x] = OriginalFields[z][x] = Objects.Powerup;
 								break;
 							case '#':
-								Fields[y][x] = OriginalFields[y][x] = Objects.Wall;
+								Fields[z][x] = OriginalFields[z][x] = Objects.Wall;
 								break;
 							case 'C':
-								pacmanStart = new Point(x, y);
-								Fields[y][x] = OriginalFields[y][x] = Objects.None;
+								pacmanStart = new Vector3i(x, 0, z);
+								Fields[z][x] = OriginalFields[z][x] = Objects.None;
 								break;
 							case 'M':
-								ghostStart = new Point(x, y);
-								Fields[y][x] = OriginalFields[y][x] = Objects.None;
+								ghostStart = new Vector3i(x, 0, z);
+								Fields[z][x] = OriginalFields[z][x] = Objects.None;
 								break;
 							case '-':
-								Fields[y][x] = OriginalFields[y][x] = Objects.None;
+								Fields[z][x] = OriginalFields[z][x] = Objects.None;
 								break;
 
 						}
 				}
 				if (PointsCount == 0 || pacmanStart == null || ghostStart == null)
 					throw new Exception("Invalid map data");
-				PacManStart = (Point)pacmanStart;
-				GhostStart = (Point)ghostStart;
+				PacManStart = (Vector3i)pacmanStart;
+				GhostStart = (Vector3i)ghostStart;
 			}
 			else
 			{
-				for (int y = 0; y < Height; y++)
-					for (int x = 0; x < Height; x++)
-						Fields[y][x] = OriginalFields[y][x];
+				for (int z = 0; z < Depth; z++)
+					for (int x = 0; x < Depth; x++)
+						Fields[z][x] = OriginalFields[z][x];
 			}
 			animationState = 0;
 			State = States.None;
@@ -814,22 +816,22 @@ namespace PacMan
 
 			floor.Render();
 
-			for (int y = 0; y < Height; y++)
+			for (int z = 0; z < Depth; z++)
 				for (int x = 0; x < Width; x++)
-					switch (Fields[y][x])
+					switch (Fields[z][x])
 					{
 
 						case Objects.Wall:
 							ShaderProgram.StaticColor.SetUniform("meshColor",
 							 new Vector4(wallColor.R / (float)255.0, wallColor.G / (float)255.0, wallColor.B / (float)255.0, (float)1.0));
-							renderWall(x, y);
+							renderWall(x, z);
 							break;
 
 						case Objects.Point:
 						case Objects.Powerup:
 							ShaderProgram.StaticColor.SetUniform("meshColor", new Vector4(1, 1, 1, 1));
 
-							double r = Fields[y][x] == Objects.Point ? 0.1 : 0.3;
+							double r = Fields[z][x] == Objects.Point ? 0.1 : 0.3;
 
 							if (State == States.AppearAnimation)
 								r *= animationState;
@@ -839,7 +841,7 @@ namespace PacMan
 								r = 0;
 
 							GL.PushMatrix();
-							GL.Translate(x, 0.5, y);
+							GL.Translate(x, 0, z);
 							GL.Scale(r, r, r);
 							sphere.Render();
 							GL.PopMatrix();

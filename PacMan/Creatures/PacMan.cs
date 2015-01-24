@@ -247,7 +247,7 @@ namespace PacMan
 			State = States.None;
 			animationState = 0;
 			X = map.PacManStart.X;
-			Y = map.PacManStart.Y;
+			Z = map.PacManStart.Z;
 		}
 
 		protected override void updateDirection(Map map)
@@ -260,34 +260,34 @@ namespace PacMan
 				case Directions.None:
 					break;
 				case Directions.Up:
-					if (Y > 0 && map[(int)(Y - 1)][(int)X] != Map.Objects.Wall)
+					if (Z > 0 && map[(int)(Z - 1)][(int)X] != Map.Objects.Wall)
 						Direction = desiredDirection;
-					else if (Y == 0 && map[map.Height - 1][(int)X] != Map.Objects.Wall)
+					else if (Z == 0 && map[map.Depth - 1][(int)X] != Map.Objects.Wall)
 						Direction = desiredDirection;
 					break;
 				case Directions.Down:
-					if (Y < map.Height - 1 && map[(int)(Y + 1)][(int)X] != Map.Objects.Wall)
+					if (Z < map.Depth - 1 && map[(int)(Z + 1)][(int)X] != Map.Objects.Wall)
 						Direction = desiredDirection;
-					else if (Y == map.Height - 1 && map[0][(int)X] != Map.Objects.Wall)
+					else if (Z == map.Depth - 1 && map[0][(int)X] != Map.Objects.Wall)
 						Direction = desiredDirection;
 					break;
 
 				case Directions.Left:
-					if (X > 0 && map[(int)Y][(int)(X - 1)] != Map.Objects.Wall)
+					if (X > 0 && map[(int)Z][(int)(X - 1)] != Map.Objects.Wall)
 						Direction = desiredDirection;
-					else if (X == 0 && map[(int)Y][map.Width - 1] != Map.Objects.Wall)
+					else if (X == 0 && map[(int)Z][map.Width - 1] != Map.Objects.Wall)
 						Direction = desiredDirection;
 					break;
 				case Directions.Right:
-					if (X < map.Width - 1 && map[(int)Y][(int)(X + 1)] != Map.Objects.Wall)
+					if (X < map.Width - 1 && map[(int)Z][(int)(X + 1)] != Map.Objects.Wall)
 						Direction = desiredDirection;
-					else if (X == map.Width - 1 && map[(int)Y][0] != Map.Objects.Wall)
+					else if (X == map.Width - 1 && map[(int)Z][0] != Map.Objects.Wall)
 						Direction = desiredDirection;
 					break;
 			}
 		}
 
-		public override Point? Update(double dt, Map map)
+		public override Vector3i? Update(double dt, Map map)
 		{
 			if (State == States.AppearAnimation)
 			{
@@ -343,11 +343,11 @@ namespace PacMan
 			if (State == States.None)
 				return;
 
-			double mouthAngle = Math.Max(Math.Abs(X - Math.Round(X)), Math.Abs(Y - Math.Round(Y)));
+			double mouthAngle = Math.Max(Math.Abs(X - Math.Round(X)), Math.Abs(Z - Math.Round(Z)));
 			mouthAngle = Math.Sin(mouthAngle * Math.PI) * maxMouthAngle;
 
 			GL.PushMatrix();
-			GL.Translate(X, 0.5, Y);
+			GL.Translate(X, 0, Z);
 			switch (Direction)
 			{
 				case Directions.Down:

@@ -45,9 +45,9 @@ namespace PacMan
 		/// </summary>
 		public double X = 0;
 		/// <summary>
-		/// Target Y in map cells
+		/// Target Z in map cells
 		/// </summary>
-		public double Y = 0;
+		public double Z = 0;
 
 		/// <summary>
 		/// Angle by X axis in degrees.
@@ -105,7 +105,7 @@ namespace PacMan
 		{
 			XAngle = 45;
 			YAngle = 0;
-			R = Math.Max(map.Width / 2, map.Height / 2) / Math.Tan(30 * Math.PI / 180) * 1.2; //distance where aligned map perfectly fits into viewport * 1.2
+			R = Math.Max(map.Width / 2, map.Depth / 2) / Math.Tan(30 * Math.PI / 180) * 1.2; //distance where aligned map perfectly fits into viewport * 1.2
 
 			xAngleSpeed = 0;
 			yAngleSpeed = 0;
@@ -116,12 +116,12 @@ namespace PacMan
 			if (FollowPacMan)
 			{
 				X = pacman.X;
-				Y = pacman.Y;
+				Z = pacman.Z;
 			}
 			else
 			{
 				X = map.Width / 2;
-				Y = map.Height / 2;
+				Z = map.Depth / 2;
 			}
 		}
 
@@ -140,12 +140,12 @@ namespace PacMan
 			if (FollowPacMan)
 			{
 				X = pacman.X;
-				Y = pacman.Y;
+				Z = pacman.Z;
 			}
 			else
 			{
 				X = map.Width / 2;
-				Y = map.Height / 2;
+				Z = map.Depth / 2;
 			}
 		}
 
@@ -194,7 +194,7 @@ namespace PacMan
 			GL.Translate(0, 0, -R);
 			GL.Rotate(XAngle, 1, 0, 0);
 			GL.Rotate(YAngle, 0, 1, 0);
-			GL.Translate(-X, -0.5, -Y);
+			GL.Translate(-X, -0.5, -Z);
 		}
 	}
 }

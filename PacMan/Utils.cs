@@ -2,6 +2,7 @@
 using System.IO;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
+using System.Xml.Serialization;
 
 namespace PacMan
 {
@@ -216,6 +217,20 @@ namespace PacMan
 					StaticColor_v = new ShaderProgram("Shaders\\StaticColor_Vert.glsl", "Shaders\\StaticColor_Frag.glsl");
 				return StaticColor_v;
 			}
+		}
+
+	}
+
+	struct Vector3i
+	{
+		public int X;
+		public int Y;
+		public int Z;
+		public Vector3i(int x, int y, int z)
+		{
+			X = x;
+			Y = y;
+			Z = z;
 		}
 	}
 

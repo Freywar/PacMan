@@ -383,9 +383,9 @@ namespace PacMan
 
 			XmlNode clearedCells = SaveData.CreateElement("clearedCells");
 
-			for (int y = 0; y < CurrentMap.Height; y++)
-				for (int x = 0; x < CurrentMap.Height; x++)
-					if (CurrentMap[y][x] != CurrentMap.OriginalFields[y][x])
+			for (int z = 0; z < CurrentMap.Depth; z++)
+				for (int x = 0; x < CurrentMap.Depth; x++)
+					if (CurrentMap[z][x] != CurrentMap.OriginalFields[z][x])
 					{
 						XmlNode cell = SaveData.CreateElement("cell");
 
@@ -393,9 +393,9 @@ namespace PacMan
 						cxAttr.Value = x.ToString();
 						cell.Attributes.Append(cxAttr);
 
-						XmlAttribute cyAttr = SaveData.CreateAttribute("y");
-						cyAttr.Value = y.ToString();
-						cell.Attributes.Append(cyAttr);
+						XmlAttribute czAttr = SaveData.CreateAttribute("z");
+						czAttr.Value = z.ToString();
+						cell.Attributes.Append(czAttr);
 
 						clearedCells.AppendChild(cell);
 					}
@@ -413,9 +413,9 @@ namespace PacMan
 			xAttr.Value = PacMan.X.ToString();
 			pacman.Attributes.Append(xAttr);
 
-			XmlAttribute yAttr = SaveData.CreateAttribute("Y");
-			yAttr.Value = PacMan.Y.ToString();
-			pacman.Attributes.Append(yAttr);
+			XmlAttribute zAttr = SaveData.CreateAttribute("Z");
+			zAttr.Value = PacMan.Z.ToString();
+			pacman.Attributes.Append(zAttr);
 
 			XmlAttribute lives = SaveData.CreateAttribute("lives");
 			lives.Value = PacMan.Lives.ToString();
@@ -452,9 +452,9 @@ namespace PacMan
 				xAttr.Value = Ghost.X.ToString();
 				ghost.Attributes.Append(xAttr);
 
-				XmlAttribute yAttr = SaveData.CreateAttribute("Y");
-				yAttr.Value = Ghost.Y.ToString();
-				ghost.Attributes.Append(yAttr);
+				XmlAttribute zAttr = SaveData.CreateAttribute("Z");
+				zAttr.Value = Ghost.Z.ToString();
+				ghost.Attributes.Append(zAttr);
 
 				XmlAttribute state = SaveData.CreateAttribute("state");
 				state.Value = Ghost.State.ToString();
@@ -519,16 +519,16 @@ namespace PacMan
 						if (cellNode.Name == "cell")
 						{
 							int? x = null;
-							int? y = null;
+							int? z = null;
 							foreach (XmlAttribute attr in cellNode.Attributes)
 							{
 								if (attr.Name == "x")
 									x = Convert.ToInt32(attr.Value);
-								if (attr.Name == "y")
-									y = Convert.ToInt32(attr.Value);
+								if (attr.Name == "z")
+									z = Convert.ToInt32(attr.Value);
 							}
-							if (x != null & y != null)
-								CurrentMap[(int)y][(int)x] = Map.Objects.None;
+							if (x != null & z != null)
+								CurrentMap[(int)z][(int)x] = Map.Objects.None;
 						}
 					}
 				}
@@ -544,8 +544,8 @@ namespace PacMan
 					case "X":
 						PacMan.X = Convert.ToDouble(attr.Value, CultureInfo.InvariantCulture);
 						break;
-					case "Y":
-						PacMan.Y = Convert.ToDouble(attr.Value, CultureInfo.InvariantCulture);
+					case "Z":
+						PacMan.Z = Convert.ToDouble(attr.Value, CultureInfo.InvariantCulture);
 						break;
 					case "lives":
 						PacMan.Lives = Convert.ToInt32(attr.Value);
@@ -616,8 +616,8 @@ namespace PacMan
 							case "X":
 								currentGhost.X = Convert.ToDouble(attr.Value);
 								break;
-							case "Y":
-								currentGhost.Y = Convert.ToDouble(attr.Value);
+							case "Z":
+								currentGhost.Z = Convert.ToDouble(attr.Value);
 								break;
 							case "state":
 								{
@@ -924,17 +924,17 @@ namespace PacMan
 
 				case States.Playing:
 
-					Point? pacManVisitedCell = PacMan.Update(dt, CurrentMap);
+					Vector3i? pacManVisitedCell = PacMan.Update(dt, CurrentMap);
 					foreach (Ghost ghost in Ghosts)
 						ghost.Update(dt, CurrentMap, PacMan);
 					Camera.Update(dt, CurrentMap, PacMan);
 
 					if (pacManVisitedCell != null)
 					{
-						Point visitedCell = (Point)pacManVisitedCell;
-						if (CurrentMap[visitedCell.Y][visitedCell.X] == Map.Objects.Point)
+						Vector3i visitedCell = (Vector3i)pacManVisitedCell;
+						if (CurrentMap[visitedCell.Z][visitedCell.X] == Map.Objects.Point)
 							Score += 10;
-						if (CurrentMap[visitedCell.Y][visitedCell.X] == Map.Objects.Powerup)
+						if (CurrentMap[visitedCell.Z][visitedCell.X] == Map.Objects.Powerup)
 						{
 							Score += 100;
 							PacMan.State = PacMan.States.Super;
@@ -942,7 +942,7 @@ namespace PacMan
 							foreach (Ghost ghost in Ghosts)
 								ghost.State = Ghost.States.Frightened;
 						}
-						CurrentMap[visitedCell.Y][visitedCell.X] = Map.Objects.None;
+						CurrentMap[visitedCell.Z][visitedCell.X] = Map.Objects.None;
 					}
 					if (PacMan.State == PacMan.States.Super)
 						PacMan.SuperTime -= dt;
@@ -960,21 +960,21 @@ namespace PacMan
 						switch (ghost.State)
 						{
 							case Ghost.States.Normal:
-								if (Utils.Distance(PacMan.X, PacMan.Y, ghost.X, ghost.Y) < 1)
+								if (Utils.Distance(PacMan.X, PacMan.Z, ghost.X, ghost.Z) < 1)
 								{
 									PacMan.Lives--;
 									State = PacMan.Lives != 0 ? States.LifeLoseAnimation : States.LoseAnimation;
 								}
 								break;
 							case Ghost.States.Frightened:
-								if (Utils.Distance(PacMan.X, PacMan.Y, ghost.X, ghost.Y) < 1)
+								if (Utils.Distance(PacMan.X, PacMan.Z, ghost.X, ghost.Z) < 1)
 								{
 									Score += 100;
 									ghost.State = Ghost.States.Eaten;
 								}
 								break;
 							case Ghost.States.Eaten:
-								if (Utils.Distance(ghost.X, ghost.Y, CurrentMap.GhostStart.X, CurrentMap.GhostStart.Y) < 0.1)
+								if (Utils.Distance(ghost.X, ghost.Z, CurrentMap.GhostStart.X, CurrentMap.GhostStart.Z) < 0.1)
 									ghost.State = Ghost.States.Waiting;
 								break;
 							default:
