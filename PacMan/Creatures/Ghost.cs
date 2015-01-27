@@ -221,19 +221,29 @@ namespace PacMan
 
 		#region Path detection.
 
-		private int[][] distanceMap = null;
+		private int[][][] distanceMap = null;
 
-		private void fillDistanceMapRec(Map map, int x, int z, int distance)
+		private void fillDistanceMapRec(Map map, int x, int z, int y, int distance, bool afterLift = false)
 		{
-			if ((distanceMap[z][x] != -1 && distanceMap[z][x] <= distance) || !map.IsWalkable(z, x))
+			if ((distanceMap[y][z][x] != -1 && distanceMap[y][z][x] <= distance) || !map.IsWalkable(y, z, x))
 				return;
 
-			distanceMap[z][x] = distance;
+			distanceMap[y][z][x] = distance;
 
-			fillDistanceMapRec(map, x, map.WrapZ(z - 1), distance + 1);
-			fillDistanceMapRec(map, x, map.WrapZ(z + 1), distance + 1);
-			fillDistanceMapRec(map, map.WrapX(x - 1), z, distance + 1);
-			fillDistanceMapRec(map, map.WrapX(x + 1), z, distance + 1);
+			if ((map[y, z, x] == Map.Objects.LiftUp || map[y, z, x] == Map.Objects.LiftDown) && !afterLift)
+				distanceMap[y][z][x] = -1;
+
+			if (map[y, z, x] == Map.Objects.LiftUp && !afterLift)
+				fillDistanceMapRec(map, x, z, y + 1, distance + 1, true);
+			else if (map[y, z, x] == Map.Objects.LiftDown && !afterLift)
+				fillDistanceMapRec(map, x, z, y - 1, distance + 1, true);
+			else
+			{
+				fillDistanceMapRec(map, x, map.WrapZ(z - 1), y, distance + 1);
+				fillDistanceMapRec(map, x, map.WrapZ(z + 1), y, distance + 1);
+				fillDistanceMapRec(map, map.WrapX(x - 1), z, y, distance + 1);
+				fillDistanceMapRec(map, map.WrapX(x + 1), z, y, distance + 1);
+			}
 
 		}
 
@@ -241,16 +251,21 @@ namespace PacMan
 		{
 			if (distanceMap == null || distanceMap.Length != map.Depth || distanceMap[0].Length != map.Width)
 			{
-				distanceMap = new int[map.Depth][];
-				for (int z = 0; z < distanceMap.Length; z++)
-					distanceMap[z] = new int[map.Width];
+				distanceMap = new int[map.Height][][];
+				for (int y = 0; y < distanceMap.Length; y++)
+				{
+					distanceMap[y] = new int[map.Depth][];
+					for (int z = 0; z < distanceMap[y].Length; z++)
+						distanceMap[y][z] = new int[map.Width];
+				}
 			}
 
-			for (int z = 0; z < map.Depth; z++)
-				for (int x = 0; x < map.Width; x++)
-					distanceMap[z][x] = -1;
+			for (int y = 0; y < map.Height; y++)
+				for (int z = 0; z < map.Depth; z++)
+					for (int x = 0; x < map.Width; x++)
+						distanceMap[y][z][x] = -1;
 
-			fillDistanceMapRec(map, target.X, target.Z, 0);
+			fillDistanceMapRec(map, target.X, target.Z, target.Y, 0);
 		}
 
 		/// <summary>
@@ -262,41 +277,42 @@ namespace PacMan
 		private Directions chooseDirection(Map map, Vector3i target, Directions currentDirection)
 		{
 			fillDistanceMap(map, target);
-			if (distanceMap[(int)Z][(int)X] == -1)
+			if (distanceMap[Y][(int)Z][(int)X] == -1)
 				currentDirection = cw(currentDirection);
 
 			int px = (int)map.WrapX(X);
+			int py = Y;
 			int pz = (int)map.WrapZ(Z);
-			int bestDistance = distanceMap[pz][px];
+			int bestDistance = distanceMap[py][pz][px];
 
 			pz = (int)map.WrapZ(Z - 1);
-			if (distanceMap[pz][px] != -1 && distanceMap[pz][px] < bestDistance)
+			if (distanceMap[py][pz][px] != -1 && distanceMap[py][pz][px] < bestDistance)
 			{
 				currentDirection = Directions.Up;
-				bestDistance = distanceMap[pz][px];
+				bestDistance = distanceMap[py][pz][px];
 			}
 
 			pz = (int)map.WrapX(Z + 1);
-			if (distanceMap[pz][px] != -1 && distanceMap[pz][px] < bestDistance)
+			if (distanceMap[py][pz][px] != -1 && distanceMap[py][pz][px] < bestDistance)
 			{
 				currentDirection = Directions.Down;
-				bestDistance = distanceMap[pz][px];
+				bestDistance = distanceMap[py][pz][px];
 			}
 
 			pz = (int)map.WrapZ(Z);
 
 			px = (int)map.WrapX(X - 1);
-			if (distanceMap[pz][px] != -1 && distanceMap[pz][px] < bestDistance)
+			if (distanceMap[py][pz][px] != -1 && distanceMap[py][pz][px] < bestDistance)
 			{
 				currentDirection = Directions.Left;
-				bestDistance = distanceMap[pz][px];
+				bestDistance = distanceMap[py][pz][px];
 			}
 
 			px = (int)map.WrapX(X + 1);
-			if (distanceMap[pz][px] != -1 && distanceMap[pz][px] < bestDistance)
+			if (distanceMap[py][pz][px] != -1 && distanceMap[py][pz][px] < bestDistance)
 			{
 				currentDirection = Directions.Right;
-				bestDistance = distanceMap[pz][px];
+				bestDistance = distanceMap[py][pz][px];
 			}
 
 			return currentDirection;
@@ -322,25 +338,26 @@ namespace PacMan
 				case States.Waiting:
 				case States.AppearAnimation:
 				case States.Normal:
-					target = new Vector3i((int)pacman.X, 0, (int)pacman.Z);
+					target = new Vector3i((int)pacman.X, pacman.Y, (int)pacman.Z);
 					break;
 				case States.Frightened:
-					target = new Vector3i((int)pacman.X, 0, (int)pacman.Z);
+					target = new Vector3i((int)pacman.X, pacman.Y, (int)pacman.Z);
 					fillDistanceMap(map, target);
 					double maxDistance = 0;
-					for (int z = 0; z < map.Depth; z++)
-						for (int x = 0; x < map.Width; x++)
-							if (distanceMap[z][x] > maxDistance)
-							{
-								target = new Vector3i(x,0, z);
-								maxDistance = distanceMap[z][x];
-							}
+					for (int y = 0; y < map.Height; y++)
+						for (int z = 0; z < map.Depth; z++)
+							for (int x = 0; x < map.Width; x++)
+								if (distanceMap[y][z][x] > maxDistance)
+								{
+									target = new Vector3i(x, y, z);
+									maxDistance = distanceMap[y][z][x];
+								}
 					break;
 				case States.Eaten:
 					target = map.GhostStart;
 					break;
 				default:
-					target = new Vector3i((int)X, 0, (int)Z);
+					target = new Vector3i((int)X, Y, (int)Z);
 					break;
 			}
 
@@ -426,11 +443,11 @@ namespace PacMan
 		/// <param name="map">Map.</param>
 		/// <param name="pacman">PacMan.</param>
 		/// <returns>Visited cell center or null if none visited.</returns>
-		public Point? Update(double dt, Map map, PacMan pacman)
+		public Vector3i? Update(double dt, Map map, PacMan pacman)
 		{
 			totalTimeElapsed += dt;
 
-			Point? result = null;
+			Vector3i? result = null;
 
 			switch (State)
 			{
@@ -460,7 +477,7 @@ namespace PacMan
 					double dtAfterMove;
 					while ((dtAfterMove = moveToClosestCenter(dt, map)) != dt)
 					{
-						result = new Point((int)X, (int)Z);
+						result = new Vector3i((int)X, Y, (int)Z);
 
 						updateDirection(map, pacman);
 						dt = dtAfterMove;
@@ -489,7 +506,7 @@ namespace PacMan
 				return;
 
 			GL.PushMatrix();
-			GL.Translate(X, 0, Z);
+			GL.Translate(X, Y, Z);
 			switch (Direction)
 			{
 				case Directions.Down:

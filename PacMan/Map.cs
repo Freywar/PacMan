@@ -50,6 +50,8 @@ namespace PacMan
 			/// Powerup.
 			/// </summary>
 			Powerup,
+			LiftUp,
+			LiftDown,
 			/// <summary>
 			/// Empty field.
 			/// </summary>
@@ -141,10 +143,10 @@ namespace PacMan
 					double[] v = new double[pointsCount * 3];
 					double[] n = new double[pointsCount * 3];
 
+					Utils.Push(v, new Vector3d(-0.5, -0.5, -0.5), ref vp);
+					Utils.Push(v, new Vector3d(-0.5, -0.5, 0.5), ref vp);
 					Utils.Push(v, new Vector3d(0.5, -0.5, 0.5), ref vp);
-					Utils.Push(v, new Vector3d(0.5, -0.5, Depth - 0.5), ref vp);
-					Utils.Push(v, new Vector3d(Width - 0.5, -0.5, Depth - 0.5), ref vp);
-					Utils.Push(v, new Vector3d(Width - 0.5, -0.5, 0.5), ref vp);
+					Utils.Push(v, new Vector3d(0.5, -0.5, -0.5), ref vp);
 
 					for (int i = 0; i < 4; i++)
 						Utils.Push(n, normal, ref np);
@@ -290,7 +292,7 @@ namespace PacMan
 						Utils.Push(n, normal, ref np);
 						normal.Mult(ps2);
 						normal.X = ps2 - normal.X;
-						normal.Y=-0.5;
+						normal.Y = -0.5;
 						normal.Z = ps2 - normal.Z;
 						Utils.Push(v, normal, ref vp);
 
@@ -315,7 +317,7 @@ namespace PacMan
 						Utils.Push(n, normal, ref np);
 						normal.Mult(ps2);
 						normal.X = ps2 - normal.X;
-						normal.Y =- 0.5;
+						normal.Y = -0.5;
 						normal.Z = ps2 - normal.Z;
 						Utils.Push(v, normal, ref vp);
 					}
@@ -366,7 +368,7 @@ namespace PacMan
 						Utils.Push(n, normal, ref np);
 						normal.Mult(ps2);
 						normal.X = normal.X - ps2;
-						normal.Y=-0.5;
+						normal.Y = -0.5;
 						normal.Z = normal.Z - ps2;
 						Utils.Push(v, normal, ref vp);
 
@@ -374,7 +376,7 @@ namespace PacMan
 						Utils.Push(n, normal, ref np);
 						normal.Mult(ps2);
 						normal.X = normal.X - ps2;
-						normal.Y=-0.5;
+						normal.Y = -0.5;
 						normal.Z = normal.Z - ps2;
 						Utils.Push(v, normal, ref vp);
 
@@ -404,7 +406,7 @@ namespace PacMan
 			}
 		}
 
-		private void renderWall(int x, int z)
+		private void renderWall(int x, int z, int y)
 		{
 			GL.Translate(x, 0, z);
 
@@ -423,7 +425,7 @@ namespace PacMan
 
 			//right
 			GL.Translate(ps, 0, 0);
-			if (x < Width - 1 && Fields[z][x + 1] == Objects.Wall)
+			if (x < Width - 1 && Fields[y][z][x + 1] == Objects.Wall)
 				wallCenter.Render();
 			else
 				wallSide.Render();
@@ -432,7 +434,7 @@ namespace PacMan
 			//left
 			GL.Translate(-ps, 0, 0);
 			GL.Rotate(180, 0, 1, 0);
-			if (x > 0 && Fields[z][x - 1] == Objects.Wall)
+			if (x > 0 && Fields[y][z][x - 1] == Objects.Wall)
 				wallCenter.Render();
 			else
 				wallSide.Render();
@@ -442,7 +444,7 @@ namespace PacMan
 			//bottom
 			GL.Translate(0, 0, ps);
 			GL.Rotate(-90, 0, 1, 0);
-			if (z < Depth - 1 && Fields[z + 1][x] == Objects.Wall)
+			if (z < Depth - 1 && Fields[y][z + 1][x] == Objects.Wall)
 				wallCenter.Render();
 			else
 				wallSide.Render();
@@ -452,7 +454,7 @@ namespace PacMan
 			//top
 			GL.Translate(0, 0, -ps);
 			GL.Rotate(90, 0, 1, 0);
-			if (z > 0 && Fields[z - 1][x] == Objects.Wall)
+			if (z > 0 && Fields[y][z - 1][x] == Objects.Wall)
 				wallCenter.Render();
 			else
 				wallSide.Render();
@@ -461,18 +463,18 @@ namespace PacMan
 
 			//rightbottom
 			GL.Translate(ps, 0, ps);
-			if (x < Width - 1 && z < Depth - 1 && Fields[z + 1][x] == Objects.Wall && Fields[z][x + 1] == Objects.Wall && Fields[z + 1][x + 1] == Objects.Wall)
+			if (x < Width - 1 && z < Depth - 1 && Fields[y][z + 1][x] == Objects.Wall && Fields[y][z][x + 1] == Objects.Wall && Fields[y][z + 1][x + 1] == Objects.Wall)
 				wallCenter.Render();
-			else if (x < Width - 1 && z < Depth - 1 && Fields[z + 1][x] == Objects.Wall && Fields[z][x + 1] == Objects.Wall)
+			else if (x < Width - 1 && z < Depth - 1 && Fields[y][z + 1][x] == Objects.Wall && Fields[y][z][x + 1] == Objects.Wall)
 				wallclosedCorner.Render();
-			else if (x < Width - 1 && Fields[z][x + 1] == Objects.Wall)
+			else if (x < Width - 1 && Fields[y][z][x + 1] == Objects.Wall)
 			{
 				GL.Rotate(-90, 0, 1, 0);
 				wallSide.Render();
 				GL.Rotate(90, 0, 1, 0);
 			}
 
-			else if (z < Depth - 1 && Fields[z + 1][x] == Objects.Wall)
+			else if (z < Depth - 1 && Fields[y][z + 1][x] == Objects.Wall)
 				wallSide.Render();
 			else
 				wallOpenCorner.Render();
@@ -482,14 +484,14 @@ namespace PacMan
 			//righttop
 			GL.Translate(ps, 0, -ps);
 			GL.Rotate(90, 0, 1, 0);
-			if (x < Width - 1 && z > 0 && Fields[z - 1][x] == Objects.Wall && Fields[z][x + 1] == Objects.Wall && Fields[z - 1][x + 1] == Objects.Wall)
+			if (x < Width - 1 && z > 0 && Fields[y][z - 1][x] == Objects.Wall && Fields[y][z][x + 1] == Objects.Wall && Fields[y][z - 1][x + 1] == Objects.Wall)
 				wallCenter.Render();
-			else if (x < Width - 1 && z > 0 && Fields[z - 1][x] == Objects.Wall && Fields[z][x + 1] == Objects.Wall)
+			else if (x < Width - 1 && z > 0 && Fields[y][z - 1][x] == Objects.Wall && Fields[y][z][x + 1] == Objects.Wall)
 				wallclosedCorner.Render();
-			else if (x < Width - 1 && Fields[z][x + 1] == Objects.Wall)
+			else if (x < Width - 1 && Fields[y][z][x + 1] == Objects.Wall)
 				wallSide.Render();
 
-			else if (z > 0 && Fields[z - 1][x] == Objects.Wall)
+			else if (z > 0 && Fields[y][z - 1][x] == Objects.Wall)
 			{
 				GL.Rotate(-90, 0, 1, 0);
 				wallSide.Render();
@@ -503,17 +505,17 @@ namespace PacMan
 			//lefttop
 			GL.Translate(-ps, 0, -ps);
 			GL.Rotate(180, 0, 1, 0);
-			if (x > 0 && z > 0 && Fields[z - 1][x] == Objects.Wall && Fields[z][x - 1] == Objects.Wall && Fields[z - 1][x - 1] == Objects.Wall)
+			if (x > 0 && z > 0 && Fields[y][z - 1][x] == Objects.Wall && Fields[y][z][x - 1] == Objects.Wall && Fields[y][z - 1][x - 1] == Objects.Wall)
 				wallCenter.Render();
-			else if (x > 0 && z > 0 && Fields[z - 1][x] == Objects.Wall && Fields[z][x - 1] == Objects.Wall)
+			else if (x > 0 && z > 0 && Fields[y][z - 1][x] == Objects.Wall && Fields[y][z][x - 1] == Objects.Wall)
 				wallclosedCorner.Render();
-			else if (x > 0 && Fields[z][x - 1] == Objects.Wall)
+			else if (x > 0 && Fields[y][z][x - 1] == Objects.Wall)
 			{
 				GL.Rotate(-90, 0, 1, 0);
 				wallSide.Render();
 				GL.Rotate(90, 0, 1, 0);
 			}
-			else if (z > 0 && Fields[z - 1][x] == Objects.Wall)
+			else if (z > 0 && Fields[y][z - 1][x] == Objects.Wall)
 				wallSide.Render();
 			else
 				wallOpenCorner.Render();
@@ -523,14 +525,14 @@ namespace PacMan
 			//leftbottom
 			GL.Translate(-ps, 0, ps);
 			GL.Rotate(-90, 0, 1, 0);
-			if (x > 0 && z < Depth - 1 && Fields[z + 1][x] == Objects.Wall && Fields[z][x - 1] == Objects.Wall && Fields[z + 1][x - 1] == Objects.Wall)
+			if (x > 0 && z < Depth - 1 && Fields[y][z + 1][x] == Objects.Wall && Fields[y][z][x - 1] == Objects.Wall && Fields[y][z + 1][x - 1] == Objects.Wall)
 				wallCenter.Render();
-			else if (x > 0 && z < Depth - 1 && Fields[z + 1][x] == Objects.Wall && Fields[z][x - 1] == Objects.Wall)
+			else if (x > 0 && z < Depth - 1 && Fields[y][z + 1][x] == Objects.Wall && Fields[y][z][x - 1] == Objects.Wall)
 				wallclosedCorner.Render();
-			else if (x > 0 && Fields[z][x - 1] == Objects.Wall)
+			else if (x > 0 && Fields[y][z][x - 1] == Objects.Wall)
 
 				wallSide.Render();
-			else if (z < Depth - 1 && Fields[z + 1][x] == Objects.Wall)
+			else if (z < Depth - 1 && Fields[y][z + 1][x] == Objects.Wall)
 			{
 				GL.Rotate(-90, 0, 1, 0);
 				wallSide.Render();
@@ -564,19 +566,14 @@ namespace PacMan
 		/// Path to map data file
 		/// </summary>
 		public string Path;
-		/// <summary>
-		/// Width in cells
-		/// </summary>
 		public int Width;
-		/// <summary>
-		/// Depth in cells
-		/// </summary>
+		public int Height;
 		public int Depth;
-		/// <summary>
-		/// Map grid
-		/// </summary>
-		public Objects[][] Fields;
-		public Objects[][] OriginalFields = null;
+
+		public int CurrentFloor = 0;
+
+		public Objects[][][] Fields;
+		public Objects[][][] OriginalFields = null;
 		/// <summary>
 		/// Start point of PacMan
 		/// </summary>
@@ -641,11 +638,11 @@ namespace PacMan
 		}
 
 		/// <summary>
-		/// Shortcut to map row.
+		/// Shortcut to map floor.
 		/// </summary>
-		/// <param name="z">Row index.</param>
-		/// <returns>Row.</returns>
-		public Objects[] this[int z] { get { return Fields[z]; } }
+		/// <param name="z">Floor index.</param>
+		/// <returns>Floor.</returns>
+		public Objects[][] this[int y] { get { return Fields[y]; } }
 
 		/// <summary>
 		/// Shortcut to map cell.
@@ -653,7 +650,7 @@ namespace PacMan
 		/// <param name="z">Row index.</param>
 		/// <param name="x">Column index.</param>
 		/// <returns>Cell.</returns>
-		public Objects this[int z, int x] { get { return Fields[WrapZ(z)][WrapX(x)]; } }
+		public Objects this[int y, int z, int x] { get { return Fields[y][WrapZ(z)][WrapX(x)]; } }
 
 		/// <summary>
 		/// Shortcut to map cell.
@@ -661,7 +658,7 @@ namespace PacMan
 		/// <param name="z">Row index.</param>
 		/// <param name="x">Column index.</param>
 		/// <returns>Cell.</returns>
-		public Objects this[double z, double x] { get { return Fields[(int)WrapZ(z)][(int)WrapX(x)]; } }
+		public Objects this[double y, double z, double x] { get { return Fields[(int)y][(int)WrapZ(z)][(int)WrapX(x)]; } }
 
 		/// <summary>
 		/// Cell does not contains walls.
@@ -669,9 +666,9 @@ namespace PacMan
 		/// <param name="z">Z coordinate, wrapping included.</param>
 		/// <param name="x">X coordinate, wrapping included.</param>
 		/// <returns>True, if cell is walkable.</returns>
-		public bool IsWalkable(int z, int x)
+		public bool IsWalkable(int y, int z, int x)
 		{
-			return this[z, x] != Objects.Wall;
+			return this[y, z, x] != Objects.Wall;
 		}
 		/// <summary>
 		/// Cell does not contains walls.
@@ -679,9 +676,9 @@ namespace PacMan
 		/// <param name="z">Z coordinate, wrapping included.</param>
 		/// <param name="x">X coordinate, wrapping included.</param>
 		/// <returns>True, if cell is walkable.</returns>
-		public bool IsWalkable(double z, double x)
+		public bool IsWalkable(double y, double z, double x)
 		{
-			return this[z, x] != Objects.Wall;
+			return this[y, z, x] != Objects.Wall;
 		}
 
 		/// <summary>
@@ -692,10 +689,11 @@ namespace PacMan
 			get
 			{
 				int result = 0;
-				for (int z = 0; z < Depth; z++)
-					for (int x = 0; x < Width; x++)
-						if (Fields[z][x] == Objects.Point || Fields[z][x] == Objects.Powerup)
-							result++;
+				for (int y = 0; y < Height; y++)
+					for (int z = 0; z < Depth; z++)
+						for (int x = 0; x < Width; x++)
+							if (Fields[y][z][x] == Objects.Point || Fields[y][z][x] == Objects.Powerup)
+								result++;
 				return result;
 			}
 		}
@@ -722,46 +720,72 @@ namespace PacMan
 				data = Regex.Replace(data, "\\n*$", "");
 				data = Regex.Replace(data, "^\\n*", "");
 
-				string[] rows = data.Split('\n');
-				Depth = rows.Length;
-				Width = rows[0].Length;
-				Fields = new Objects[Depth][];
-				OriginalFields = new Objects[Depth][];
+
+				string[] floors = data.Split(new string[] { "\n\n" }, StringSplitOptions.None);
+				Height = floors.Length;
+				Fields = new Objects[Height][][];
+				OriginalFields = new Objects[Height][][];
+
 
 				Vector3i? pacmanStart = null;
 				Vector3i? ghostStart = null;
 
-				for (int z = 0; z < rows.Length; z++)
+				for (int y = 0; y < Height; y++)
 				{
-					if (rows[z].Length != Width)
-						throw new Exception("Invalid map data");
-					Fields[z] = new Objects[Width];
-					OriginalFields[z] = new Objects[Width];
-					for (int x = 0; x < rows[z].Length; x++)
-						switch (rows[z][x])
-						{
-							case '.':
-								Fields[z][x] = OriginalFields[z][x] = Objects.Point;
-								break;
-							case 'O':
-								Fields[z][x] = OriginalFields[z][x] = Objects.Powerup;
-								break;
-							case '#':
-								Fields[z][x] = OriginalFields[z][x] = Objects.Wall;
-								break;
-							case 'C':
-								pacmanStart = new Vector3i(x, 0, z);
-								Fields[z][x] = OriginalFields[z][x] = Objects.None;
-								break;
-							case 'M':
-								ghostStart = new Vector3i(x, 0, z);
-								Fields[z][x] = OriginalFields[z][x] = Objects.None;
-								break;
-							case '-':
-								Fields[z][x] = OriginalFields[z][x] = Objects.None;
-								break;
+					string[] rows = floors[y].Split('\n');
+					Depth = rows.Length;
+					Width = rows[0].Length;
+					Fields[y] = new Objects[Depth][];
+					OriginalFields[y] = new Objects[Depth][];
 
+					for (int z = 0; z < rows.Length; z++)
+					{
+						if (rows[z].Length != Width)
+							throw new Exception("Invalid map data");
+						Fields[y][z] = new Objects[Width];
+						OriginalFields[y][z] = new Objects[Width];
+						for (int x = 0; x < rows[z].Length; x++)
+						{
+							if (y > 0 && Fields[y - 1][z][x] == Objects.LiftUp)
+							{
+								if (rows[z].Length != Width)
+									throw new Exception("Invalid map data");
+								Fields[y][z][x] = Objects.LiftDown;
+							}
+							else
+							{
+								switch (rows[z][x])
+								{
+									case '.':
+										Fields[y][z][x] = OriginalFields[y][z][x] = Objects.Point;
+										break;
+									case 'O':
+										Fields[y][z][x] = OriginalFields[y][z][x] = Objects.Powerup;
+										break;
+									case '#':
+										Fields[y][z][x] = OriginalFields[y][z][x] = Objects.Wall;
+										break;
+									case 'C':
+										pacmanStart = new Vector3i(x, y, z);
+										Fields[y][z][x] = OriginalFields[y][z][x] = Objects.None;
+										break;
+									case 'M':
+										ghostStart = new Vector3i(x, y, z);
+										Fields[y][z][x] = OriginalFields[y][z][x] = Objects.None;
+										break;
+									case 'U':
+										if (y > 0 && Fields[y][z][x] == Objects.LiftUp)
+											throw new Exception("Invalid map data");
+										Fields[y][z][x] = OriginalFields[y][z][x] = Objects.LiftUp;
+										break;
+									case '-':
+										Fields[y][z][x] = OriginalFields[y][z][x] = Objects.None;
+										break;
+
+								}
+							}
 						}
+					}
 				}
 				if (PointsCount == 0 || pacmanStart == null || ghostStart == null)
 					throw new Exception("Invalid map data");
@@ -770,9 +794,10 @@ namespace PacMan
 			}
 			else
 			{
-				for (int z = 0; z < Depth; z++)
-					for (int x = 0; x < Depth; x++)
-						Fields[z][x] = OriginalFields[z][x];
+				for (int y = 0; y < Height; y++)
+					for (int z = 0; z < Depth; z++)
+						for (int x = 0; x < Width; x++)
+							Fields[y][z][x] = OriginalFields[y][z][x];
 			}
 			animationState = 0;
 			State = States.None;
@@ -812,45 +837,89 @@ namespace PacMan
 		{
 			ShaderProgram.StaticColor.Enable();
 
-			ShaderProgram.StaticColor.SetUniform("meshColor", new Vector4(0, 0, 0, 1));
+			for (int y = 0; y < Height; y++)
+			{
+				GL.PushMatrix();
+				GL.Translate(0, y + (y > CurrentFloor ? 100 : 0) , 0);
 
-			floor.Render();
 
-			for (int z = 0; z < Depth; z++)
-				for (int x = 0; x < Width; x++)
-					switch (Fields[z][x])
-					{
+				for (int z = 0; z < Depth; z++)
+					for (int x = 0; x < Width; x++)
+						switch (Fields[y][z][x])
+						{
 
-						case Objects.Wall:
-							ShaderProgram.StaticColor.SetUniform("meshColor",
-							 new Vector4(wallColor.R / (float)255.0, wallColor.G / (float)255.0, wallColor.B / (float)255.0, (float)1.0));
-							renderWall(x, z);
-							break;
 
-						case Objects.Point:
-						case Objects.Powerup:
-							ShaderProgram.StaticColor.SetUniform("meshColor", new Vector4(1, 1, 1, 1));
+							case Objects.Wall:
+								ShaderProgram.StaticColor.SetUniform("meshColor", new Vector4(0, 0, 0, 0.5f));
 
-							double r = Fields[z][x] == Objects.Point ? 0.1 : 0.3;
+								GL.Translate(x, 0, z);
+								floor.Render();
+								GL.Translate(-x, 0, -z);
 
-							if (State == States.AppearAnimation)
-								r *= animationState;
-							if (State == States.DisappearAnimation)
-								r *= 1 - animationState;
-							if (State == States.None)
-								r = 0;
+								ShaderProgram.StaticColor.SetUniform("meshColor",
+								 new Vector4(wallColor.R / (float)255.0, wallColor.G / (float)255.0, wallColor.B / (float)255.0, (float)1.0));
+								renderWall(x, z, y);
+								break;
 
-							GL.PushMatrix();
-							GL.Translate(x, 0, z);
-							GL.Scale(r, r, r);
-							sphere.Render();
-							GL.PopMatrix();
-							break;
+							case Objects.Point:
+							case Objects.Powerup:
 
-						case Objects.None:
-						default:
-							break;
-					}
+								ShaderProgram.StaticColor.SetUniform("meshColor", new Vector4(0, 0, 0, 0.5f));
+
+								GL.Translate(x, 0, z);
+								floor.Render();
+								GL.Translate(-x, 0, -z);
+
+								ShaderProgram.StaticColor.SetUniform("meshColor", new Vector4(1, 1, 1, 1));
+
+								double r = Fields[y][z][x] == Objects.Point ? 0.1 : 0.3;
+
+								if (State == States.AppearAnimation)
+									r *= animationState;
+								if (State == States.DisappearAnimation)
+									r *= 1 - animationState;
+								if (State == States.None)
+									r = 0;
+
+								GL.PushMatrix();
+								GL.Translate(x, 0, z);
+								GL.Scale(r, r, r);
+								sphere.Render();
+								GL.PopMatrix();
+								break;
+
+
+							case Objects.LiftUp:
+								ShaderProgram.StaticColor.SetUniform("meshColor", new Vector4(0, 1, 0, 1));
+
+								GL.Translate(x, 0, z);
+								floor.Render();
+								GL.Translate(-x, 0, -z);
+
+								break;
+
+							case Objects.LiftDown:
+								ShaderProgram.StaticColor.SetUniform("meshColor", new Vector4(1, 0, 0, 1));
+
+								GL.Translate(x, 0, z);
+								floor.Render();
+								GL.Translate(-x, 0, -z);
+
+								break;
+
+							case Objects.None:
+							default:
+								ShaderProgram.StaticColor.SetUniform("meshColor", new Vector4(0, 0, 0, 0.5f));
+
+								GL.Translate(x, 0, z);
+								floor.Render();
+								GL.Translate(-x, 0, -z);
+
+								break;
+						}
+
+				GL.PopMatrix();
+			}
 
 			ShaderProgram.StaticColor.Disable();
 		}

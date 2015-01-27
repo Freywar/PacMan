@@ -260,28 +260,28 @@ namespace PacMan
 				case Directions.None:
 					break;
 				case Directions.Up:
-					if (Z > 0 && map[(int)(Z - 1)][(int)X] != Map.Objects.Wall)
+					if (Z > 0 && map[Y][(int)(Z - 1)][(int)X] != Map.Objects.Wall)
 						Direction = desiredDirection;
-					else if (Z == 0 && map[map.Depth - 1][(int)X] != Map.Objects.Wall)
+					else if (Z == 0 && map[Y][map.Depth - 1][(int)X] != Map.Objects.Wall)
 						Direction = desiredDirection;
 					break;
 				case Directions.Down:
-					if (Z < map.Depth - 1 && map[(int)(Z + 1)][(int)X] != Map.Objects.Wall)
+					if (Z < map.Depth - 1 && map[Y][(int)(Z + 1)][(int)X] != Map.Objects.Wall)
 						Direction = desiredDirection;
-					else if (Z == map.Depth - 1 && map[0][(int)X] != Map.Objects.Wall)
+					else if (Z == map.Depth - 1 && map[Y][0][(int)X] != Map.Objects.Wall)
 						Direction = desiredDirection;
 					break;
 
 				case Directions.Left:
-					if (X > 0 && map[(int)Z][(int)(X - 1)] != Map.Objects.Wall)
+					if (X > 0 && map[Y][(int)Z][(int)(X - 1)] != Map.Objects.Wall)
 						Direction = desiredDirection;
-					else if (X == 0 && map[(int)Z][map.Width - 1] != Map.Objects.Wall)
+					else if (X == 0 && map[Y][(int)Z][map.Width - 1] != Map.Objects.Wall)
 						Direction = desiredDirection;
 					break;
 				case Directions.Right:
-					if (X < map.Width - 1 && map[(int)Z][(int)(X + 1)] != Map.Objects.Wall)
+					if (X < map.Width - 1 && map[Y][(int)Z][(int)(X + 1)] != Map.Objects.Wall)
 						Direction = desiredDirection;
-					else if (X == map.Width - 1 && map[(int)Z][0] != Map.Objects.Wall)
+					else if (X == map.Width - 1 && map[Y][(int)Z][0] != Map.Objects.Wall)
 						Direction = desiredDirection;
 					break;
 			}
@@ -347,7 +347,7 @@ namespace PacMan
 			mouthAngle = Math.Sin(mouthAngle * Math.PI) * maxMouthAngle;
 
 			GL.PushMatrix();
-			GL.Translate(X, 0, Z);
+			GL.Translate(X, Y, Z);
 			switch (Direction)
 			{
 				case Directions.Down:

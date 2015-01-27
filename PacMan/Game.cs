@@ -519,16 +519,19 @@ namespace PacMan
 						if (cellNode.Name == "cell")
 						{
 							int? x = null;
+							int? y = null;
 							int? z = null;
 							foreach (XmlAttribute attr in cellNode.Attributes)
 							{
 								if (attr.Name == "x")
 									x = Convert.ToInt32(attr.Value);
+								if (attr.Name == "y")
+									y = Convert.ToInt32(attr.Value);
 								if (attr.Name == "z")
 									z = Convert.ToInt32(attr.Value);
 							}
-							if (x != null & z != null)
-								CurrentMap[(int)z][(int)x] = Map.Objects.None;
+							if (x != null && y != null && z != null)
+								CurrentMap[(int)y][(int)z][(int)x] = Map.Objects.None;
 						}
 					}
 				}
@@ -926,15 +929,25 @@ namespace PacMan
 
 					Vector3i? pacManVisitedCell = PacMan.Update(dt, CurrentMap);
 					foreach (Ghost ghost in Ghosts)
-						ghost.Update(dt, CurrentMap, PacMan);
+					{
+						Vector3i? ghostVisitedCell = ghost.Update(dt, CurrentMap, PacMan);
+						if (ghostVisitedCell != null)
+						{
+							Vector3i gv = (Vector3i)ghostVisitedCell;
+							if (CurrentMap[gv.Y][gv.Z][gv.X] == Map.Objects.LiftUp)
+								ghost.Y += 1;
+							if (CurrentMap[gv.Y][gv.Z][gv.X] == Map.Objects.LiftDown)
+								ghost.Y -= 1;
+						}
+					}
 					Camera.Update(dt, CurrentMap, PacMan);
 
 					if (pacManVisitedCell != null)
 					{
 						Vector3i visitedCell = (Vector3i)pacManVisitedCell;
-						if (CurrentMap[visitedCell.Z][visitedCell.X] == Map.Objects.Point)
+						if (CurrentMap[visitedCell.Y][visitedCell.Z][visitedCell.X] == Map.Objects.Point)
 							Score += 10;
-						if (CurrentMap[visitedCell.Z][visitedCell.X] == Map.Objects.Powerup)
+						if (CurrentMap[visitedCell.Y][visitedCell.Z][visitedCell.X] == Map.Objects.Powerup)
 						{
 							Score += 100;
 							PacMan.State = PacMan.States.Super;
@@ -942,7 +955,18 @@ namespace PacMan
 							foreach (Ghost ghost in Ghosts)
 								ghost.State = Ghost.States.Frightened;
 						}
-						CurrentMap[visitedCell.Z][visitedCell.X] = Map.Objects.None;
+						if (CurrentMap[visitedCell.Y][visitedCell.Z][visitedCell.X] == Map.Objects.LiftUp)
+						{
+							PacMan.Y += 1;
+							CurrentMap.CurrentFloor += 1;
+						}
+						else if (CurrentMap[visitedCell.Y][visitedCell.Z][visitedCell.X] == Map.Objects.LiftDown)
+						{
+							PacMan.Y -= 1;
+							CurrentMap.CurrentFloor -= 1;
+						}
+						else
+							CurrentMap[visitedCell.Y][visitedCell.Z][visitedCell.X] = Map.Objects.None;
 					}
 					if (PacMan.State == PacMan.States.Super)
 						PacMan.SuperTime -= dt;
@@ -960,14 +984,14 @@ namespace PacMan
 						switch (ghost.State)
 						{
 							case Ghost.States.Normal:
-								if (Utils.Distance(PacMan.X, PacMan.Z, ghost.X, ghost.Z) < 1)
+								if (PacMan.Y == ghost.Y && Utils.Distance(PacMan.X, PacMan.Z, ghost.X, ghost.Z) < 1)
 								{
 									PacMan.Lives--;
 									State = PacMan.Lives != 0 ? States.LifeLoseAnimation : States.LoseAnimation;
 								}
 								break;
 							case Ghost.States.Frightened:
-								if (Utils.Distance(PacMan.X, PacMan.Z, ghost.X, ghost.Z) < 1)
+								if (PacMan.Y == ghost.Y && Utils.Distance(PacMan.X, PacMan.Z, ghost.X, ghost.Z) < 1)
 								{
 									Score += 100;
 									ghost.State = Ghost.States.Eaten;
@@ -1212,11 +1236,13 @@ namespace PacMan
 					GL.LoadIdentity();
 
 					Camera.Render();
-					CurrentMap.Render();
+	
 
 					PacMan.Render();
 					for (int i = 0; i < Ghosts.Length; i++)
 						Ghosts[i].Render();
+
+					CurrentMap.Render();
 
 					GL.Disable(EnableCap.Lighting);
 					GL.Disable(EnableCap.Light0);

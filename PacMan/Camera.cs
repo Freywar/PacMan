@@ -45,6 +45,10 @@ namespace PacMan
 		/// </summary>
 		public double X = 0;
 		/// <summary>
+		/// Target Y in map cells
+		/// </summary>
+		public double Y = 0;
+		/// <summary>
 		/// Target Z in map cells
 		/// </summary>
 		public double Z = 0;
@@ -137,6 +141,7 @@ namespace PacMan
 			YAngle += yAngleSpeed * dt;
 			R += rSpeed * dt;
 
+			Y = pacman.Y;
 			if (FollowPacMan)
 			{
 				X = pacman.X;
@@ -194,7 +199,7 @@ namespace PacMan
 			GL.Translate(0, 0, -R);
 			GL.Rotate(XAngle, 1, 0, 0);
 			GL.Rotate(YAngle, 0, 1, 0);
-			GL.Translate(-X, -0.5, -Z);
+			GL.Translate(-X, - 0.5-Y, -Z);
 		}
 	}
 }

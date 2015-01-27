@@ -190,7 +190,7 @@ namespace PacMan
 			}
 
 			double distance = Math.Abs(dx) + Math.Abs(dz);
-			if (dt * CurrentSpeed < distance || !map.IsWalkable(Z + dz, X + dx))
+			if (dt * CurrentSpeed < distance || !map.IsWalkable(Y, Z + dz, X + dx))
 				dx = dz = distance = 0;
 
 			if (distance > 0)
@@ -216,14 +216,14 @@ namespace PacMan
 				case Directions.Up:
 				case Directions.Down:
 					m = Direction == Directions.Up ? -1 : 1;
-					if (!isInCenter || map.IsWalkable(Z + m, X))
+					if (!isInCenter || map.IsWalkable(Y, Z + m, X))
 						Z = map.WrapZ(Z + dt * CurrentSpeed * m);
 					break;
 
 				case Directions.Left:
 				case Directions.Right:
 					m = Direction == Directions.Left ? -1 : 1;
-					if (!isInCenter || map.IsWalkable(Z, X + m))
+					if (!isInCenter || map.IsWalkable(Y, Z, X + m))
 						X = map.WrapX(X + dt * CurrentSpeed * m);
 					break;
 			}
@@ -233,6 +233,10 @@ namespace PacMan
 		/// X coordinate in map cells.
 		/// </summary>
 		public double X = 0;
+		/// <summary>
+		/// Y coordinate in map cells.
+		/// </summary>
+		public int Y = 0;
 		/// <summary>
 		/// Z coordinate in map cells.
 		/// </summary>
@@ -268,13 +272,13 @@ namespace PacMan
 			double dtAfterMove;
 			while ((dtAfterMove = moveToClosestCenter(dt, map)) != dt)
 			{
-				result = new Vector3i((int)X, 0, (int)Z);
+				result = new Vector3i((int)X, Y, (int)Z);
 				updateDirection(map);
 				dt = dtAfterMove;
 			}
 			if (isInCenter)
 			{
-				result = new Vector3i((int)X, 0, (int)Z);
+				result = new Vector3i((int)X, Y, (int)Z);
 				updateDirection(map);
 			}
 			if (dt > 0)
