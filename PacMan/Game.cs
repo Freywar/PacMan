@@ -801,6 +801,7 @@ namespace PacMan
 		private void restartMap()
 		{
 			PacMan.Init(CurrentMap);
+			CurrentMap.CurrentFloor = PacMan.Y;
 			foreach (Ghost ghost in Ghosts)
 				ghost.Init(CurrentMap);
 
@@ -923,6 +924,8 @@ namespace PacMan
 							State = States.Playing;
 						}
 					}
+
+					Camera.Update(dt, CurrentMap, PacMan);
 					break;
 
 				case States.Playing:

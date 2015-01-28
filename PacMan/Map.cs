@@ -722,6 +722,7 @@ namespace PacMan
 							Fields[y][z][x] = OriginalFields[y][z][x];
 			}
 			animationState = 0;
+			CurrentFloor = PacManStart.Y;
 			State = States.None;
 		}
 
@@ -1190,16 +1191,16 @@ namespace PacMan
 								ShaderProgram.StaticColor.SetUniform("meshColor", new Vector4(0, 1, 0, 1));
 							else
 								ShaderProgram.StaticColor.SetUniform("meshColor", new Vector4(1, 0, 0, 1));
-							GL.Translate(x, 0, z);
+							GL.Translate(x, 0.01, z);
 							floor.Render();
-							GL.Translate(-x, 0, -z);
+							GL.Translate(-x, 0.01, -z);
 						}
 				GL.PopMatrix();
 			}
 			#endregion
 
 			#region floors
-			ShaderProgram.StaticColor.SetUniform("meshColor", new Vector4(0, 0, 0, 0.5f));
+			ShaderProgram.StaticColor.SetUniform("meshColor", new Vector4(0, 0, 0, 0.7f));
 			for (int y = 0; y < Height; y++)
 			{
 				GL.PushMatrix();
@@ -1212,9 +1213,9 @@ namespace PacMan
 							case Objects.Point:
 							case Objects.Powerup:
 							case Objects.None:
-								GL.Translate(x, 0, z);
+								GL.Translate(x, 0.01, z);
 								floor.Render();
-								GL.Translate(-x, 0, -z);
+								GL.Translate(-x, -0.01, -z);
 								break;
 
 							default:
@@ -1231,7 +1232,7 @@ namespace PacMan
 						if (Fields[y][z][x] == Objects.Wall)
 						{
 							GL.PushMatrix();
-							GL.Translate(x, y + (y > CurrentFloor ? 100 : 0) - 0.5, z);
+							GL.Translate(x, y + (y > CurrentFloor ? 100 : 0) - 0.5+0.01, z);
 
 							double ps = 1.0 / 3.0;
 

@@ -428,6 +428,7 @@ namespace PacMan
 			waitTimeElapsed = 0;
 			totalTimeElapsed = 0;
 			X = map.GhostStart.X;
+			Y = map.GhostStart.Y;
 			Z = map.GhostStart.Z;
 		}
 

@@ -247,6 +247,7 @@ namespace PacMan
 			State = States.None;
 			animationState = 0;
 			X = map.PacManStart.X;
+			Y = map.PacManStart.Y;
 			Z = map.PacManStart.Z;
 		}
 
