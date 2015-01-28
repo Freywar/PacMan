@@ -76,7 +76,7 @@
     </None>
     <Content Include="config.xml">
       <SubType>Designer</SubType>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="Shaders\Default_Frag.glsl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -101,7 +101,9 @@
     <Content Include="Fonts\emulogic-readme.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="lib\License.txt" />
+    <Content Include="lib\License.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="lib\OpenTK.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
