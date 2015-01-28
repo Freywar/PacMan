@@ -113,9 +113,9 @@ namespace PacMan
 						Utils.Push(c, color, ref cp);
 
 					body_v = new Mesh();
-					body_v.Vertices = v;
-					body_v.Normals = n;
-					body_v.Colors = c;
+					body_v.Vertex = v;
+					body_v.Normal = n;
+					body_v.Color = c;
 				}
 				return body_v;
 			}
@@ -183,9 +183,9 @@ namespace PacMan
 						Utils.Push(c, color, ref cp);
 
 					jaw_v = new Mesh();
-					jaw_v.Vertices = v;
-					jaw_v.Normals = n;
-					jaw_v.Colors = c;
+					jaw_v.Vertex = v;
+					jaw_v.Normal = n;
+					jaw_v.Color = c;
 				}
 				return jaw_v;
 			}
@@ -199,26 +199,26 @@ namespace PacMan
 			{
 				if (evilEye_v == null)
 				{
-					double[] v = new double[eye.Vertices.Length];
-					double[] n = new double[eye.Normals.Length];
-					double[] c = new double[eye.Colors.Length];
+					double[] v = new double[eye.Vertex.Length];
+					double[] n = new double[eye.Normal.Length];
+					double[] c = new double[eye.Color.Length];
 
 					for (int i = 0; i < v.Length; i++)
 					{
-						v[i] = eye.Vertices[i];
-						n[i] = eye.Normals[i];
+						v[i] = eye.Vertex[i];
+						n[i] = eye.Normal[i];
 					}
 					for (int i = 0; i < c.Length; i += 3)
 					{
-						c[i] = eye.Colors[i];
+						c[i] = eye.Color[i];
 						c[i + 1] = 0;
 						c[i + 2] = 0;
 					}
 
 					evilEye_v = new Mesh();
-					evilEye_v.Vertices = v;
-					evilEye_v.Normals = n;
-					evilEye_v.Colors = c;
+					evilEye_v.Vertex = v;
+					evilEye_v.Normal = n;
+					evilEye_v.Color = c;
 				}
 				return evilEye_v;
 			}

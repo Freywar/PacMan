@@ -120,8 +120,8 @@ namespace PacMan
 						}
 
 					sphere_v = new Mesh();
-					sphere_v.Vertices = v;
-					sphere_v.Normals = n;
+					sphere_v.Vertex = v;
+					sphere_v.Normal = n;
 				}
 
 				return sphere_v;
@@ -152,15 +152,15 @@ namespace PacMan
 						Utils.Push(n, normal, ref np);
 
 					floor_v = new Mesh();
-					floor_v.Vertices = v;
-					floor_v.Normals = n;
+					floor_v.Vertex = v;
+					floor_v.Normal = n;
 				}
 
 				return floor_v;
 			}
 		}
 
-		#region Wall rendering
+		#region Wall meshes
 
 		private Mesh wallCenter
 		{
@@ -187,8 +187,8 @@ namespace PacMan
 						Utils.Push(n, normal, ref np);
 
 					wallCenter_v = new Mesh();
-					wallCenter_v.Vertices = v;
-					wallCenter_v.Normals = n;
+					wallCenter_v.Vertex = v;
+					wallCenter_v.Normal = n;
 				}
 
 				return wallCenter_v;
@@ -230,8 +230,8 @@ namespace PacMan
 						Utils.Push(n, normal, ref np);
 
 					wallSide_v = new Mesh();
-					wallSide_v.Vertices = v;
-					wallSide_v.Normals = n;
+					wallSide_v.Vertex = v;
+					wallSide_v.Normal = n;
 				}
 
 				return wallSide_v;
@@ -323,8 +323,8 @@ namespace PacMan
 					}
 
 					wallclosedCorner_v = new Mesh();
-					wallclosedCorner_v.Vertices = v;
-					wallclosedCorner_v.Normals = n;
+					wallclosedCorner_v.Vertex = v;
+					wallclosedCorner_v.Normal = n;
 				}
 
 				return wallclosedCorner_v;
@@ -398,159 +398,14 @@ namespace PacMan
 					}
 
 					wallOpenCorner_v = new Mesh();
-					wallOpenCorner_v.Vertices = v;
-					wallOpenCorner_v.Normals = n;
+					wallOpenCorner_v.Vertex = v;
+					wallOpenCorner_v.Normal = n;
 				}
 
 				return wallOpenCorner_v;
 			}
 		}
-
-		private void renderWall(int x, int z, int y)
-		{
-			GL.Translate(x, 0, z);
-
-			GL.PushMatrix();
-			if (State == States.AppearAnimation)
-				GL.Scale(1, animationState, 1);
-			if (State == States.DisappearAnimation)
-				GL.Scale(1, 1 - animationState, 1);
-			if (State == States.None)
-				GL.Scale(1, 0, 1);
-
-			double ps = 1.0 / 3.0;
-
-			//center
-			wallCenter.Render();
-
-			//right
-			GL.Translate(ps, 0, 0);
-			if (x < Width - 1 && Fields[y][z][x + 1] == Objects.Wall)
-				wallCenter.Render();
-			else
-				wallSide.Render();
-			GL.Translate(-ps, 0, 0);
-
-			//left
-			GL.Translate(-ps, 0, 0);
-			GL.Rotate(180, 0, 1, 0);
-			if (x > 0 && Fields[y][z][x - 1] == Objects.Wall)
-				wallCenter.Render();
-			else
-				wallSide.Render();
-			GL.Rotate(-180, 0, 1, 0);
-			GL.Translate(ps, 0, 0);
-
-			//bottom
-			GL.Translate(0, 0, ps);
-			GL.Rotate(-90, 0, 1, 0);
-			if (z < Depth - 1 && Fields[y][z + 1][x] == Objects.Wall)
-				wallCenter.Render();
-			else
-				wallSide.Render();
-			GL.Rotate(90, 0, 1, 0);
-			GL.Translate(0, 0, -ps);
-
-			//top
-			GL.Translate(0, 0, -ps);
-			GL.Rotate(90, 0, 1, 0);
-			if (z > 0 && Fields[y][z - 1][x] == Objects.Wall)
-				wallCenter.Render();
-			else
-				wallSide.Render();
-			GL.Rotate(-90, 0, 1, 0);
-			GL.Translate(0, 0, ps);
-
-			//rightbottom
-			GL.Translate(ps, 0, ps);
-			if (x < Width - 1 && z < Depth - 1 && Fields[y][z + 1][x] == Objects.Wall && Fields[y][z][x + 1] == Objects.Wall && Fields[y][z + 1][x + 1] == Objects.Wall)
-				wallCenter.Render();
-			else if (x < Width - 1 && z < Depth - 1 && Fields[y][z + 1][x] == Objects.Wall && Fields[y][z][x + 1] == Objects.Wall)
-				wallclosedCorner.Render();
-			else if (x < Width - 1 && Fields[y][z][x + 1] == Objects.Wall)
-			{
-				GL.Rotate(-90, 0, 1, 0);
-				wallSide.Render();
-				GL.Rotate(90, 0, 1, 0);
-			}
-
-			else if (z < Depth - 1 && Fields[y][z + 1][x] == Objects.Wall)
-				wallSide.Render();
-			else
-				wallOpenCorner.Render();
-			GL.Translate(-ps, 0, -ps);
-
-
-			//righttop
-			GL.Translate(ps, 0, -ps);
-			GL.Rotate(90, 0, 1, 0);
-			if (x < Width - 1 && z > 0 && Fields[y][z - 1][x] == Objects.Wall && Fields[y][z][x + 1] == Objects.Wall && Fields[y][z - 1][x + 1] == Objects.Wall)
-				wallCenter.Render();
-			else if (x < Width - 1 && z > 0 && Fields[y][z - 1][x] == Objects.Wall && Fields[y][z][x + 1] == Objects.Wall)
-				wallclosedCorner.Render();
-			else if (x < Width - 1 && Fields[y][z][x + 1] == Objects.Wall)
-				wallSide.Render();
-
-			else if (z > 0 && Fields[y][z - 1][x] == Objects.Wall)
-			{
-				GL.Rotate(-90, 0, 1, 0);
-				wallSide.Render();
-				GL.Rotate(90, 0, 1, 0);
-			}
-			else
-				wallOpenCorner.Render();
-			GL.Rotate(-90, 0, 1, 0);
-			GL.Translate(-ps, 0, ps);
-
-			//lefttop
-			GL.Translate(-ps, 0, -ps);
-			GL.Rotate(180, 0, 1, 0);
-			if (x > 0 && z > 0 && Fields[y][z - 1][x] == Objects.Wall && Fields[y][z][x - 1] == Objects.Wall && Fields[y][z - 1][x - 1] == Objects.Wall)
-				wallCenter.Render();
-			else if (x > 0 && z > 0 && Fields[y][z - 1][x] == Objects.Wall && Fields[y][z][x - 1] == Objects.Wall)
-				wallclosedCorner.Render();
-			else if (x > 0 && Fields[y][z][x - 1] == Objects.Wall)
-			{
-				GL.Rotate(-90, 0, 1, 0);
-				wallSide.Render();
-				GL.Rotate(90, 0, 1, 0);
-			}
-			else if (z > 0 && Fields[y][z - 1][x] == Objects.Wall)
-				wallSide.Render();
-			else
-				wallOpenCorner.Render();
-			GL.Rotate(-180, 0, 1, 0);
-			GL.Translate(ps, 0, ps);
-
-			//leftbottom
-			GL.Translate(-ps, 0, ps);
-			GL.Rotate(-90, 0, 1, 0);
-			if (x > 0 && z < Depth - 1 && Fields[y][z + 1][x] == Objects.Wall && Fields[y][z][x - 1] == Objects.Wall && Fields[y][z + 1][x - 1] == Objects.Wall)
-				wallCenter.Render();
-			else if (x > 0 && z < Depth - 1 && Fields[y][z + 1][x] == Objects.Wall && Fields[y][z][x - 1] == Objects.Wall)
-				wallclosedCorner.Render();
-			else if (x > 0 && Fields[y][z][x - 1] == Objects.Wall)
-
-				wallSide.Render();
-			else if (z < Depth - 1 && Fields[y][z + 1][x] == Objects.Wall)
-			{
-				GL.Rotate(-90, 0, 1, 0);
-				wallSide.Render();
-				GL.Rotate(90, 0, 1, 0);
-			}
-
-			else
-				wallOpenCorner.Render();
-			GL.Rotate(90, 0, 1, 0);
-			GL.Translate(ps, 0, -ps);
-
-			GL.PopMatrix();
-
-			GL.Translate(-x, 0, -z);
-
-			GL.End();
-		}
-
+		
 		#endregion
 
 		/// <summary>
@@ -566,10 +421,22 @@ namespace PacMan
 		/// Path to map data file
 		/// </summary>
 		public string Path;
+		/// <summary>
+		/// Width(left to right, cells).
+		/// </summary>
 		public int Width;
+		/// <summary>
+		/// Height(bottom to top, floors).
+		/// </summary>
 		public int Height;
+		/// <summary>
+		/// Depth(From farthest end to camera, cells).
+		/// </summary>
 		public int Depth;
 
+		/// <summary>
+		/// Current floor, on which PacMan is.
+		/// </summary>
 		public int CurrentFloor = 0;
 
 		public Objects[][][] Fields;
@@ -837,89 +704,472 @@ namespace PacMan
 		{
 			ShaderProgram.StaticColor.Enable();
 
+			#region walls
+			ShaderProgram.StaticColor.SetUniform("meshColor",
+				 new Vector4(wallColor.R / (float)255.0, wallColor.G / (float)255.0, wallColor.B / (float)255.0, (float)1.0));
+
+			#region wall center mesh
+			for (int y = 0; y < Height; y++)
+
+
+				for (int z = 0; z < Depth; z++)
+					for (int x = 0; x < Width; x++)
+						if (Fields[y][z][x] == Objects.Wall)
+						{
+							GL.PushMatrix();
+
+							GL.Translate(x, y + (y > CurrentFloor ? 100 : 0), z);
+
+							if (State == States.AppearAnimation)
+								GL.Scale(1, animationState, 1);
+							if (State == States.DisappearAnimation)
+								GL.Scale(1, 1 - animationState, 1);
+							if (State == States.None)
+								GL.Scale(1, 0, 1);
+
+							double ps = 1.0 / 3.0;
+
+							//center
+							wallCenter.Render();
+
+							if (x < Width - 1 && Fields[y][z][x + 1] == Objects.Wall)
+							{
+								//right
+								GL.Translate(ps, 0, 0);
+								wallCenter.Render();
+								GL.Translate(-ps, 0, 0);
+
+								//rightbottom
+								if (z < Depth - 1 && Fields[y][z + 1][x] == Objects.Wall && Fields[y][z + 1][x + 1] == Objects.Wall)
+								{
+									GL.Translate(ps, 0, ps);
+									wallCenter.Render();
+									GL.Translate(-ps, 0, -ps);
+								}
+
+								//righttop
+								if (z > 0 && Fields[y][z - 1][x] == Objects.Wall && Fields[y][z - 1][x + 1] == Objects.Wall)
+								{
+									GL.Translate(ps, 0, -ps);
+									GL.Rotate(90, 0, 1, 0);
+									wallCenter.Render();
+									GL.Rotate(-90, 0, 1, 0);
+									GL.Translate(-ps, 0, ps);
+								}
+							}
+
+							if (x > 0 && Fields[y][z][x - 1] == Objects.Wall)
+							{
+								//left
+								GL.Translate(-ps, 0, 0);
+								GL.Rotate(180, 0, 1, 0);
+								wallCenter.Render();
+								GL.Rotate(-180, 0, 1, 0);
+								GL.Translate(ps, 0, 0);
+
+
+								//lefttop
+								if (z > 0 && Fields[y][z - 1][x] == Objects.Wall && Fields[y][z - 1][x - 1] == Objects.Wall)
+								{
+									GL.Translate(-ps, 0, -ps);
+									GL.Rotate(180, 0, 1, 0);
+									wallCenter.Render();
+									GL.Rotate(-180, 0, 1, 0);
+									GL.Translate(ps, 0, ps);
+								}
+
+								//leftbottom
+								if (z < Depth - 1 && Fields[y][z + 1][x] == Objects.Wall && Fields[y][z + 1][x - 1] == Objects.Wall)
+								{
+									GL.Translate(-ps, 0, ps);
+									GL.Rotate(-90, 0, 1, 0);
+									wallCenter.Render();
+									GL.Rotate(90, 0, 1, 0);
+									GL.Translate(ps, 0, -ps);
+								}
+							}
+
+							//bottom
+							if (z < Depth - 1 && Fields[y][z + 1][x] == Objects.Wall)
+							{
+								GL.Translate(0, 0, ps);
+								GL.Rotate(-90, 0, 1, 0);
+								wallCenter.Render();
+								GL.Rotate(90, 0, 1, 0);
+								GL.Translate(0, 0, -ps);
+							}
+
+							//top
+							if (z > 0 && Fields[y][z - 1][x] == Objects.Wall)
+							{
+								GL.Translate(0, 0, -ps);
+								GL.Rotate(90, 0, 1, 0);
+								wallCenter.Render();
+								GL.Rotate(-90, 0, 1, 0);
+								GL.Translate(0, 0, ps);
+							}
+
+							GL.PopMatrix();
+						}
+			#endregion
+
+			#region wall sides
+			for (int y = 0; y < Height; y++)
+				for (int z = 0; z < Depth; z++)
+					for (int x = 0; x < Width; x++)
+						if (Fields[y][z][x] == Objects.Wall)
+						{
+							GL.PushMatrix();
+							GL.Translate(x, y + (y > CurrentFloor ? 100 : 0), z);
+
+							if (State == States.AppearAnimation)
+								GL.Scale(1, animationState, 1);
+							if (State == States.DisappearAnimation)
+								GL.Scale(1, 1 - animationState, 1);
+							if (State == States.None)
+								GL.Scale(1, 0, 1);
+
+							double ps = 1.0 / 3.0;
+
+							if (x < Width - 1 && Fields[y][z][x + 1] == Objects.Wall)
+							{
+								//rightbottom
+								if (z < Depth - 1 && Fields[y][z + 1][x] != Objects.Wall || z >= Depth - 1)
+								{
+									GL.Translate(ps, 0, ps);
+									GL.Rotate(-90, 0, 1, 0);
+									wallSide.Render();
+									GL.Rotate(90, 0, 1, 0);
+									GL.Translate(-ps, 0, -ps);
+								}
+
+								//righttop
+								if (z > 0 && Fields[y][z - 1][x] != Objects.Wall || z <= 0)
+								{
+									GL.Translate(ps, 0, -ps);
+									GL.Rotate(90, 0, 1, 0);
+									wallSide.Render();
+									GL.Rotate(-90, 0, 1, 0);
+									GL.Translate(-ps, 0, ps);
+								}
+							}
+							else
+							{
+								//right
+								GL.Translate(ps, 0, 0);
+								wallSide.Render();
+								GL.Translate(-ps, 0, 0);
+							}
+
+							if (z > 0 && Fields[y][z - 1][x] == Objects.Wall)
+							{
+								//righttop
+								if (x < Width - 1 && Fields[y][z][x + 1] != Objects.Wall || x >= Width - 1)
+								{
+									GL.Translate(ps, 0, -ps);
+									wallSide.Render();
+									GL.Translate(-ps, 0, ps);
+								}
+
+								//lefttop
+								if (x > 0 && Fields[y][z][x - 1] != Objects.Wall || x <= 0)
+								{
+									GL.Translate(-ps, 0, -ps);
+									GL.Rotate(180, 0, 1, 0);
+									wallSide.Render();
+									GL.Rotate(-180, 0, 1, 0);
+									GL.Translate(ps, 0, ps);
+								}
+							}
+							else
+							{
+								//top
+								GL.Translate(0, 0, -ps);
+								GL.Rotate(90, 0, 1, 0);
+								wallSide.Render();
+								GL.Rotate(-90, 0, 1, 0);
+								GL.Translate(0, 0, ps);
+							}
+
+							if (z < Depth - 1 && Fields[y][z + 1][x] == Objects.Wall)
+							{
+								//leftbottom
+								if (x > 0 && Fields[y][z][x - 1] != Objects.Wall || x <= 0)
+								{
+									GL.Translate(-ps, 0, ps);
+									GL.Rotate(-180, 0, 1, 0);
+									wallSide.Render();
+									GL.Rotate(180, 0, 1, 0);
+									GL.Translate(ps, 0, -ps);
+								}
+
+								//rightbottom
+								if (x < Width - 1 && Fields[y][z][x + 1] != Objects.Wall || x >= Width - 1)
+								{
+									GL.Translate(ps, 0, ps);
+									wallSide.Render();
+									GL.Translate(-ps, 0, -ps);
+								}
+							}
+							else
+							{
+								//bottom
+								GL.Translate(0, 0, ps);
+								GL.Rotate(-90, 0, 1, 0);
+								wallSide.Render();
+								GL.Rotate(90, 0, 1, 0);
+								GL.Translate(0, 0, -ps);
+							}
+
+							if (x > 0 && Fields[y][z][x - 1] == Objects.Wall)
+							{
+								//lefttop
+								if (z > 0 && Fields[y][z - 1][x] != Objects.Wall || z <= 0)
+								{
+									GL.Translate(-ps, 0, -ps);
+									GL.Rotate(90, 0, 1, 0);
+									wallSide.Render();
+									GL.Rotate(-90, 0, 1, 0);
+									GL.Translate(ps, 0, ps);
+								}
+
+								//leftbottom
+								if (z < Depth - 1 && Fields[y][z + 1][x] != Objects.Wall || z >= Depth - 1)
+								{
+									GL.Translate(-ps, 0, ps);
+									GL.Rotate(-90, 0, 1, 0);
+									wallSide.Render();
+									GL.Rotate(90, 0, 1, 0);
+									GL.Translate(ps, 0, -ps);
+								}
+							}
+							else
+							{
+								//left
+								GL.Translate(-ps, 0, 0);
+								GL.Rotate(180, 0, 1, 0);
+								wallSide.Render();
+								GL.Rotate(-180, 0, 1, 0);
+								GL.Translate(ps, 0, 0);
+							}
+
+							GL.PopMatrix();
+						}
+			#endregion
+
+			#region wall closed corners
+			for (int y = 0; y < Height; y++)
+				for (int z = 0; z < Depth; z++)
+					for (int x = 0; x < Width; x++)
+						if (Fields[y][z][x] == Objects.Wall)
+						{
+							GL.PushMatrix();
+							GL.Translate(x, y + (y > CurrentFloor ? 100 : 0), z);
+
+							if (State == States.AppearAnimation)
+								GL.Scale(1, animationState, 1);
+							if (State == States.DisappearAnimation)
+								GL.Scale(1, 1 - animationState, 1);
+							if (State == States.None)
+								GL.Scale(1, 0, 1);
+
+							double ps = 1.0 / 3.0;
+
+							if (x < Width - 1 && Fields[y][z][x + 1] == Objects.Wall)
+							{
+								//rightbottom
+								if (z < Depth - 1 && Fields[y][z + 1][x] == Objects.Wall && Fields[y][z + 1][x + 1] != Objects.Wall)
+								{
+									GL.Translate(ps, 0, ps);
+									wallclosedCorner.Render();
+									GL.Translate(-ps, 0, -ps);
+								}
+
+								//righttop
+								if (z > 0 && Fields[y][z - 1][x] == Objects.Wall && Fields[y][z - 1][x + 1] != Objects.Wall)
+								{
+									GL.Translate(ps, 0, -ps);
+									GL.Rotate(90, 0, 1, 0);
+									wallclosedCorner.Render();
+									GL.Rotate(-90, 0, 1, 0);
+									GL.Translate(-ps, 0, ps);
+								}
+							}
+
+							if (x > 0 && Fields[y][z][x - 1] == Objects.Wall)
+							{
+								if (z > 0 && Fields[y][z - 1][x] == Objects.Wall && Fields[y][z - 1][x - 1] != Objects.Wall)
+								{
+									//lefttop
+									GL.Translate(-ps, 0, -ps);
+									GL.Rotate(180, 0, 1, 0);
+									wallclosedCorner.Render();
+									GL.Rotate(-180, 0, 1, 0);
+									GL.Translate(ps, 0, ps);
+								}
+
+								if (z < Depth - 1 && Fields[y][z + 1][x] == Objects.Wall && Fields[y][z + 1][x - 1] != Objects.Wall)
+								{
+									//leftbottom
+									GL.Translate(-ps, 0, ps);
+									GL.Rotate(-90, 0, 1, 0);
+									wallclosedCorner.Render();
+									GL.Rotate(90, 0, 1, 0);
+									GL.Translate(ps, 0, -ps);
+								}
+							}
+
+							GL.PopMatrix();
+						}
+			#endregion
+
+			#region wall open corners
+			for (int y = 0; y < Height; y++)
+				for (int z = 0; z < Depth; z++)
+					for (int x = 0; x < Width; x++)
+						if (Fields[y][z][x] == Objects.Wall)
+						{
+							GL.PushMatrix();
+							GL.Translate(x, y + (y > CurrentFloor ? 100 : 0), z);
+
+							if (State == States.AppearAnimation)
+								GL.Scale(1, animationState, 1);
+							if (State == States.DisappearAnimation)
+								GL.Scale(1, 1 - animationState, 1);
+							if (State == States.None)
+								GL.Scale(1, 0, 1);
+
+							double ps = 1.0 / 3.0;
+
+							if (x < Width - 1 && Fields[y][z][x + 1] != Objects.Wall)
+							{
+								//rightbottom
+								if (z < Depth - 1 && Fields[y][z + 1][x] != Objects.Wall)
+								{
+									GL.Translate(ps, 0, ps);
+									wallOpenCorner.Render();
+									GL.Translate(-ps, 0, -ps);
+								}
+
+								//righttop
+								if (z > 0 && Fields[y][z - 1][x] != Objects.Wall)
+								{
+									GL.Translate(ps, 0, -ps);
+									GL.Rotate(90, 0, 1, 0);
+									wallOpenCorner.Render();
+									GL.Rotate(-90, 0, 1, 0);
+									GL.Translate(-ps, 0, ps);
+								}
+							}
+
+							if (x > 0 && Fields[y][z][x - 1] != Objects.Wall)
+							{
+								if (z > 0 && Fields[y][z - 1][x] != Objects.Wall)
+								{
+									//lefttop
+									GL.Translate(-ps, 0, -ps);
+									GL.Rotate(180, 0, 1, 0);
+									wallOpenCorner.Render();
+									GL.Rotate(-180, 0, 1, 0);
+									GL.Translate(ps, 0, ps);
+								}
+
+								if (z < Depth - 1 && Fields[y][z + 1][x] != Objects.Wall)
+								{
+									//leftbottom
+									GL.Translate(-ps, 0, ps);
+									GL.Rotate(-90, 0, 1, 0);
+									wallOpenCorner.Render();
+									GL.Rotate(90, 0, 1, 0);
+									GL.Translate(ps, 0, -ps);
+								}
+							}
+
+							GL.PopMatrix();
+						}
+			#endregion
+
+			#endregion
+
+			#region points
+			ShaderProgram.StaticColor.SetUniform("meshColor", new Vector4(1, 1, 1, 1));
 			for (int y = 0; y < Height; y++)
 			{
 				GL.PushMatrix();
-				GL.Translate(0, y + (y > CurrentFloor ? 100 : 0) , 0);
+				GL.Translate(0, y + (y > CurrentFloor ? 100 : 0), 0);
 
+				for (int z = 0; z < Depth; z++)
+					for (int x = 0; x < Width; x++)
+						if (Fields[y][z][x] == Objects.Point || Fields[y][z][x] == Objects.Point)
+						{
+							double r = Fields[y][z][x] == Objects.Point ? 0.1 : 0.3;
+
+							if (State == States.AppearAnimation)
+								r *= animationState;
+							if (State == States.DisappearAnimation)
+								r *= 1 - animationState;
+							if (State == States.None)
+								r = 0;
+
+							GL.PushMatrix();
+							GL.Translate(x, 0, z);
+							GL.Scale(r, r, r);
+							sphere.Render();
+							GL.PopMatrix();
+						}
+
+				GL.PopMatrix();
+			}
+			#endregion points
+
+			#region lifts
+			for (int y = 0; y < Height; y++)
+			{
+				GL.PushMatrix();
+				GL.Translate(0, y + (y > CurrentFloor ? 100 : 0), 0);
+				for (int z = 0; z < Depth; z++)
+					for (int x = 0; x < Width; x++)
+						if (Fields[y][z][x] == Objects.LiftUp || Fields[y][z][x] == Objects.LiftDown)
+						{
+							if (Fields[y][z][x] == Objects.LiftUp)
+								ShaderProgram.StaticColor.SetUniform("meshColor", new Vector4(0, 1, 0, 1));
+							else
+								ShaderProgram.StaticColor.SetUniform("meshColor", new Vector4(1, 0, 0, 1));
+							GL.Translate(x, 0, z);
+							floor.Render();
+							GL.Translate(-x, 0, -z);
+						}
+				GL.PopMatrix();
+			}
+			#endregion
+
+			#region floors
+			ShaderProgram.StaticColor.SetUniform("meshColor", new Vector4(0, 0, 0, 0.5f));
+			for (int y = 0; y < Height; y++)
+			{
+				GL.PushMatrix();
+				GL.Translate(0, y + (y > CurrentFloor ? 100 : 0), 0);
 
 				for (int z = 0; z < Depth; z++)
 					for (int x = 0; x < Width; x++)
 						switch (Fields[y][z][x])
 						{
-
-
 							case Objects.Wall:
-								ShaderProgram.StaticColor.SetUniform("meshColor", new Vector4(0, 0, 0, 0.5f));
-
-								GL.Translate(x, 0, z);
-								floor.Render();
-								GL.Translate(-x, 0, -z);
-
-								ShaderProgram.StaticColor.SetUniform("meshColor",
-								 new Vector4(wallColor.R / (float)255.0, wallColor.G / (float)255.0, wallColor.B / (float)255.0, (float)1.0));
-								renderWall(x, z, y);
-								break;
-
 							case Objects.Point:
 							case Objects.Powerup:
-
-								ShaderProgram.StaticColor.SetUniform("meshColor", new Vector4(0, 0, 0, 0.5f));
-
-								GL.Translate(x, 0, z);
-								floor.Render();
-								GL.Translate(-x, 0, -z);
-
-								ShaderProgram.StaticColor.SetUniform("meshColor", new Vector4(1, 1, 1, 1));
-
-								double r = Fields[y][z][x] == Objects.Point ? 0.1 : 0.3;
-
-								if (State == States.AppearAnimation)
-									r *= animationState;
-								if (State == States.DisappearAnimation)
-									r *= 1 - animationState;
-								if (State == States.None)
-									r = 0;
-
-								GL.PushMatrix();
-								GL.Translate(x, 0, z);
-								GL.Scale(r, r, r);
-								sphere.Render();
-								GL.PopMatrix();
-								break;
-
-
-							case Objects.LiftUp:
-								ShaderProgram.StaticColor.SetUniform("meshColor", new Vector4(0, 1, 0, 1));
-
-								GL.Translate(x, 0, z);
-								floor.Render();
-								GL.Translate(-x, 0, -z);
-
-								break;
-
-							case Objects.LiftDown:
-								ShaderProgram.StaticColor.SetUniform("meshColor", new Vector4(1, 0, 0, 1));
-
-								GL.Translate(x, 0, z);
-								floor.Render();
-								GL.Translate(-x, 0, -z);
-
-								break;
-
 							case Objects.None:
-							default:
-								ShaderProgram.StaticColor.SetUniform("meshColor", new Vector4(0, 0, 0, 0.5f));
-
 								GL.Translate(x, 0, z);
 								floor.Render();
 								GL.Translate(-x, 0, -z);
+								break;
 
+							default:
 								break;
 						}
 
 				GL.PopMatrix();
 			}
+			#endregion floors
 
 			ShaderProgram.StaticColor.Disable();
 		}

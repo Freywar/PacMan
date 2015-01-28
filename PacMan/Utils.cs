@@ -11,66 +11,93 @@ namespace PacMan
 	/// </summary>
 	class Mesh : IDisposable
 	{
-		private uint verticesBufferId;
-		private uint normalsBufferId;
-		private uint colorsBufferId;
+		private static Mesh CurrentBound;
 
-		private double[] Vertices_v = null;
-		private double[] Colors_v = null;
-		private double[] Normals_v = null;
+		private uint bufferId;
+
+		private double[] Vertex_v = null;
+		private double[] Normal_v = null;
+		private double[] Color_v = null;
+
+		private void updateData()
+		{
+			if (CurrentBound != null)
+				CurrentBound.Unbind();
+			Bind();
+
+			int size = 0;
+			if (Vertex_v != null)
+				size += Vertex_v.Length;
+
+			if (Normal_v != null)
+				size += Normal_v.Length;
+
+			if (Color_v != null)
+				size += Color_v.Length;
+
+			double[] data = new double[size];
+
+			int offset = 0;
+
+			if (Vertex_v != null)
+			{
+				Buffer.BlockCopy(Vertex_v, 0, data, offset * sizeof(double), Vertex_v.Length * sizeof(double));
+				offset += Vertex_v.Length;
+			}
+
+			if (Normal_v != null)
+			{
+				Buffer.BlockCopy(Normal_v, 0, data, offset * sizeof(double), Normal_v.Length * sizeof(double));
+				offset += Normal_v.Length;
+			}
+
+			if (Color_v != null)
+			{
+				Buffer.BlockCopy(Color_v, 0, data, offset * sizeof(double), Color_v.Length * sizeof(double));
+				offset += Color_v.Length;
+			}
+
+			GL.BufferData(
+				 BufferTarget.ArrayBuffer,
+				 (IntPtr)(data.Length * sizeof(double)),
+				 data,
+				 BufferUsageHint.StaticDraw);
+		}
 
 		/// <summary>
 		/// Vertex components.
 		/// </summary>
-		public double[] Vertices
+		public double[] Vertex
 		{
-			get { return Vertices_v; }
+			get { return Vertex_v; }
 			set
 			{
-				Vertices_v = value;
-				GL.BindBuffer(BufferTarget.ArrayBuffer, verticesBufferId);
-				GL.BufferData(
-					 BufferTarget.ArrayBuffer,
-					 (IntPtr)(Vertices_v.Length * sizeof(double)),
-					 Vertices_v,
-					 BufferUsageHint.StaticDraw);
-				GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
+				Vertex_v = value;
+				updateData();
 			}
 		}
 		/// <summary>
-		/// Normals components.
+		/// Normal components.
 		/// </summary>
-		public double[] Normals
+		public double[] Normal
 		{
-			get { return Normals_v; }
+			get { return Normal_v; }
 			set
 			{
-				Normals_v = value;
-				GL.BindBuffer(BufferTarget.ArrayBuffer, normalsBufferId);
-				GL.BufferData(
-					 BufferTarget.ArrayBuffer,
-					 (IntPtr)(Normals_v.Length * sizeof(double)),
-					 Normals_v,
-					 BufferUsageHint.StaticDraw);
-				GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
+				Normal_v = value;
+				updateData();
 			}
 		}
 		/// <summary>
-		/// Colors components.
+		/// Color components.
 		/// </summary>
-		public double[] Colors
+		public double[] Color
 		{
-			get { return Colors_v; }
+			get { return Color_v; }
 			set
 			{
-				Colors_v = value;
-				GL.BindBuffer(BufferTarget.ArrayBuffer, colorsBufferId);
-				GL.BufferData(
-					 BufferTarget.ArrayBuffer,
-					 (IntPtr)(Colors_v.Length * sizeof(double)),
-					 Colors_v,
-					 BufferUsageHint.StaticDraw);
-				GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
+				Color_v = value;
+				updateData();
 			}
 		}
 
@@ -79,9 +106,40 @@ namespace PacMan
 		/// </summary>
 		public Mesh()
 		{
-			GL.GenBuffers(1, out verticesBufferId);
-			GL.GenBuffers(1, out normalsBufferId);
-			GL.GenBuffers(1, out colorsBufferId);
+			GL.GenBuffers(1, out bufferId);
+		}
+
+		private void Bind()
+		{
+			if (CurrentBound != this)
+			{
+				GL.BindBuffer(BufferTarget.ArrayBuffer, bufferId);
+
+				int offset = 0;
+
+				if (Vertex_v != null)
+				{
+					GL.EnableClientState(ArrayCap.VertexArray);
+					GL.VertexPointer(3, VertexPointerType.Double, 0, offset);
+					offset += sizeof(double) * Vertex_v.Length;
+				}
+
+				if (Normal_v != null)
+				{
+					GL.EnableClientState(ArrayCap.NormalArray);
+					GL.NormalPointer(NormalPointerType.Double, 0, offset);
+					offset += sizeof(double) * Normal_v.Length;
+				}
+
+				if (Color_v != null)
+				{
+					GL.EnableClientState(ArrayCap.ColorArray);
+					GL.ColorPointer(3, ColorPointerType.Double, 0, offset);
+					offset += sizeof(double) * Color_v.Length;
+				}
+
+				CurrentBound = this;
+			}
 		}
 
 		/// <summary>
@@ -90,38 +148,17 @@ namespace PacMan
 		/// <param name="type">Primitive type.</param>
 		public void Render(PrimitiveType type)
 		{
-			if (Vertices_v == null)
+			if (Vertex_v == null)
 				return;
 
-			GL.BindBuffer(BufferTarget.ArrayBuffer, verticesBufferId);
-			GL.EnableClientState(ArrayCap.VertexArray);
-			GL.VertexPointer(3, VertexPointerType.Double, 0, IntPtr.Zero);
-
-			if (Normals_v != null)
+			if (CurrentBound != this)
 			{
-				GL.BindBuffer(BufferTarget.ArrayBuffer, normalsBufferId);
-				GL.EnableClientState(ArrayCap.NormalArray);
-				GL.NormalPointer(NormalPointerType.Double, 0, IntPtr.Zero);
+				if (CurrentBound != null)
+					CurrentBound.Unbind();
+				Bind();
 			}
 
-			if (Colors_v != null)
-			{
-				GL.BindBuffer(BufferTarget.ArrayBuffer, colorsBufferId);
-				GL.EnableClientState(ArrayCap.ColorArray);
-				GL.ColorPointer(3, ColorPointerType.Double, 0, IntPtr.Zero);
-			}
-
-			GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
-
-			GL.DrawArrays(type, 0, Vertices_v.Length / 3);
-
-
-			GL.DisableClientState(ArrayCap.VertexArray);
-			if (Normals_v != null)
-				GL.DisableClientState(ArrayCap.NormalArray);
-
-			if (Colors_v != null)
-				GL.DisableClientState(ArrayCap.ColorArray);
+			GL.DrawArrays(type, 0, Vertex_v.Length / 3);
 		}
 
 		/// <summary>
@@ -132,11 +169,24 @@ namespace PacMan
 			Render(PrimitiveType.Quads);
 		}
 
+		protected void Unbind()
+		{
+			if (CurrentBound == this)
+			{
+				if (Vertex_v != null)
+					GL.DisableClientState(ArrayCap.VertexArray);
+				if (Normal_v != null)
+					GL.DisableClientState(ArrayCap.NormalArray);
+				if (Color_v != null)
+					GL.DisableClientState(ArrayCap.ColorArray);
+
+				CurrentBound = null;
+			}
+		}
+
 		public void Dispose()
 		{
-			GL.DeleteBuffer(verticesBufferId);
-			GL.DeleteBuffer(normalsBufferId);
-			GL.DeleteBuffer(colorsBufferId);
+			GL.DeleteBuffer(bufferId);
 		}
 	}
 

@@ -123,8 +123,8 @@ namespace PacMan
 						}
 
 					cap_v = new Mesh();
-					cap_v.Vertices = v;
-					cap_v.Normals = n;
+					cap_v.Vertex = v;
+					cap_v.Normal = n;
 				}
 
 				return cap_v;
@@ -160,7 +160,7 @@ namespace PacMan
 						}
 
 					skirt_v = new Mesh();
-					skirt_v.Vertices = v;
+					skirt_v.Vertex = v;
 				}
 
 				return skirt_v;

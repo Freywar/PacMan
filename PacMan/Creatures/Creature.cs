@@ -135,9 +135,9 @@ namespace PacMan
 						}
 
 					eye_v = new Mesh();
-					eye_v.Vertices = v;
-					eye_v.Normals = n;
-					eye_v.Colors = c;
+					eye_v.Vertex = v;
+					eye_v.Normal = n;
+					eye_v.Color = c;
 				}
 
 				return eye_v;
