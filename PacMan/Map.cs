@@ -55,7 +55,11 @@ namespace PacMan
 			/// <summary>
 			/// Empty field.
 			/// </summary>
-			None
+			None,
+			/// <summary>
+			/// Cell which PacMan or ghost can't reach (except walls). Has no floor.
+			/// </summary>
+			Empty
 		}
 
 		/// <summary>
@@ -408,6 +412,55 @@ namespace PacMan
 
 		#endregion
 
+		private void fillReachMap(bool[][][] reachMap, int x, int y, int z)
+		{
+			x = WrapX(x);
+			z = WrapZ(z);
+
+			if (!IsWalkable(y, z, x) || reachMap[y][z][x])
+				return;
+
+			reachMap[y][z][x] = true;
+
+			if (Fields[y][z][x] == Objects.LiftUp)
+				fillReachMap(reachMap, x, y + 1, z);
+			if (Fields[y][z][x] == Objects.LiftDown)
+				fillReachMap(reachMap, x, y - 1, z);
+
+			fillReachMap(reachMap, x - 1, y, z);
+			fillReachMap(reachMap, x + 1, y, z);
+			fillReachMap(reachMap, x, y, z - 1);
+			fillReachMap(reachMap, x, y, z + 1);
+		}
+
+		private void fillUnreachableCells()
+		{
+
+			bool[][][] reachMap = new bool[Height][][];
+			for (int y = 0; y < Height; y++)
+			{
+				reachMap[y] = new bool[Depth][];
+				for (int z = 0; z < Depth; z++)
+				{
+					reachMap[y][z] = new bool[Width];
+					for (int x = 0; x < Width; x++)
+						reachMap[y][z][x] = false;
+				}
+			}
+			fillReachMap(reachMap, PacManStart.X, PacManStart.Y, PacManStart.Z);
+			fillReachMap(reachMap, GhostStart.X, GhostStart.Y, GhostStart.Z);
+
+			for (int y = 0; y < Height; y++)
+				for (int z = 0; z < Depth; z++)
+					for (int x = 0; x < Width; x++)
+						if (!reachMap[y][z][x] && Fields[y][z][x] != Objects.Wall)
+						{
+							if (Fields[y][z][x] != Objects.None)
+								throw new Exception("Invalid map data.");
+							Fields[y][z][x] = OriginalFields[y][z][x] = Objects.Empty;
+						}
+		}
+
 		/// <summary>
 		/// Map state.
 		/// </summary>
@@ -658,6 +711,8 @@ namespace PacMan
 					throw new Exception("Invalid map data");
 				PacManStart = (Vector3i)pacmanStart;
 				GhostStart = (Vector3i)ghostStart;
+
+				fillUnreachableCells();
 			}
 			else
 			{
@@ -1062,7 +1117,6 @@ namespace PacMan
 								}
 							}
 
-
 							if (x > 0 && Fields[y][z][x - 1] != Objects.Wall || x <= 0)
 							{
 								if (z < Depth - 1 && Fields[y][z + 1][x] != Objects.Wall || z >= Depth - 1)
@@ -1084,7 +1138,6 @@ namespace PacMan
 									GL.Rotate(-180, 0, 1, 0);
 									GL.Translate(ps, 0, ps);
 								}
-
 							}
 
 							GL.PopMatrix();
@@ -1102,7 +1155,7 @@ namespace PacMan
 
 				for (int z = 0; z < Depth; z++)
 					for (int x = 0; x < Width; x++)
-						if (Fields[y][z][x] == Objects.Point || Fields[y][z][x] == Objects.Point)
+						if (Fields[y][z][x] == Objects.Point || Fields[y][z][x] == Objects.Powerup)
 						{
 							double r = Fields[y][z][x] == Objects.Point ? 0.1 : 0.3;
 
@@ -1156,7 +1209,6 @@ namespace PacMan
 					for (int x = 0; x < Width; x++)
 						switch (Fields[y][z][x])
 						{
-							case Objects.Wall:
 							case Objects.Point:
 							case Objects.Powerup:
 							case Objects.None:
@@ -1171,6 +1223,102 @@ namespace PacMan
 
 				GL.PopMatrix();
 			}
+
+			#region floor near walls
+			for (int y = 0; y < Height; y++)
+				for (int z = 0; z < Depth; z++)
+					for (int x = 0; x < Width; x++)
+						if (Fields[y][z][x] == Objects.Wall)
+						{
+							GL.PushMatrix();
+							GL.Translate(x, y + (y > CurrentFloor ? 100 : 0) - 0.5, z);
+
+							double ps = 1.0 / 3.0;
+
+							if (x < Width - 1 && Fields[y][z][x + 1] != Objects.Empty)
+							{
+								//right
+								GL.Translate(ps, 0, 0);
+								GL.Scale(ps, 0, ps);
+								floor.Render();
+								GL.Scale(1 / ps, 0, 1 / ps);
+								GL.Translate(-ps, 0, 0);
+
+								if (z < Depth - 1 && Fields[y][z + 1][x] != Objects.Empty && Fields[y][z + 1][x + 1] != Objects.Empty)
+								{
+									//rightbottom
+									GL.Translate(ps, 0, ps);
+									GL.Scale(ps, 0, ps);
+									floor.Render();
+									GL.Scale(1 / ps, 0, 1 / ps);
+									GL.Translate(-ps, 0, -ps);
+								}
+
+								if (z > 0 && Fields[y][z - 1][x] != Objects.Empty && Fields[y][z - 1][x + 1] != Objects.Empty)
+								{
+									//righttop
+									GL.Translate(ps, 0, -ps);
+									GL.Scale(ps, 0, ps);
+									floor.Render();
+									GL.Scale(1 / ps, 0, 1 / ps);
+									GL.Translate(-ps, 0, ps);
+								}
+							}
+
+							if (z > 0 && Fields[y][z - 1][x] != Objects.Empty)
+							{
+								//top
+								GL.Translate(0, 0, -ps);
+								GL.Scale(ps, 0, ps);
+								floor.Render();
+								GL.Scale(1 / ps, 0, 1 / ps);
+								GL.Translate(0, 0, ps);
+							}
+
+							if (z < Depth - 1 && Fields[y][z + 1][x] != Objects.Empty)
+							{
+								//bottom
+								GL.Translate(0, 0, ps);
+								GL.Scale(ps, 0, ps);
+								floor.Render();
+								GL.Scale(1 / ps, 0, 1 / ps);
+								GL.Translate(0, 0, -ps);
+							}
+
+							if (x > 0 && Fields[y][z][x - 1] != Objects.Empty)
+							{
+								//left
+								GL.Translate(-ps, 0, 0);
+								GL.Scale(ps, 0, ps);
+								floor.Render();
+								GL.Scale(1 / ps, 0, 1 / ps);
+								GL.Translate(ps, 0, 0);
+
+								if (z < Depth - 1 && Fields[y][z + 1][x] != Objects.Empty && Fields[y][z + 1][x - 1] != Objects.Empty)
+								{
+									//leftbottom
+									GL.Translate(-ps, 0, ps);
+									GL.Scale(ps, 0, ps);
+									floor.Render();
+									GL.Scale(1 / ps, 0, 1 / ps);
+									GL.Translate(ps, 0, -ps);
+								}
+
+								if (z > 0 && Fields[y][z - 1][x] != Objects.Empty && Fields[y][z - 1][x - 1] != Objects.Empty)
+								{
+									//rightbottom
+									GL.Translate(-ps, 0, -ps);
+									GL.Scale(ps, 0, ps);
+									floor.Render();
+									GL.Scale(1 / ps, 0, 1 / ps);
+									GL.Translate(ps, 0, ps);
+								}
+							}
+
+							GL.PopMatrix();
+						}
+			#endregion
+
 			#endregion floors
 
 			ShaderProgram.StaticColor.Disable();
