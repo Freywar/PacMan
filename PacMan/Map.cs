@@ -405,7 +405,7 @@ namespace PacMan
 				return wallOpenCorner_v;
 			}
 		}
-		
+
 		#endregion
 
 		/// <summary>
@@ -1041,10 +1041,10 @@ namespace PacMan
 
 							double ps = 1.0 / 3.0;
 
-							if (x < Width - 1 && Fields[y][z][x + 1] != Objects.Wall)
+							if (x < Width - 1 && Fields[y][z][x + 1] != Objects.Wall || x >= Width - 1)
 							{
 								//rightbottom
-								if (z < Depth - 1 && Fields[y][z + 1][x] != Objects.Wall)
+								if (z < Depth - 1 && Fields[y][z + 1][x] != Objects.Wall || z >= Depth - 1)
 								{
 									GL.Translate(ps, 0, ps);
 									wallOpenCorner.Render();
@@ -1052,7 +1052,7 @@ namespace PacMan
 								}
 
 								//righttop
-								if (z > 0 && Fields[y][z - 1][x] != Objects.Wall)
+								if (z > 0 && Fields[y][z - 1][x] != Objects.Wall || z <= 0)
 								{
 									GL.Translate(ps, 0, -ps);
 									GL.Rotate(90, 0, 1, 0);
@@ -1062,9 +1062,20 @@ namespace PacMan
 								}
 							}
 
-							if (x > 0 && Fields[y][z][x - 1] != Objects.Wall)
+
+							if (x > 0 && Fields[y][z][x - 1] != Objects.Wall || x <= 0)
 							{
-								if (z > 0 && Fields[y][z - 1][x] != Objects.Wall)
+								if (z < Depth - 1 && Fields[y][z + 1][x] != Objects.Wall || z >= Depth - 1)
+								{
+									//leftbottom
+									GL.Translate(-ps, 0, ps);
+									GL.Rotate(-90, 0, 1, 0);
+									wallOpenCorner.Render();
+									GL.Rotate(90, 0, 1, 0);
+									GL.Translate(ps, 0, -ps);
+								}
+
+								if (z > 0 && Fields[y][z - 1][x] != Objects.Wall || z <= 0)
 								{
 									//lefttop
 									GL.Translate(-ps, 0, -ps);
@@ -1074,15 +1085,6 @@ namespace PacMan
 									GL.Translate(ps, 0, ps);
 								}
 
-								if (z < Depth - 1 && Fields[y][z + 1][x] != Objects.Wall)
-								{
-									//leftbottom
-									GL.Translate(-ps, 0, ps);
-									GL.Rotate(-90, 0, 1, 0);
-									wallOpenCorner.Render();
-									GL.Rotate(90, 0, 1, 0);
-									GL.Translate(ps, 0, -ps);
-								}
 							}
 
 							GL.PopMatrix();
