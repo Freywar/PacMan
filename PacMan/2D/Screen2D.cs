@@ -48,7 +48,7 @@ namespace PacMan
 		{
 			get
 			{
-				if (texture_v == null)
+				if (texture_v == null && Width > 0 && Height > 0)
 				{
 					texture_v = new Bitmap(Width, Height);
 					textureId = GL.GenTexture();
@@ -144,7 +144,7 @@ namespace PacMan
 
 			GL.Enable(EnableCap.Texture2D);
 			GL.Enable(EnableCap.Blend);
-			GL.BlendFunc(BlendingFactorSrc.One, BlendingFactorDest.OneMinusSrcAlpha);
+			GL.BlendFunc(BlendingFactorSrc.SrcAlpha, BlendingFactorDest.OneMinusSrcAlpha);
 
 			GL.Begin(PrimitiveType.Quads);
 

@@ -347,4 +347,46 @@ namespace PacMan
 			return (Math.Sin((param * 2 - 1) * Math.PI / 2) + 1) / 2;
 		}
 	}
+
+	class ExtendableEnum
+	{
+		public static bool operator ==(ExtendableEnum left, ExtendableEnum right)
+		{
+			return ((object)left == null && (object)right == null) || (object)left != null && (object)right != null && left.Value == right.Value;
+		}
+
+		public static bool operator !=(ExtendableEnum left, ExtendableEnum right)
+		{
+			return !((object)left == null && (object)right == null) && ((object)left == null || (object)right == null || left.Value != right.Value);
+		}
+
+		public override bool Equals(object obj)
+		{
+			return base.Equals(obj);
+		}
+
+		public override string ToString()
+		{
+			return Value;
+		}
+
+		protected ExtendableEnum(string value)
+		{
+			Value = value;
+		}
+
+		public readonly string Value;
+	}
+
+	class AnimationEnum : ExtendableEnum
+	{
+		protected AnimationEnum(string value, double duration, ExtendableEnum result)
+			: base(value)
+		{
+			Duration = duration;
+			Result = result;
+		}
+		public readonly double Duration = 0;
+		public readonly ExtendableEnum Result = null;
+	}
 }

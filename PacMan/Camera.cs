@@ -7,8 +7,16 @@ namespace PacMan
 	/// <summary>
 	/// Camera class
 	/// </summary>
-	class Camera
+	class Camera : GameObject
 	{
+		public new class Animations : GameObject.Animations
+		{
+			public Animations(string value, double duration, States result) : base(value, duration, result) { }
+
+			public static readonly new Animations Appear = new Animations("Appear", 0, States.Normal);
+			public static readonly new Animations Disappear = new Animations("Disappear", 0, States.None);
+		}
+
 		/// <summary>
 		/// Default rotation speed(degrees per second).
 		/// </summary>
@@ -44,10 +52,6 @@ namespace PacMan
 		/// Target X in map cells
 		/// </summary>
 		public double X = 0;
-		/// <summary>
-		/// Target Y in map cells
-		/// </summary>
-		public double Y = 0;
 		/// <summary>
 		/// Target Z in map cells
 		/// </summary>
@@ -127,6 +131,10 @@ namespace PacMan
 				X = map.Width / 2;
 				Z = map.Depth / 2;
 			}
+			Floor = pacman.Floor;
+
+			base.Init();
+			Animate(Animations.Appear);
 		}
 
 		/// <summary>
@@ -141,7 +149,6 @@ namespace PacMan
 			YAngle += yAngleSpeed * dt;
 			R += rSpeed * dt;
 
-			Y = pacman.Y;
 			if (FollowPacMan)
 			{
 				X = pacman.X;
@@ -152,6 +159,8 @@ namespace PacMan
 				X = map.Width / 2;
 				Z = map.Depth / 2;
 			}
+
+			base.Update(dt);
 		}
 
 		/// <summary>
@@ -194,12 +203,14 @@ namespace PacMan
 		/// <summary>
 		/// Applying camera properties to scene.
 		/// </summary>
-		public void Render()
+		override public void Render()
 		{
 			GL.Translate(0, 0, -R);
 			GL.Rotate(XAngle, 1, 0, 0);
 			GL.Rotate(YAngle, 0, 1, 0);
-			GL.Translate(-X, - 0.5-Y, -Z);
+			GL.Translate(-X, -0.5 - Y, -Z);
 		}
+
+		public override void Dispose() { }
 	}
 }

@@ -7,7 +7,7 @@ namespace PacMan
 	/// <summary>
 	/// Creature class
 	/// </summary>
-	abstract class Creature : IDisposable
+	abstract class Creature : GameObject, IDisposable
 	{
 		/// <summary>
 		/// Moving directions.
@@ -108,29 +108,25 @@ namespace PacMan
 							Vector3d color = Utils.Distance(alpha, beta, 0, 0) < Math.PI / 6 ? blackColor : whiteColor;
 							Vector3d normal = Utils.FromSpheric(alpha, beta, 1);
 							Utils.Push(n, normal, ref np);
-							normal.Mult(r);
-							Utils.Push(v, normal, ref vp);
+							Utils.Push(v, Vector3d.Multiply(normal, r), ref vp);
 							Utils.Push(c, color, ref cp);
 
 							color = Utils.Distance(alpha + step, beta, 0, 0) < Math.PI / 6 ? blackColor : whiteColor;
 							normal = Utils.FromSpheric(alpha + step, beta, 1);
 							Utils.Push(n, normal, ref np);
-							normal.Mult(r);
-							Utils.Push(v, normal, ref vp);
+							Utils.Push(v, Vector3d.Multiply(normal, r), ref vp);
 							Utils.Push(c, color, ref cp);
 
 							color = Utils.Distance(alpha + step, beta + step, 0, 0) < Math.PI / 6 ? blackColor : whiteColor;
 							normal = Utils.FromSpheric(alpha + step, beta + step, 1);
 							Utils.Push(n, normal, ref np);
-							normal.Mult(r);
-							Utils.Push(v, normal, ref vp);
+							Utils.Push(v, Vector3d.Multiply(normal, r), ref vp);
 							Utils.Push(c, color, ref cp);
 
 							color = Utils.Distance(alpha, beta + step, 0, 0) < Math.PI / 6 ? blackColor : whiteColor;
 							normal = Utils.FromSpheric(alpha, beta + step, 1);
 							Utils.Push(n, normal, ref np);
-							normal.Mult(r);
-							Utils.Push(v, normal, ref vp);
+							Utils.Push(v, Vector3d.Multiply(normal, r), ref vp);
 							Utils.Push(c, color, ref cp);
 						}
 
@@ -159,7 +155,7 @@ namespace PacMan
 		/// New direction selection on crossroads.
 		/// </summary>
 		/// <param name="map">Map</param>
-		abstract protected void updateDirection(Map map);
+		abstract protected void updateDirection(Map map, Creature target);
 		/// <summary>
 		/// Move to closest cell center in current direction if possible(excluding current position if it is center).
 		/// </summary>
@@ -190,7 +186,7 @@ namespace PacMan
 			}
 
 			double distance = Math.Abs(dx) + Math.Abs(dz);
-			if (dt * CurrentSpeed < distance || !map.IsWalkable(Y, Z + dz, X + dx))
+			if (dt * CurrentSpeed < distance || !map.IsWalkable(Floor, Z + dz, X + dx))
 				dx = dz = distance = 0;
 
 			if (distance > 0)
@@ -216,27 +212,24 @@ namespace PacMan
 				case Directions.Up:
 				case Directions.Down:
 					m = Direction == Directions.Up ? -1 : 1;
-					if (!isInCenter || map.IsWalkable(Y, Z + m, X))
+					if (!isInCenter || map.IsWalkable(Floor, Z + m, X))
 						Z = map.WrapZ(Z + dt * CurrentSpeed * m);
 					break;
 
 				case Directions.Left:
 				case Directions.Right:
 					m = Direction == Directions.Left ? -1 : 1;
-					if (!isInCenter || map.IsWalkable(Y, Z, X + m))
+					if (!isInCenter || map.IsWalkable(Floor, Z, X + m))
 						X = map.WrapX(X + dt * CurrentSpeed * m);
 					break;
 			}
 		}
+		protected bool ignoreNextUpdateAtCenter = false;
 
 		/// <summary>
 		/// X coordinate in map cells.
 		/// </summary>
 		public double X = 0;
-		/// <summary>
-		/// Y coordinate in map cells.
-		/// </summary>
-		public int Y = 0;
 		/// <summary>
 		/// Z coordinate in map cells.
 		/// </summary>
@@ -266,32 +259,44 @@ namespace PacMan
 		/// <param name="dt">Time passed from last call(seconds).</param>
 		/// <param name="map">Map.</param>
 		/// <returns>Visited cell center or null if none visited.</returns>
-		virtual public Vector3i? Update(double dt, Map map)
+		virtual public Vector3i? Update(double dt, Map map, Creature target)
 		{
+			if (IsAnimated)
+			{
+				base.Update(dt);
+				ignoreNextUpdateAtCenter = true;
+				return null;
+			}
+			if (State == States.None)
+				return null;
+
 			Vector3i? result = null;
 			double dtAfterMove;
 			while ((dtAfterMove = moveToClosestCenter(dt, map)) != dt)
 			{
-				result = new Vector3i((int)X, Y, (int)Z);
-				updateDirection(map);
+				result = new Vector3i((int)X, Floor, (int)Z);
+				updateDirection(map, target);
 				dt = dtAfterMove;
+
+				if (map[(int)Floor, (int)Z, (int)X] == Map.Objects.LiftUp || map[(int)Floor, (int)Z, (int)X] == Map.Objects.LiftDown)
+					return result;
 			}
-			if (isInCenter)
+			if (result == null && isInCenter)
 			{
-				result = new Vector3i((int)X, Y, (int)Z);
-				updateDirection(map);
+				if (!ignoreNextUpdateAtCenter)
+				{
+					updateDirection(map, target);
+					result = new Vector3i((int)X, Floor, (int)Z);
+				}
+				else
+					ignoreNextUpdateAtCenter = false;
 			}
 			if (dt > 0)
 				moveRemainingCellPart(dt, map);
 			return result;
 		}
 
-		/// <summary>
-		/// Render.
-		/// </summary>
-		abstract public void Render();
-
-		virtual public void Dispose()
+		override public void Dispose()
 		{
 			if (eye_v != null)
 				eye_v.Dispose();

@@ -8,31 +8,8 @@ using System.Drawing;
 
 namespace PacMan
 {
-	class Map : IDisposable
+	class Map : GameObject
 	{
-		/// <summary>
-		/// Map states.
-		/// </summary>
-		public enum States
-		{
-			/// <summary>
-			/// Appear animation.
-			/// </summary>
-			AppearAnimation,
-			/// <summary>
-			/// Normal.
-			/// </summary>
-			Normal,
-			/// <summary>
-			/// Disappear animation.
-			/// </summary>
-			DisappearAnimation,
-			/// <summary>
-			/// Not in game.
-			/// </summary>
-			None
-		}
-
 		/// <summary>
 		/// Possible map objects.
 		/// </summary>
@@ -63,10 +40,6 @@ namespace PacMan
 		}
 
 		/// <summary>
-		/// Appear and disappear animation duration(seconds).
-		/// </summary>
-		private const double animationDuration = 0.5;
-		/// <summary>
 		/// Details count per 360 degrees or 1 map cell.
 		/// </summary>
 		private const int detailsCount = 20;
@@ -78,11 +51,10 @@ namespace PacMan
 		private Mesh wallclosedCorner_v = null;
 		private Mesh wallOpenCorner_v = null;
 		private Mesh floor_v = null;
+		private Mesh floorHole_v = null;
+		private Mesh lift_v = null;
+		private ShaderProgram liftProgram_v = null;
 
-		/// <summary>
-		/// Animation progress in [0..1]
-		/// </summary>
-		private double animationState = 0;
 
 		/// <summary>
 		/// Sphere mesh with radius equal to cell size.
@@ -161,6 +133,148 @@ namespace PacMan
 				}
 
 				return floor_v;
+			}
+		}
+
+		private Mesh floorHole
+		{
+			get
+			{
+				if (floorHole_v == null)
+				{
+					double step = Math.PI * 2 / detailsCount;
+
+					int pointsCount = (int)(Math.PI / 2 / step) * 4 * 4;
+					int vp = 0;
+					int np = 0;
+
+					double[] v = new double[pointsCount * 3];
+					double[] n = new double[pointsCount * 3];
+
+
+					Vector3d normal = new Vector3d(0, 1, 0);
+
+
+					for (double alpha = 0; alpha < Math.PI / 2; alpha += step)
+					{
+						Utils.Push(v, new Vector3d(-0.5 + 0, -0.5, -0.5 + 0), ref vp);
+						Utils.Push(v, new Vector3d(-0.5 + 0.5 - 0.5 * Math.Sin(alpha + step), -0.5, -0.5 + 0.5 - 0.5 * Math.Cos(alpha + step)), ref vp);
+						Utils.Push(v, new Vector3d(-0.5 + 0.5 - 0.5 * Math.Sin(alpha), -0.5, -0.5 + 0.5 - 0.5 * Math.Cos(alpha)), ref vp);
+						Utils.Push(v, new Vector3d(-0.5 + 0, -0.5, -0.5 + 0), ref vp);
+
+						Utils.Push(v, new Vector3d(0.5 + 0, -0.5, -0.5 + 0), ref vp);
+						Utils.Push(v, new Vector3d(0.5 - 0.5 + 0.5 * Math.Sin(alpha), -0.5, -0.5 + 0.5 - 0.5 * Math.Cos(alpha)), ref vp);
+						Utils.Push(v, new Vector3d(0.5 - 0.5 + 0.5 * Math.Sin(alpha + step), -0.5, -0.5 + 0.5 - 0.5 * Math.Cos(alpha + step)), ref vp);
+						Utils.Push(v, new Vector3d(0.5 + 0, -0.5, -0.5 + 0), ref vp);
+
+						Utils.Push(v, new Vector3d(0.5 + 0, -0.5, 0.5 + 0), ref vp);
+						Utils.Push(v, new Vector3d(0.5 - 0.5 + 0.5 * Math.Sin(alpha + step), -0.5, 0.5 - 0.5 + 0.5 * Math.Cos(alpha + step)), ref vp);
+						Utils.Push(v, new Vector3d(0.5 - 0.5 + 0.5 * Math.Sin(alpha), -0.5, 0.5 - 0.5 + 0.5 * Math.Cos(alpha)), ref vp);
+						Utils.Push(v, new Vector3d(0.5 + 0, -0.5, 0.5 + 0), ref vp);
+
+						Utils.Push(v, new Vector3d(-0.5 + 0, -0.5, 0.5 + 0), ref vp);
+						Utils.Push(v, new Vector3d(-0.5 + 0.5 - 0.5 * Math.Sin(alpha), -0.5, 0.5 - 0.5 + 0.5 * Math.Cos(alpha)), ref vp);
+						Utils.Push(v, new Vector3d(-0.5 + 0.5 - 0.5 * Math.Sin(alpha + step), -0.5, 0.5 - 0.5 + 0.5 * Math.Cos(alpha + step)), ref vp);
+						Utils.Push(v, new Vector3d(-0.5 + 0, -0.5, 0.5 + 0), ref vp);
+						for (int i = 0; i < 4 * 4; i++)
+							Utils.Push(n, normal, ref np);
+
+					}
+
+
+
+					floorHole_v = new Mesh();
+					floorHole_v.Vertex = v;
+					floorHole_v.Normal = n;
+				}
+
+				return floorHole_v;
+			}
+		}
+
+
+		private Mesh lift
+		{
+			get
+			{
+				if (lift_v == null)
+				{
+					double step = Math.PI / 10;
+					double yStep = 1.0 / 100;
+
+					int pointsCount = (int)(Math.PI / 2 / step) * 4 * 4 * 2 * (int)(1.0 / yStep) * 3;
+					int vp = 0;
+					int np = 0;
+
+					double[] v = new double[pointsCount * 3];
+					double[] n = new double[pointsCount * 3];
+
+					Vector3d normal = new Vector3d(0, 1, 0);
+
+					for (double c = 0, r = 0.5 - 0.1 - 0.1; c < 3; c += 1.0, r += 0.1)
+					{
+						for (double y = -0.5; y < 0.5; y += yStep)
+							for (double alpha = 0; alpha < Math.PI * 2; alpha += step)
+							{
+								normal = new Vector3d(Math.Sin(alpha), 0, Math.Cos(alpha));
+								Utils.Push(n, normal, ref np);
+								normal = Vector3d.Multiply(normal, r); ;
+								normal.Y = y;
+								Utils.Push(v, normal, ref vp);
+
+								normal = new Vector3d(Math.Sin(alpha + step), 0, Math.Cos(alpha + step));
+								Utils.Push(n, normal, ref np);
+								normal = Vector3d.Multiply(normal, r); ;
+								normal.Y = y;
+								Utils.Push(v, normal, ref vp);
+
+								normal = new Vector3d(Math.Sin(alpha + step), 0, Math.Cos(alpha + step));
+								Utils.Push(n, normal, ref np);
+								normal = Vector3d.Multiply(normal, r); ;
+								normal.Y = y + yStep;
+								Utils.Push(v, normal, ref vp);
+
+								normal = new Vector3d(Math.Sin(alpha), 0, Math.Cos(alpha));
+								Utils.Push(n, normal, ref np);
+								normal = Vector3d.Multiply(normal, r); ;
+								normal.Y = y + yStep;
+								Utils.Push(v, normal, ref vp);
+							}
+
+						for (double y = -0.5; y < 0.5; y += yStep)
+							for (double alpha = Math.PI * 2; alpha > 0; alpha -= step)
+							{
+								normal = new Vector3d(-Math.Sin(alpha), 0, -Math.Cos(alpha));
+								Utils.Push(n, normal, ref np);
+								normal = Vector3d.Multiply(normal, -r); ;
+								normal.Y = y;
+								Utils.Push(v, normal, ref vp);
+
+								normal = new Vector3d(-Math.Sin(alpha - step), 0, -Math.Cos(alpha - step));
+								Utils.Push(n, normal, ref np);
+								normal = Vector3d.Multiply(normal, -r); ;
+								normal.Y = y;
+								Utils.Push(v, normal, ref vp);
+
+								normal = new Vector3d(-Math.Sin(alpha - step), 0, -Math.Cos(alpha - step));
+								Utils.Push(n, normal, ref np);
+								normal = Vector3d.Multiply(normal, -r); ;
+								normal.Y = y + yStep;
+								Utils.Push(v, normal, ref vp);
+
+								normal = new Vector3d(-Math.Sin(alpha), 0, -Math.Cos(alpha));
+								Utils.Push(n, normal, ref np);
+								normal = Vector3d.Multiply(normal, -r); ;
+								normal.Y = y + yStep;
+								Utils.Push(v, normal, ref vp);
+							}
+					}
+					lift_v = new Mesh();
+					lift_v.Vertex = v;
+					lift_v.Normal = n;
+				}
+
+				return lift_v;
 			}
 		}
 
@@ -294,7 +408,7 @@ namespace PacMan
 					{
 						normal = new Vector3d(Math.Sin(alpha), 0, Math.Cos(alpha));
 						Utils.Push(n, normal, ref np);
-						normal.Mult(ps2);
+						normal = Vector3d.Multiply(normal, ps2);
 						normal.X = ps2 - normal.X;
 						normal.Y = -0.5;
 						normal.Z = ps2 - normal.Z;
@@ -302,7 +416,7 @@ namespace PacMan
 
 						normal = new Vector3d(Math.Sin(alpha), 0, Math.Cos(alpha));
 						Utils.Push(n, normal, ref np);
-						normal.Mult(ps2);
+						normal = Vector3d.Multiply(normal, ps2);
 						normal.X = ps2 - normal.X;
 						normal.Y = 0.5;
 						normal.Z = ps2 - normal.Z;
@@ -310,7 +424,7 @@ namespace PacMan
 
 						normal = new Vector3d(Math.Sin(alpha + step), 0, Math.Cos(alpha + step));
 						Utils.Push(n, normal, ref np);
-						normal.Mult(ps2);
+						normal = Vector3d.Multiply(normal, ps2);
 						normal.X = ps2 - normal.X;
 						normal.Y = 0.5;
 						normal.Z = ps2 - normal.Z;
@@ -319,7 +433,7 @@ namespace PacMan
 
 						normal = new Vector3d(Math.Sin(alpha + step), 0, Math.Cos(alpha + step));
 						Utils.Push(n, normal, ref np);
-						normal.Mult(ps2);
+						normal = Vector3d.Multiply(normal, ps2);
 						normal.X = ps2 - normal.X;
 						normal.Y = -0.5;
 						normal.Z = ps2 - normal.Z;
@@ -370,7 +484,7 @@ namespace PacMan
 					{
 						normal = new Vector3d(Math.Sin(alpha), 0, Math.Cos(alpha));
 						Utils.Push(n, normal, ref np);
-						normal.Mult(ps2);
+						normal = Vector3d.Multiply(normal, ps2); ;
 						normal.X = normal.X - ps2;
 						normal.Y = -0.5;
 						normal.Z = normal.Z - ps2;
@@ -378,7 +492,7 @@ namespace PacMan
 
 						normal = new Vector3d(Math.Sin(alpha + step), 0, Math.Cos(alpha + step));
 						Utils.Push(n, normal, ref np);
-						normal.Mult(ps2);
+						normal = Vector3d.Multiply(normal, ps2); ;
 						normal.X = normal.X - ps2;
 						normal.Y = -0.5;
 						normal.Z = normal.Z - ps2;
@@ -386,7 +500,7 @@ namespace PacMan
 
 						normal = new Vector3d(Math.Sin(alpha + step), 0, Math.Cos(alpha + step));
 						Utils.Push(n, normal, ref np);
-						normal.Mult(ps2);
+						normal = Vector3d.Multiply(normal, ps2); ;
 						normal.X = normal.X - ps2;
 						normal.Y = 0.5;
 						normal.Z = normal.Z - ps2;
@@ -394,7 +508,7 @@ namespace PacMan
 
 						normal = new Vector3d(Math.Sin(alpha), 0, Math.Cos(alpha));
 						Utils.Push(n, normal, ref np);
-						normal.Mult(ps2);
+						normal = Vector3d.Multiply(normal, ps2); ;
 						normal.X = normal.X - ps2;
 						normal.Y = 0.5;
 						normal.Z = normal.Z - ps2;
@@ -411,6 +525,16 @@ namespace PacMan
 		}
 
 		#endregion
+
+		private ShaderProgram liftProgram
+		{
+			get
+			{
+				if (liftProgram_v == null)
+					liftProgram_v = new ShaderProgram("Shaders\\Lift_Vert.glsl", "Shaders\\Lift_Frag.glsl");
+				return liftProgram_v;
+			}
+		}
 
 		private void fillReachMap(bool[][][] reachMap, int x, int y, int z)
 		{
@@ -461,10 +585,8 @@ namespace PacMan
 						}
 		}
 
-		/// <summary>
-		/// Map state.
-		/// </summary>
-		public States State = States.Normal;
+		private float totalTimeElapsed = 0.0f;
+
 
 		/// <summary>
 		/// Map name
@@ -486,11 +608,6 @@ namespace PacMan
 		/// Depth(From farthest end to camera, cells).
 		/// </summary>
 		public int Depth;
-
-		/// <summary>
-		/// Current floor, on which PacMan is.
-		/// </summary>
-		public int CurrentFloor = 0;
 
 		public Objects[][][] Fields;
 		public Objects[][][] OriginalFields = null;
@@ -621,7 +738,7 @@ namespace PacMan
 		/// <summary>
 		/// Map loading and initialization method
 		/// </summary>
-		public void Init()
+		override public void Init()
 		{
 			if (OriginalFields == null)
 			{
@@ -721,42 +838,35 @@ namespace PacMan
 						for (int x = 0; x < Width; x++)
 							Fields[y][z][x] = OriginalFields[y][z][x];
 			}
-			animationState = 0;
-			CurrentFloor = PacManStart.Y;
-			State = States.None;
+			Floor = PacManStart.Y;
+			base.Init();
 		}
 
-		/// <summary>
-		/// Update.
-		/// </summary>
-		/// <param name="dt">Time elapsed from last call(seconds)</param>
-		public void Update(double dt)
+		public override void Update(double dt)
 		{
-			if (State == States.AppearAnimation)
-			{
-				animationState += dt / animationDuration;
-				if (animationState >= 1)
-				{
-					State = States.Normal;
-					animationState = 0;
-				}
-			}
+			totalTimeElapsed += (float)dt;
+			base.Update(dt);
+		}
 
-			if (State == States.DisappearAnimation)
+		private double liftAnimatedY(double y, int upperFloorDelta = 100)
+		{
+			double ry = y;
+			if (State == States.Normal || Animation == Animations.Appear || Animation == Animations.Disappear)
 			{
-				animationState += dt / animationDuration;
-				if (animationState >= 1)
-				{
-					State = States.None;
-					animationState = 0;
-				}
+				if (y > Floor)
+					ry += upperFloorDelta;
 			}
+			if (Animation == Animations.LiftUp && y == Floor)
+				ry += upperFloorDelta * (1 - animationProgress) * (1 - animationProgress) * (1 - animationProgress);
+			if (Animation == Animations.LiftDown && y == Floor + 1)
+				ry += -upperFloorDelta + upperFloorDelta * animationProgress * animationProgress * animationProgress;
+			return ry;
 		}
 
 		/// <summary>
 		/// Render method
 		/// </summary>
-		public void Render()
+		override public void Render()
 		{
 			ShaderProgram.StaticColor.Enable();
 
@@ -766,6 +876,8 @@ namespace PacMan
 
 			#region wall center mesh
 			for (int y = 0; y < Height; y++)
+			{
+				double ry = liftAnimatedY(y);
 
 
 				for (int z = 0; z < Depth; z++)
@@ -774,13 +886,13 @@ namespace PacMan
 						{
 							GL.PushMatrix();
 
-							GL.Translate(x, y + (y > CurrentFloor ? 100 : 0), z);
+							GL.Translate(x, ry, z);
 
-							if (State == States.AppearAnimation)
-								GL.Scale(1, animationState, 1);
-							if (State == States.DisappearAnimation)
-								GL.Scale(1, 1 - animationState, 1);
-							if (State == States.None)
+							if (Animation == Animations.Appear)
+								GL.Scale(1, animationProgress, 1);
+							if (Animation == Animations.Disappear)
+								GL.Scale(1, 1 - animationProgress, 1);
+							if (Animation == Animations.None && State == States.None)
 								GL.Scale(1, 0, 1);
 
 							double ps = 1.0 / 3.0;
@@ -867,22 +979,26 @@ namespace PacMan
 
 							GL.PopMatrix();
 						}
+			}
 			#endregion
 
 			#region wall sides
 			for (int y = 0; y < Height; y++)
+			{
+				double ry = liftAnimatedY(y);
+
 				for (int z = 0; z < Depth; z++)
 					for (int x = 0; x < Width; x++)
 						if (Fields[y][z][x] == Objects.Wall)
 						{
 							GL.PushMatrix();
-							GL.Translate(x, y + (y > CurrentFloor ? 100 : 0), z);
+							GL.Translate(x, ry, z);
 
-							if (State == States.AppearAnimation)
-								GL.Scale(1, animationState, 1);
-							if (State == States.DisappearAnimation)
-								GL.Scale(1, 1 - animationState, 1);
-							if (State == States.None)
+							if (Animation == Animations.Appear)
+								GL.Scale(1, animationProgress, 1);
+							if (Animation == Animations.Disappear)
+								GL.Scale(1, 1 - animationProgress, 1);
+							if (Animation == Animations.None && State == States.None)
 								GL.Scale(1, 0, 1);
 
 							double ps = 1.0 / 3.0;
@@ -1011,22 +1127,26 @@ namespace PacMan
 
 							GL.PopMatrix();
 						}
+			}
 			#endregion
 
 			#region wall closed corners
 			for (int y = 0; y < Height; y++)
+			{
+				double ry = liftAnimatedY(y);
+
 				for (int z = 0; z < Depth; z++)
 					for (int x = 0; x < Width; x++)
 						if (Fields[y][z][x] == Objects.Wall)
 						{
 							GL.PushMatrix();
-							GL.Translate(x, y + (y > CurrentFloor ? 100 : 0), z);
+							GL.Translate(x, ry, z);
 
-							if (State == States.AppearAnimation)
-								GL.Scale(1, animationState, 1);
-							if (State == States.DisappearAnimation)
-								GL.Scale(1, 1 - animationState, 1);
-							if (State == States.None)
+							if (Animation == Animations.Appear)
+								GL.Scale(1, animationProgress, 1);
+							if (Animation == Animations.Disappear)
+								GL.Scale(1, 1 - animationProgress, 1);
+							if (Animation == Animations.None && State == States.None)
 								GL.Scale(1, 0, 1);
 
 							double ps = 1.0 / 3.0;
@@ -1077,22 +1197,26 @@ namespace PacMan
 
 							GL.PopMatrix();
 						}
+			}
 			#endregion
 
 			#region wall open corners
 			for (int y = 0; y < Height; y++)
+			{
+				double ry = liftAnimatedY(y);
+
 				for (int z = 0; z < Depth; z++)
 					for (int x = 0; x < Width; x++)
 						if (Fields[y][z][x] == Objects.Wall)
 						{
 							GL.PushMatrix();
-							GL.Translate(x, y + (y > CurrentFloor ? 100 : 0), z);
+							GL.Translate(x, ry, z);
 
-							if (State == States.AppearAnimation)
-								GL.Scale(1, animationState, 1);
-							if (State == States.DisappearAnimation)
-								GL.Scale(1, 1 - animationState, 1);
-							if (State == States.None)
+							if (Animation == Animations.Appear)
+								GL.Scale(1, animationProgress, 1);
+							if (Animation == Animations.Disappear)
+								GL.Scale(1, 1 - animationProgress, 1);
+							if (Animation == Animations.None && State == States.None)
 								GL.Scale(1, 0, 1);
 
 							double ps = 1.0 / 3.0;
@@ -1143,6 +1267,7 @@ namespace PacMan
 
 							GL.PopMatrix();
 						}
+			}
 			#endregion
 
 			#endregion
@@ -1151,8 +1276,10 @@ namespace PacMan
 			ShaderProgram.StaticColor.SetUniform("meshColor", new Vector4(1, 1, 1, 1));
 			for (int y = 0; y < Height; y++)
 			{
+				double ry = liftAnimatedY(y);
+
 				GL.PushMatrix();
-				GL.Translate(0, y + (y > CurrentFloor ? 100 : 0), 0);
+				GL.Translate(0, ry, 0);
 
 				for (int z = 0; z < Depth; z++)
 					for (int x = 0; x < Width; x++)
@@ -1160,11 +1287,11 @@ namespace PacMan
 						{
 							double r = Fields[y][z][x] == Objects.Point ? 0.1 : 0.3;
 
-							if (State == States.AppearAnimation)
-								r *= animationState;
-							if (State == States.DisappearAnimation)
-								r *= 1 - animationState;
-							if (State == States.None)
+							if (Animation == Animations.Appear)
+								r *= animationProgress;
+							if (Animation == Animations.Disappear)
+								r *= 1 - animationProgress;
+							if (Animation == Animations.None && State == States.None)
 								r = 0;
 
 							GL.PushMatrix();
@@ -1179,20 +1306,28 @@ namespace PacMan
 			#endregion points
 
 			#region lifts
+			ShaderProgram.StaticColor.SetUniform("meshColor", new Vector4(0, 0, 0, 0.7f));
 			for (int y = 0; y < Height; y++)
 			{
+				double ry = liftAnimatedY(y, 0);
+
 				GL.PushMatrix();
-				GL.Translate(0, y + (y > CurrentFloor ? 100 : 0), 0);
+				GL.Translate(0, ry, 0);
 				for (int z = 0; z < Depth; z++)
 					for (int x = 0; x < Width; x++)
 						if (Fields[y][z][x] == Objects.LiftUp || Fields[y][z][x] == Objects.LiftDown)
 						{
-							if (Fields[y][z][x] == Objects.LiftUp)
-								ShaderProgram.StaticColor.SetUniform("meshColor", new Vector4(0, 1, 0, 1));
-							else
-								ShaderProgram.StaticColor.SetUniform("meshColor", new Vector4(1, 0, 0, 1));
 							GL.Translate(x, 0.01, z);
-							floor.Render();
+
+							liftProgram.Enable();
+							liftProgram.SetUniform("meshColor", new Vector4(0.2f, 1.0f, 0.6f, 0.5f));
+							liftProgram.SetUniform("totalTimeElapsed", totalTimeElapsed);
+							liftProgram.SetUniform("useYOpacity", Fields[y][z][x] == Objects.LiftUp ? 0.0f : 1.0f);
+							liftProgram.SetUniform("floorY", (float)ry);
+							lift.Render();
+							liftProgram.Disable();
+
+							ShaderProgram.StaticColor.Enable();
 							GL.Translate(-x, 0.01, -z);
 						}
 				GL.PopMatrix();
@@ -1203,8 +1338,32 @@ namespace PacMan
 			ShaderProgram.StaticColor.SetUniform("meshColor", new Vector4(0, 0, 0, 0.7f));
 			for (int y = 0; y < Height; y++)
 			{
+				double ry = liftAnimatedY(y);
+
 				GL.PushMatrix();
-				GL.Translate(0, y + (y > CurrentFloor ? 100 : 0), 0);
+				GL.Translate(0, ry, 0);
+				for (int z = 0; z < Depth; z++)
+					for (int x = 0; x < Width; x++)
+						if (Fields[y][z][x] == Objects.LiftUp || Fields[y][z][x] == Objects.LiftDown)
+						{
+							GL.Translate(x, 0.01, z);
+							if (Fields[y][z][x] == Objects.LiftUp)
+								floor.Render();
+							else
+								floorHole.Render();
+							ShaderProgram.StaticColor.Enable();
+							GL.Translate(-x, 0.01, -z);
+						}
+				GL.PopMatrix();
+			}
+			ShaderProgram.StaticColor.SetUniform("meshColor", new Vector4(0, 0, 0, 0.7f));
+			for (int y = 0; y < Height; y++)
+			{
+				double ry = liftAnimatedY(y);
+
+
+				GL.PushMatrix();
+				GL.Translate(0, ry, 0);
 
 				for (int z = 0; z < Depth; z++)
 					for (int x = 0; x < Width; x++)
@@ -1227,12 +1386,15 @@ namespace PacMan
 
 			#region floor near walls
 			for (int y = 0; y < Height; y++)
+			{
+				double ry = liftAnimatedY(y);
+
 				for (int z = 0; z < Depth; z++)
 					for (int x = 0; x < Width; x++)
 						if (Fields[y][z][x] == Objects.Wall)
 						{
 							GL.PushMatrix();
-							GL.Translate(x, y + (y > CurrentFloor ? 100 : 0) - 0.5+0.01, z);
+							GL.Translate(x, ry - 0.5 + 0.01, z);
 
 							double ps = 1.0 / 3.0;
 
@@ -1318,6 +1480,7 @@ namespace PacMan
 
 							GL.PopMatrix();
 						}
+			}
 			#endregion
 
 			#endregion floors
@@ -1325,7 +1488,7 @@ namespace PacMan
 			ShaderProgram.StaticColor.Disable();
 		}
 
-		public void Dispose()
+		override public void Dispose()
 		{
 			if (wallCenter_v != null)
 				wallCenter_v.Dispose();

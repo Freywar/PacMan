@@ -10,39 +10,27 @@ namespace PacMan
 	/// </summary>
 	class Ghost : Creature
 	{
-		/// <summary>
-		/// Ghost states.
-		/// </summary>
-		public enum States
+
+		public new class States : GameObject.States
 		{
-			/// <summary>
-			/// Waiting outside map.
-			/// </summary>
-			Waiting,
-			/// <summary>
-			/// Appear animation.
-			/// </summary>
-			AppearAnimation,
-			/// <summary>
-			/// Normal.
-			/// </summary>
-			Normal,
-			/// <summary>
-			/// Frightened.
-			/// </summary>
-			Frightened,
-			/// <summary>
-			/// Disappear animation.
-			/// </summary>
-			DisappearAnimation,
-			/// <summary>
-			/// Eaten.
-			/// </summary>
-			Eaten,
-			/// <summary>
-			/// Not in game.
-			/// </summary>
-			None
+			public States(string value) : base(value) { }
+
+			public static readonly States Waiting = new States("Waiting");
+			public static readonly States Frightened = new States("Frightened");
+			public static readonly States Eaten = new States("Eaten");
+		}
+
+		public new class Animations : GameObject.Animations
+		{
+			public Animations(string value, double duration, GameObject.States result) : base(value, duration, result) { }
+
+			public static readonly new Animations Appear = new Animations("Appear", 2, States.Normal);
+			public static readonly new Animations LiftUp = new Animations("LiftUp", 2, null);
+			public static readonly new Animations LiftDown = new Animations("LiftDown", 2, null);
+			public static readonly Animations ToNormal = new Animations("ToNormal", 0, States.Normal);
+			public static readonly Animations ToWaiting = new Animations("ToWaiting", 0, States.Waiting);
+			public static readonly Animations ToFrightened = new Animations("ToFrightened", 0, States.Frightened);
+			public static readonly Animations ToEaten = new Animations("ToEaten", 0, States.Eaten);
 		}
 
 		/// <summary>
@@ -53,24 +41,12 @@ namespace PacMan
 		/// Details count per 360 degrees or 1 map cell.
 		/// </summary>
 		private const int detailsCount = 20;
-		/// <summary>
-		/// Appear animation duration(seconds);
-		/// </summary>
-		private const double appearAnimationDuration = 2;
-		/// <summary>
-		/// Disappear animation duration(seconds);
-		/// </summary>
-		private const double disappearAnimationDuration = 0.5;
 
 		private Mesh cap_v = null;
 		private Mesh skirt_v = null;
 		private ShaderProgram skirtProgram_v = null;
 		private Color Color_v = Color.Red;
 
-		/// <summary>
-		/// Animation progress in [0..1].
-		/// </summary>
-		private double animationState = 0;
 		/// <summary>
 		/// Time elapsed in Waiting state(seconds).
 		/// </summary>
@@ -93,7 +69,6 @@ namespace PacMan
 					int pointsCount = (int)(Math.PI / step) * (int)(Math.PI * 2 / step) * 4;
 					int vp = 0;
 					int np = 0;
-					int cp = 0;
 
 					double[] v = new double[pointsCount * 3];
 					double[] n = new double[pointsCount * 3];
@@ -103,23 +78,19 @@ namespace PacMan
 						{
 							Vector3d normal = Utils.FromSpheric(alpha, beta, 1);
 							Utils.Push(n, normal, ref np);
-							normal.Mult(radius);
-							Utils.Push(v, normal, ref vp);
+							Utils.Push(v, Vector3d.Multiply(normal, radius), ref vp);
 
 							normal = Utils.FromSpheric(alpha + step, beta, 1);
 							Utils.Push(n, normal, ref np);
-							normal.Mult(radius);
-							Utils.Push(v, normal, ref vp);
+							Utils.Push(v, Vector3d.Multiply(normal, radius), ref vp);
 
 							normal = Utils.FromSpheric(alpha + step, beta + step, 1);
 							Utils.Push(n, normal, ref np);
-							normal.Mult(radius);
-							Utils.Push(v, normal, ref vp);
+							Utils.Push(v, Vector3d.Multiply(normal, radius), ref vp);
 
 							normal = Utils.FromSpheric(alpha, beta + step, 1);
 							Utils.Push(n, normal, ref np);
-							normal.Mult(radius);
-							Utils.Push(v, normal, ref vp);
+							Utils.Push(v, Vector3d.Multiply(normal, radius), ref vp);
 						}
 
 					cap_v = new Mesh();
@@ -144,8 +115,6 @@ namespace PacMan
 					double yStep = 2.0 / detailsCount;
 					int pointsCount = (int)(0.5 / yStep) * (int)(Math.PI * 2 / angleStep) * 4;
 					int vp = 0;
-					int np = 0;
-					int cp = 0;
 
 					double[] v = new double[pointsCount * 3];
 					double[] n = new double[pointsCount * 3];
@@ -191,24 +160,24 @@ namespace PacMan
 			y = 4 * y * y * 0.2;
 
 			double delta = 0;
-			if (State == States.AppearAnimation)
+			if (Animation == Animations.Appear)
 			{
-				if (animationState < 0.25)
-					delta = -y * Utils.NormSin(animationState * 4);
-				if (animationState >= 0.25 && animationState < 0.5)
-					delta = -y * (1 - Utils.NormSin(animationState * 4 - 1));
-				if (animationState >= 0.5 && animationState < 0.75)
-					delta = y * Utils.NormSin(animationState * 4 - 2);
-				if (animationState >= 0.75 && animationState < 1)
-					delta = y * (1 - Utils.NormSin(animationState * 4 - 3));
+				if (animationProgress < 0.25)
+					delta = -y * Utils.NormSin(animationProgress * 4);
+				if (animationProgress >= 0.25 && animationProgress < 0.5)
+					delta = -y * (1 - Utils.NormSin(animationProgress * 4 - 1));
+				if (animationProgress >= 0.5 && animationProgress < 0.75)
+					delta = y * Utils.NormSin(animationProgress * 4 - 2);
+				if (animationProgress >= 0.75 && animationProgress < 1)
+					delta = y * (1 - Utils.NormSin(animationProgress * 4 - 3));
 			}
 
-			if (State == States.DisappearAnimation)
+			if (Animation == Animations.Disappear)
 			{
-				if (animationState < 0.5)
-					delta = y * Utils.NormSin(animationState * 2);
+				if (animationProgress < 0.5)
+					delta = y * Utils.NormSin(animationProgress * 2);
 				else
-					delta = y * (1 - Utils.NormSin(animationState * 2 - 1));
+					delta = y * (1 - Utils.NormSin(animationProgress * 2 - 1));
 			}
 
 			return (
@@ -277,11 +246,11 @@ namespace PacMan
 		private Directions chooseDirection(Map map, Vector3i target, Directions currentDirection)
 		{
 			fillDistanceMap(map, target);
-			if (distanceMap[Y][(int)Z][(int)X] == -1)
+			if (distanceMap[Floor][(int)Z][(int)X] == -1)
 				currentDirection = cw(currentDirection);
 
 			int px = (int)map.WrapX(X);
-			int py = Y;
+			int py = Floor;
 			int pz = (int)map.WrapZ(Z);
 			int bestDistance = distanceMap[py][pz][px];
 
@@ -320,46 +289,36 @@ namespace PacMan
 
 		#endregion
 
-		protected override void updateDirection(Map map)
-		{
-			throw new NotSupportedException("PacMan required.");
-		}
-
 		/// <summary>
 		/// New direction selection on crossroads.
 		/// </summary>
 		/// <param name="map">Map.</param>
 		/// <param name="pacman">PacMan.</param>
-		protected void updateDirection(Map map, PacMan pacman)
+		override protected void updateDirection(Map map, Creature pacman)
 		{
 			Vector3i target;
-			switch (State)
+			if (State == States.Waiting || State == States.Normal)
+				target = new Vector3i((int)pacman.X, pacman.Floor, (int)pacman.Z);
+
+			else if (State == States.Frightened)
 			{
-				case States.Waiting:
-				case States.AppearAnimation:
-				case States.Normal:
-					target = new Vector3i((int)pacman.X, pacman.Y, (int)pacman.Z);
-					break;
-				case States.Frightened:
-					target = new Vector3i((int)pacman.X, pacman.Y, (int)pacman.Z);
-					fillDistanceMap(map, target);
-					double maxDistance = 0;
-					for (int y = 0; y < map.Height; y++)
-						for (int z = 0; z < map.Depth; z++)
-							for (int x = 0; x < map.Width; x++)
-								if (distanceMap[y][z][x] > maxDistance)
-								{
-									target = new Vector3i(x, y, z);
-									maxDistance = distanceMap[y][z][x];
-								}
-					break;
-				case States.Eaten:
-					target = map.GhostStart;
-					break;
-				default:
-					target = new Vector3i((int)X, Y, (int)Z);
-					break;
+
+				target = new Vector3i((int)pacman.X, pacman.Floor, (int)pacman.Z);
+				fillDistanceMap(map, target);
+				double maxDistance = 0;
+				for (int y = 0; y < map.Height; y++)
+					for (int z = 0; z < map.Depth; z++)
+						for (int x = 0; x < map.Width; x++)
+							if (distanceMap[y][z][x] > maxDistance)
+							{
+								target = new Vector3i(x, y, z);
+								maxDistance = distanceMap[y][z][x];
+							}
 			}
+			else if (State == States.Eaten)
+				target = map.GhostStart;
+			else
+				target = new Vector3i((int)X, Floor, (int)Z);
 
 			Direction = chooseDirection(map, target, Direction);
 		}
@@ -388,10 +347,6 @@ namespace PacMan
 		/// </summary>
 		public double Delay = 0;
 		/// <summary>
-		/// State.
-		/// </summary>
-		public States State = States.Normal;
-		/// <summary>
 		/// Frightened speed.
 		/// </summary>
 		public double FrightenedSpeed = 1;
@@ -403,39 +358,26 @@ namespace PacMan
 		{
 			get
 			{
-				switch (State)
-				{
-					case States.Normal:
-						return Speed;
-					case States.Frightened:
-						return FrightenedSpeed;
-					case States.Eaten:
-						return EatenSpeed;
-					case States.AppearAnimation:
-					case States.Waiting:
-					case States.DisappearAnimation:
-					case States.None:
-					default:
-						return 0;
-				}
+				if (State == States.Normal)
+					return Speed;
+				if (State == States.Frightened)
+					return FrightenedSpeed;
+				if (State == States.Eaten)
+					return EatenSpeed;
+				return 0;
 			}
 		}
 
 		public override void Init(Map map)
 		{
-			State = States.None;
-			animationState = 0;
+			base.Init();
 			waitTimeElapsed = 0;
 			totalTimeElapsed = 0;
 			X = map.GhostStart.X;
-			Y = map.GhostStart.Y;
+			Floor = map.GhostStart.Y;
 			Z = map.GhostStart.Z;
 		}
 
-		public override Vector3i? Update(double dt, Map map)
-		{
-			throw new NotSupportedException("PacMan required.");
-		}
 
 		/// <summary>
 		/// Position and direction update.
@@ -444,70 +386,32 @@ namespace PacMan
 		/// <param name="map">Map.</param>
 		/// <param name="pacman">PacMan.</param>
 		/// <returns>Visited cell center or null if none visited.</returns>
-		public Vector3i? Update(double dt, Map map, PacMan pacman)
+		override public Vector3i? Update(double dt, Map map, Creature pacman)
 		{
 			totalTimeElapsed += dt;
-
-			Vector3i? result = null;
-
-			switch (State)
+			if (!IsAnimated && State == States.Waiting)
 			{
-				case States.Waiting:
-					waitTimeElapsed += dt;
-					if (waitTimeElapsed >= Delay)
-					{
-						updateDirection(map, pacman);
-						State = States.AppearAnimation;
-					}
-
-					break;
-				case States.AppearAnimation:
-					animationState += dt / appearAnimationDuration;
-					if (animationState >= 1)
-					{
-						State = States.Normal;
-						animationState = 0;
-					}
-					break;
-				case States.Normal:
-				case States.Frightened:
-				case States.Eaten:
-					if (pacman.State != PacMan.States.Normal && pacman.State != PacMan.States.Super)
-						break;
-
-					double dtAfterMove;
-					while ((dtAfterMove = moveToClosestCenter(dt, map)) != dt)
-					{
-						result = new Vector3i((int)X, Y, (int)Z);
-
-						updateDirection(map, pacman);
-						dt = dtAfterMove;
-					}
-					if (Math.Floor(X) == X && Math.Floor(Z) == Z)
-						updateDirection(map, pacman);
-					if (dt > 0)
-						moveRemainingCellPart(dt, map);
-					break;
-				case States.DisappearAnimation:
-					animationState += dt / disappearAnimationDuration;
-					if (animationState >= 1)
-					{
-						State = States.None;
-						animationState = 0;
-					}
-					break;
+				waitTimeElapsed += dt;
+				if (waitTimeElapsed >= Delay)
+				{
+					updateDirection(map, pacman);
+					Animate(Animations.Appear);
+					return null;
+				}
+				else
+					return base.Update(dt, map, pacman);
 			}
-
-			return result;
+			else
+				return base.Update(dt, map, pacman);
 		}
 
 		public override void Render()
 		{
-			if (State == States.Waiting || State == States.None)
+			if (!IsAnimated && (State == States.Waiting || State == States.None))
 				return;
 
 			GL.PushMatrix();
-			GL.Translate(X, Y, Z);
+			GL.Translate(X, Floor, Z);
 			switch (Direction)
 			{
 				case Directions.Down:
@@ -523,16 +427,25 @@ namespace PacMan
 					break;
 			}
 
-			if (State == States.AppearAnimation)
+			if (Animation == Animations.Appear)
 			{
-				GL.Rotate(360 * Utils.NormSin(animationState), 0, 1, 0);
-				if (animationState < 0.5)
-					GL.Translate(0, -1 + 1.5 * Utils.NormSin(animationState * 2), 0);
+				GL.Rotate(360 * Utils.NormSin(animationProgress), 0, 1, 0);
+				if (animationProgress < 0.5)
+					GL.Translate(0, -1 + 1.5 * Utils.NormSin(animationProgress * 2), 0);
 				else
-					GL.Translate(0, 0.5 * (1 - Utils.NormSin(animationState * 2 - 1)), 0);
+					GL.Translate(0, 0.5 * (1 - Utils.NormSin(animationProgress * 2 - 1)), 0);
 			}
-			if (State == States.DisappearAnimation)
-				GL.Translate(0, -Utils.NormSin(animationState), 0);
+			if (Animation == Animations.LiftUp)
+			{
+				if (animationProgress < 0.5)
+					GL.Translate(0, -1 + 1.5 * Utils.NormSin(animationProgress * 2), 0);
+				else
+					GL.Translate(0, 0.5 * (1 - Utils.NormSin(animationProgress * 2 - 1)), 0);
+			}
+			if (Animation == Animations.LiftDown)
+				GL.Translate(0, 1 - Utils.NormSin(animationProgress), 0);
+			if (Animation == Animations.Disappear)
+				GL.Translate(0, -Utils.NormSin(animationProgress), 0);
 
 
 			if (State != States.Eaten)
@@ -559,24 +472,24 @@ namespace PacMan
 				skirtProgram.SetUniform("yStep", (float)0.1);
 
 				double delta = 0;
-				if (State == States.AppearAnimation)
+				if (Animation == Animations.Appear || Animation == Animations.LiftUp)
 				{
-					if (animationState < 0.25)
-						delta = -1 * Utils.NormSin(animationState * 4);
-					if (animationState >= 0.25 && animationState < 0.5)
-						delta = -1 * (1 - Utils.NormSin(animationState * 4 - 1));
-					if (animationState >= 0.5 && animationState < 0.75)
-						delta = 1 * Utils.NormSin(animationState * 4 - 2);
-					if (animationState >= 0.75 && animationState < 1)
-						delta = 1 * (1 - Utils.NormSin(animationState * 4 - 3));
+					if (animationProgress < 0.25)
+						delta = -1 * Utils.NormSin(animationProgress * 4);
+					if (animationProgress >= 0.25 && animationProgress < 0.5)
+						delta = -1 * (1 - Utils.NormSin(animationProgress * 4 - 1));
+					if (animationProgress >= 0.5 && animationProgress < 0.75)
+						delta = 1 * Utils.NormSin(animationProgress * 4 - 2);
+					if (animationProgress >= 0.75 && animationProgress < 1)
+						delta = 1 * (1 - Utils.NormSin(animationProgress * 4 - 3));
 				}
 
-				if (State == States.DisappearAnimation)
+				if (Animation == Animations.Disappear || Animation == Animations.LiftDown)
 				{
-					if (animationState < 0.5)
-						delta = 1 * Utils.NormSin(animationState * 2);
+					if (animationProgress < 0.5)
+						delta = 1 * Utils.NormSin(animationProgress * 2);
 					else
-						delta = 1 * (1 - Utils.NormSin(animationState * 2 - 1));
+						delta = 1 * (1 - Utils.NormSin(animationProgress * 2 - 1));
 				}
 				skirtProgram.SetUniform("delta", (float)delta);
 				skirtProgram.SetUniform("totalTimeElapsed", (float)totalTimeElapsed);

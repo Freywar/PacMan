@@ -118,7 +118,7 @@ namespace PacMan
 		/// <summary>
 		/// Temp storage for PacMan loaded state during game appear animation.
 		/// </summary>
-		private PacMan.States? savedPacManState = null;
+		private PacMan.States savedPacManState = null;
 		/// <summary>
 		/// Save data.
 		/// </summary>
@@ -382,23 +382,27 @@ namespace PacMan
 			map.Attributes.Append(name);
 
 			XmlNode clearedCells = SaveData.CreateElement("clearedCells");
+			for (int y = 0; y < CurrentMap.Height; y++)
+				for (int z = 0; z < CurrentMap.Depth; z++)
+					for (int x = 0; x < CurrentMap.Depth; x++)
+						if (CurrentMap[y][z][x] != CurrentMap.OriginalFields[y][z][x])
+						{
+							XmlNode cell = SaveData.CreateElement("cell");
 
-			for (int z = 0; z < CurrentMap.Depth; z++)
-				for (int x = 0; x < CurrentMap.Depth; x++)
-					if (CurrentMap[z][x] != CurrentMap.OriginalFields[z][x])
-					{
-						XmlNode cell = SaveData.CreateElement("cell");
+							XmlAttribute cxAttr = SaveData.CreateAttribute("x");
+							cxAttr.Value = x.ToString();
+							cell.Attributes.Append(cxAttr);
 
-						XmlAttribute cxAttr = SaveData.CreateAttribute("x");
-						cxAttr.Value = x.ToString();
-						cell.Attributes.Append(cxAttr);
+							XmlAttribute cyAttr = SaveData.CreateAttribute("y");
+							cxAttr.Value = y.ToString();
+							cell.Attributes.Append(cxAttr);
 
-						XmlAttribute czAttr = SaveData.CreateAttribute("z");
-						czAttr.Value = z.ToString();
-						cell.Attributes.Append(czAttr);
+							XmlAttribute czAttr = SaveData.CreateAttribute("z");
+							czAttr.Value = z.ToString();
+							cell.Attributes.Append(czAttr);
 
-						clearedCells.AppendChild(cell);
-					}
+							clearedCells.AppendChild(cell);
+						}
 
 			map.AppendChild(clearedCells);
 
@@ -558,7 +562,7 @@ namespace PacMan
 							switch (attr.Value)
 							{
 								case "Normal":
-									savedPacManState = PacMan.States.Normal;
+									savedPacManState = (PacMan.States)PacMan.States.Normal;
 									break;
 								case "Super":
 									savedPacManState = PacMan.States.Super;
@@ -627,16 +631,16 @@ namespace PacMan
 									switch (attr.Value)
 									{
 										case "Waiting":
-											currentGhost.State = Ghost.States.Waiting;
+											currentGhost.Animate(Ghost.Animations.ToWaiting);
 											break;
 										case "Normal":
-											currentGhost.State = Ghost.States.Normal;
+											currentGhost.Animate(Ghost.Animations.ToNormal);
 											break;
 										case "Frightened":
-											currentGhost.State = Ghost.States.Frightened;
+											currentGhost.Animate(Ghost.Animations.ToFrightened);
 											break;
 										case "Eaten":
-											currentGhost.State = Ghost.States.Eaten;
+											currentGhost.Animate(Ghost.Animations.ToEaten);
 											break;
 									}
 								}
@@ -801,7 +805,7 @@ namespace PacMan
 		private void restartMap()
 		{
 			PacMan.Init(CurrentMap);
-			CurrentMap.CurrentFloor = PacMan.Y;
+			CurrentMap.Floor = PacMan.Floor;
 			foreach (Ghost ghost in Ghosts)
 				ghost.Init(CurrentMap);
 
@@ -903,26 +907,25 @@ namespace PacMan
 
 				case States.AppearAnimation:
 					if (CurrentMap.State == Map.States.None)
-						CurrentMap.State = Map.States.AppearAnimation;
+						CurrentMap.Animate(Map.Animations.Appear);
 
 					CurrentMap.Update(dt);
-					if (CurrentMap.State == Map.States.Normal)
-					{
-						PacMan.State = PacMan.States.AppearAnimation;
 
-						PacMan.Update(dt, CurrentMap);
-						if (PacMan.State == PacMan.States.Normal)
+					if (CurrentMap.State == Map.States.Normal && PacMan.State == PacMan.States.None)
+						PacMan.Animate(PacMan.Animations.Appear);
+
+					PacMan.Update(dt, CurrentMap, null);
+					if (PacMan.State == PacMan.States.Normal)
+					{
+						if (savedPacManState == PacMan.States.Super)
 						{
-							if (savedPacManState != null)
-							{
-								PacMan.State = (PacMan.States)savedPacManState;
-								savedPacManState = null;
-							}
-							foreach (Ghost ghost in Ghosts)
-								if (ghost.State == Ghost.States.None)
-									ghost.State = Ghost.States.Waiting;
-							State = States.Playing;
+							PacMan.Animate(PacMan.Animations.ToSuper);
+							savedPacManState = null;
 						}
+						foreach (Ghost ghost in Ghosts)
+							if (ghost.State == Ghost.States.None)
+								ghost.Animate(Ghost.Animations.ToWaiting);
+						State = States.Playing;
 					}
 
 					Camera.Update(dt, CurrentMap, PacMan);
@@ -930,7 +933,9 @@ namespace PacMan
 
 				case States.Playing:
 
-					Vector3i? pacManVisitedCell = PacMan.Update(dt, CurrentMap);
+					CurrentMap.Update(dt);
+
+					Vector3i? pacManVisitedCell = PacMan.Update(dt, CurrentMap, null);
 					foreach (Ghost ghost in Ghosts)
 					{
 						Vector3i? ghostVisitedCell = ghost.Update(dt, CurrentMap, PacMan);
@@ -938,9 +943,9 @@ namespace PacMan
 						{
 							Vector3i gv = (Vector3i)ghostVisitedCell;
 							if (CurrentMap[gv.Y][gv.Z][gv.X] == Map.Objects.LiftUp)
-								ghost.Y += 1;
+								ghost.Animate(Ghost.Animations.LiftUp);
 							if (CurrentMap[gv.Y][gv.Z][gv.X] == Map.Objects.LiftDown)
-								ghost.Y -= 1;
+								ghost.Animate(Ghost.Animations.LiftDown);
 						}
 					}
 					Camera.Update(dt, CurrentMap, PacMan);
@@ -953,20 +958,22 @@ namespace PacMan
 						if (CurrentMap[visitedCell.Y][visitedCell.Z][visitedCell.X] == Map.Objects.Powerup)
 						{
 							Score += 100;
-							PacMan.State = PacMan.States.Super;
+							PacMan.Animate(PacMan.Animations.ToSuper);
 							PacMan.SuperTime += PowerupDuration;
 							foreach (Ghost ghost in Ghosts)
-								ghost.State = Ghost.States.Frightened;
+								ghost.Animate(Ghost.Animations.ToFrightened);
 						}
 						if (CurrentMap[visitedCell.Y][visitedCell.Z][visitedCell.X] == Map.Objects.LiftUp)
 						{
-							PacMan.Y += 1;
-							CurrentMap.CurrentFloor += 1;
+							PacMan.Animate(PacMan.Animations.LiftUp);
+							Camera.Animate(Camera.Animations.LiftUp);
+							CurrentMap.Animate(Map.Animations.LiftUp);
 						}
 						else if (CurrentMap[visitedCell.Y][visitedCell.Z][visitedCell.X] == Map.Objects.LiftDown)
 						{
-							PacMan.Y -= 1;
-							CurrentMap.CurrentFloor -= 1;
+							PacMan.Animate(PacMan.Animations.LiftDown);
+							Camera.Animate(Camera.Animations.LiftDown);
+							CurrentMap.Animate(Map.Animations.LiftDown);
 						}
 						else
 							CurrentMap[visitedCell.Y][visitedCell.Z][visitedCell.X] = Map.Objects.None;
@@ -975,38 +982,28 @@ namespace PacMan
 						PacMan.SuperTime -= dt;
 					if (PacMan.State == PacMan.States.Super && PacMan.SuperTime <= 0)
 					{
-						PacMan.State = PacMan.States.Normal;
+						PacMan.Animate(PacMan.Animations.ToNormal);
 						PacMan.SuperTime = 0;
 						foreach (Ghost ghost in Ghosts)
 							if (ghost.State == Ghost.States.Frightened)
-								ghost.State = Ghost.States.Normal;
+								ghost.Animate(Ghost.Animations.ToNormal);
 					}
 
 					foreach (Ghost ghost in Ghosts)
 					{
-						switch (ghost.State)
+						if (ghost.State == Ghost.States.Normal && PacMan.Floor == ghost.Floor && Utils.Distance(PacMan.X, PacMan.Z, ghost.X, ghost.Z) < 1)
 						{
-							case Ghost.States.Normal:
-								if (PacMan.Y == ghost.Y && Utils.Distance(PacMan.X, PacMan.Z, ghost.X, ghost.Z) < 1)
-								{
-									PacMan.Lives--;
-									State = PacMan.Lives != 0 ? States.LifeLoseAnimation : States.LoseAnimation;
-								}
-								break;
-							case Ghost.States.Frightened:
-								if (PacMan.Y == ghost.Y && Utils.Distance(PacMan.X, PacMan.Z, ghost.X, ghost.Z) < 1)
-								{
-									Score += 100;
-									ghost.State = Ghost.States.Eaten;
-								}
-								break;
-							case Ghost.States.Eaten:
-								if (Utils.Distance(ghost.X, ghost.Z, CurrentMap.GhostStart.X, CurrentMap.GhostStart.Z) < 0.1)
-									ghost.State = Ghost.States.Waiting;
-								break;
-							default:
-								break;
+							PacMan.Lives--;
+							State = PacMan.Lives != 0 ? States.LifeLoseAnimation : States.LoseAnimation;
 						}
+
+						else if (ghost.State == Ghost.States.Frightened && PacMan.Floor == ghost.Floor && Utils.Distance(PacMan.X, PacMan.Z, ghost.X, ghost.Z) < 1)
+						{
+							Score += 100;
+							ghost.Animate(Ghost.Animations.ToEaten);
+						}
+						else if (ghost.State == Ghost.States.Eaten && Utils.Distance(ghost.X, ghost.Z, CurrentMap.GhostStart.X, CurrentMap.GhostStart.Z) < 0.1)
+							ghost.Animate(Ghost.Animations.ToWaiting);
 					}
 
 					if (CurrentMap.PointsCount == 0)
@@ -1019,74 +1016,74 @@ namespace PacMan
 
 
 				case States.LifeLoseAnimation:
-					if (PacMan.State == PacMan.States.Normal)
-						PacMan.State = PacMan.States.DisappearAnimation;
 
+					if (PacMan.State != PacMan.States.None)
+						PacMan.Animate(PacMan.Animations.Disappear);
 
-					PacMan.Update(dt, CurrentMap);
+					PacMan.Update(dt, CurrentMap, null);
 					if (PacMan.State == PacMan.States.None)
 					{
 						foreach (Ghost ghost in Ghosts)
-							if (ghost.State != Ghost.States.DisappearAnimation && ghost.State != Ghost.States.None)
-								ghost.State = Ghost.States.DisappearAnimation;
+							if (ghost.State != Ghost.States.None)
+								ghost.Animate(Ghost.Animations.Disappear);
 					}
 
-					bool allGhostsDisappeard = true;
+					bool allGhostsDisappeared = true;
 					foreach (Ghost ghost in Ghosts)
 					{
 						ghost.Update(dt, CurrentMap, PacMan);
-						allGhostsDisappeard = allGhostsDisappeard && ghost.State == Ghost.States.None;
+						allGhostsDisappeared = allGhostsDisappeared && ghost.State == Ghost.States.None;
 					}
 
-					if (allGhostsDisappeard)
+					if (allGhostsDisappeared)
 						restartMap();
 
 					break;
 
 				case States.WinAnimation:
-					if (CurrentMap.State == Map.States.Normal)
-						CurrentMap.State = Map.States.DisappearAnimation;
+					if (CurrentMap.State != Map.States.None)
+						CurrentMap.Animate(Map.Animations.Disappear);
 
 					CurrentMap.Update(dt);
 
-					allGhostsDisappeard = true;
+					allGhostsDisappeared = true;
 					foreach (Ghost ghost in Ghosts)
 					{
-						if (ghost.State != Ghost.States.DisappearAnimation && ghost.State != Ghost.States.None)
-							ghost.State = Ghost.States.DisappearAnimation;
+						if (ghost.State != Ghost.States.None)
+							ghost.Animate(Ghost.Animations.Disappear);
 						ghost.Update(dt, CurrentMap, PacMan);
-						allGhostsDisappeard = allGhostsDisappeard && ghost.State == Ghost.States.None;
+						allGhostsDisappeared = allGhostsDisappeared && ghost.State == Ghost.States.None;
 					}
 
-					if (allGhostsDisappeard && CurrentMap.State == Map.States.None)
+					if (allGhostsDisappeared && CurrentMap.State == Map.States.None)
 						nextMap();
 
 					break;
 
 				case States.LoseAnimation:
-					if (PacMan.State == PacMan.States.Normal)
-						PacMan.State = PacMan.States.DisappearAnimation;
+					if (PacMan.State != PacMan.States.None)
+						PacMan.Animate(PacMan.Animations.Disappear);
 
-					PacMan.Update(dt, CurrentMap);
+					PacMan.Update(dt, CurrentMap, null);
 					if (PacMan.State == PacMan.States.None)
 					{
 						foreach (Ghost ghost in Ghosts)
-							if (ghost.State != Ghost.States.DisappearAnimation && ghost.State != Ghost.States.None)
-								ghost.State = Ghost.States.DisappearAnimation;
-						if (CurrentMap.State == Map.States.Normal)
-							CurrentMap.State = Map.States.DisappearAnimation;
+							if (ghost.State != Ghost.States.None)
+								ghost.Animate(Ghost.Animations.Disappear);
+						if (CurrentMap.State != Map.States.None)
+							CurrentMap.Animate(Map.Animations.Disappear);
 					}
 
 					CurrentMap.Update(dt);
 
-					allGhostsDisappeard = true;
+					allGhostsDisappeared = true;
 					foreach (Ghost ghost in Ghosts)
 					{
 						ghost.Update(dt, CurrentMap, PacMan);
-						allGhostsDisappeard = allGhostsDisappeard && ghost.State == Ghost.States.None;
+						allGhostsDisappeared = allGhostsDisappeared && ghost.State == Ghost.States.None;
 					}
 
-					if (allGhostsDisappeard && CurrentMap.State == Map.States.None)
+					if (allGhostsDisappeared && CurrentMap.State == Map.States.None)
 					{
 						deleteSave();
 						LoseMenu.Header[1] = "Score:" + Score.ToString();
@@ -1239,7 +1236,7 @@ namespace PacMan
 					GL.LoadIdentity();
 
 					Camera.Render();
-	
+
 
 					PacMan.Render();
 					for (int i = 0; i < Ghosts.Length; i++)

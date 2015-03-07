@@ -56,6 +56,7 @@
     <Compile Include="Game.cs" />
     <Compile Include="Creatures\Ghost.cs" />
     <Compile Include="2D\HUD.cs" />
+    <Compile Include="GameObject.cs" />
     <Compile Include="Map.cs" />
     <Compile Include="2D\Menu.cs" />
     <Compile Include="Creatures\PacMan.cs" />
@@ -81,7 +82,13 @@
     <None Include="Shaders\Default_Frag.glsl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="Shaders\Lift_Frag.glsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="Shaders\StaticColor_Frag.glsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Shaders\Lift_Vert.glsl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Shaders\StaticColor_Vert.glsl">

@@ -11,31 +11,19 @@ namespace PacMan
 	/// </summary>
 	class PacMan : Creature
 	{
-		/// <summary>
-		/// PacMan states.
-		/// </summary>
-		public enum States
+		public new class States : GameObject.States
 		{
-			/// <summary>
-			/// Appear animation/
-			/// </summary>
-			AppearAnimation,
-			/// <summary>
-			/// Normal.
-			/// </summary>
-			Normal,
-			/// <summary>
-			/// Super.
-			/// </summary>
-			Super,
-			/// <summary>
-			/// Disappear animation.
-			/// </summary>
-			DisappearAnimation,
-			/// <summary>
-			/// Not in game.
-			/// </summary>
-			None
+			public States(string value) : base(value) { }
+
+			public static readonly States Super = new States("Super");
+		}
+
+		public new class Animations : GameObject.Animations
+		{
+			public Animations(string value, double duration, GameObject.States result) : base(value, duration, result) { }
+
+			public static readonly Animations ToSuper = new Animations("ToSuper", 0, States.Super);
+			public static readonly Animations ToNormal = new Animations("ToNormal", 0, States.Normal);
 		}
 
 		/// <summary>
@@ -50,19 +38,10 @@ namespace PacMan
 		/// Details count per 360 degrees or 1 map cell.
 		/// </summary>
 		private const int detailsCount = 20;
-		/// <summary>
-		/// Appear and disappear animation duration(seconds).
-		/// </summary>
-		private const double animationDuration = 0.5;
 
 		private Mesh body_v = null;
 		private Mesh jaw_v = null;
 		private Mesh evilEye_v = null;
-
-		/// <summary>
-		/// Animation progress in [0..1].
-		/// </summary>
-		public double animationState = 0;
 
 		/// <summary>
 		/// Body mesh.
@@ -91,23 +70,19 @@ namespace PacMan
 						{
 							Vector3d normal = Utils.FromSpheric(yAngle, xAngle, 1);
 							Utils.Push(n, normal, ref np);
-							normal.Mult(radius);
-							Utils.Push(v, normal, ref vp);
+							Utils.Push(v, Vector3d.Multiply(normal, radius), ref vp);
 
 							normal = Utils.FromSpheric(yAngle + yAngleStep, xAngle, 1);
 							Utils.Push(n, normal, ref np);
-							normal.Mult(radius);
-							Utils.Push(v, normal, ref vp);
+							Utils.Push(v, Vector3d.Multiply(normal, radius), ref vp);
 
 							normal = Utils.FromSpheric(yAngle + yAngleStep, xAngle + xAngleStep, 1);
 							Utils.Push(n, normal, ref np);
-							normal.Mult(radius);
-							Utils.Push(v, normal, ref vp);
+							Utils.Push(v, Vector3d.Multiply(normal, radius), ref vp);
 
 							normal = Utils.FromSpheric(yAngle, xAngle + xAngleStep, 1);
 							Utils.Push(n, normal, ref np);
-							normal.Mult(radius);
-							Utils.Push(v, normal, ref vp);
+							Utils.Push(v, Vector3d.Multiply(normal, radius), ref vp);
 						}
 					for (int i = 0; i < pointsCount; i++)
 						Utils.Push(c, color, ref cp);
@@ -161,23 +136,19 @@ namespace PacMan
 						{
 							normal = Utils.FromSpheric(yAngle, xAngle, 1);
 							Utils.Push(n, normal, ref np);
-							normal.Mult(radius);
-							Utils.Push(v, normal, ref vp);
+							Utils.Push(v, Vector3d.Multiply(normal, radius), ref vp);
 
 							normal = Utils.FromSpheric(yAngle + yAngleStep, xAngle, 1);
 							Utils.Push(n, normal, ref np);
-							normal.Mult(radius);
-							Utils.Push(v, normal, ref vp);
+							Utils.Push(v, Vector3d.Multiply(normal, radius), ref vp);
 
 							normal = Utils.FromSpheric(yAngle + yAngleStep, xAngle + xAngleStep, 1);
 							Utils.Push(n, normal, ref np);
-							normal.Mult(radius);
-							Utils.Push(v, normal, ref vp);
+							Utils.Push(v, Vector3d.Multiply(normal, radius), ref vp);
 
 							normal = Utils.FromSpheric(yAngle, xAngle + xAngleStep, 1);
 							Utils.Push(n, normal, ref np);
-							normal.Mult(radius);
-							Utils.Push(v, normal, ref vp);
+							Utils.Push(v, Vector3d.Multiply(normal, radius), ref vp);
 						}
 					for (int i = cp / 3; i < pointsCount; i++)
 						Utils.Push(c, color, ref cp);
@@ -233,10 +204,7 @@ namespace PacMan
 		/// Lives count.
 		/// </summary>
 		public int Lives = 3;
-		/// <summary>
-		/// State.
-		/// </summary>
-		public States State = States.Normal;
+
 		/// <summary>
 		/// Remaining time in Super state.
 		/// </summary>
@@ -244,14 +212,13 @@ namespace PacMan
 
 		public override void Init(Map map)
 		{
-			State = States.None;
-			animationState = 0;
+			base.Init();
 			X = map.PacManStart.X;
-			Y = map.PacManStart.Y;
+			Floor = map.PacManStart.Y;
 			Z = map.PacManStart.Z;
 		}
 
-		protected override void updateDirection(Map map)
+		protected override void updateDirection(Map map, Creature target)
 		{
 			if (desiredDirection == Direction)
 				return;
@@ -261,55 +228,31 @@ namespace PacMan
 				case Directions.None:
 					break;
 				case Directions.Up:
-					if (Z > 0 && map[Y][(int)(Z - 1)][(int)X] != Map.Objects.Wall)
+					if (Z > 0 && map[Floor][(int)(Z - 1)][(int)X] != Map.Objects.Wall)
 						Direction = desiredDirection;
-					else if (Z == 0 && map[Y][map.Depth - 1][(int)X] != Map.Objects.Wall)
+					else if (Z == 0 && map[Floor][map.Depth - 1][(int)X] != Map.Objects.Wall)
 						Direction = desiredDirection;
 					break;
 				case Directions.Down:
-					if (Z < map.Depth - 1 && map[Y][(int)(Z + 1)][(int)X] != Map.Objects.Wall)
+					if (Z < map.Depth - 1 && map[Floor][(int)(Z + 1)][(int)X] != Map.Objects.Wall)
 						Direction = desiredDirection;
-					else if (Z == map.Depth - 1 && map[Y][0][(int)X] != Map.Objects.Wall)
+					else if (Z == map.Depth - 1 && map[Floor][0][(int)X] != Map.Objects.Wall)
 						Direction = desiredDirection;
 					break;
 
 				case Directions.Left:
-					if (X > 0 && map[Y][(int)Z][(int)(X - 1)] != Map.Objects.Wall)
+					if (X > 0 && map[Floor][(int)Z][(int)(X - 1)] != Map.Objects.Wall)
 						Direction = desiredDirection;
-					else if (X == 0 && map[Y][(int)Z][map.Width - 1] != Map.Objects.Wall)
+					else if (X == 0 && map[Floor][(int)Z][map.Width - 1] != Map.Objects.Wall)
 						Direction = desiredDirection;
 					break;
 				case Directions.Right:
-					if (X < map.Width - 1 && map[Y][(int)Z][(int)(X + 1)] != Map.Objects.Wall)
+					if (X < map.Width - 1 && map[Floor][(int)Z][(int)(X + 1)] != Map.Objects.Wall)
 						Direction = desiredDirection;
-					else if (X == map.Width - 1 && map[Y][(int)Z][0] != Map.Objects.Wall)
+					else if (X == map.Width - 1 && map[Floor][(int)Z][0] != Map.Objects.Wall)
 						Direction = desiredDirection;
 					break;
 			}
-		}
-
-		public override Vector3i? Update(double dt, Map map)
-		{
-			if (State == States.AppearAnimation)
-			{
-				animationState += dt / animationDuration;
-				if (animationState >= 1)
-				{
-					State = States.Normal;
-					animationState = 0;
-				}
-				return null;
-			}
-			if (State == States.DisappearAnimation)
-			{
-				animationState += dt / animationDuration;
-				if (animationState >= 1)
-					State = States.None;
-				return null;
-			}
-			if (State == States.None)
-				return null;
-			return base.Update(dt, map);
 		}
 
 		/// <summary>
@@ -318,7 +261,7 @@ namespace PacMan
 		/// <param name="keyboard">Pressed key.</param>
 		public void KeyDown(Key key)
 		{
-			if (State == States.AppearAnimation || State == States.DisappearAnimation)
+			if (Animation == Animations.Appear || Animation == Animations.Disappear)
 				return;
 
 			if (key == Key.Up)
@@ -341,8 +284,9 @@ namespace PacMan
 
 		public override void Render()
 		{
-			if (State == States.None)
+			if (State == States.None && Animation == Animations.None)
 				return;
+
 
 			double mouthAngle = Math.Max(Math.Abs(X - Math.Round(X)), Math.Abs(Z - Math.Round(Z)));
 			mouthAngle = Math.Sin(mouthAngle * Math.PI) * maxMouthAngle;
@@ -366,10 +310,10 @@ namespace PacMan
 			}
 			GL.Rotate(-90, 1, 0, 0);
 
-			if (State == States.AppearAnimation)
-				GL.Scale(animationState, animationState, animationState);
-			if (State == States.DisappearAnimation)
-				GL.Scale(1 - animationState, 1 - animationState, 1 - animationState);
+			if (Animation == Animations.Appear)
+				GL.Scale(animationProgress, animationProgress, animationProgress);
+			if (Animation == Animations.Disappear)
+				GL.Scale(1 - animationProgress, 1 - animationProgress, 1 - animationProgress);
 
 
 			ShaderProgram.Default.Enable();
